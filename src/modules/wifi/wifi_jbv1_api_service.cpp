@@ -1,5 +1,6 @@
 #include "wifi_jbv1_api_service.h"
 #include "modules/services/jbv1_client.h"
+#include "main_globals.h"
 #include <ArduinoJson.h>
 #include <Arduino.h>
 

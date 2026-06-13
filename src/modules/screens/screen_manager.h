@@ -33,4 +33,3 @@ private:
     bool lastHadAlert_ = false;
 };
 
-extern ScreenManager screenManager;

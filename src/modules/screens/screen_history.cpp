@@ -1,6 +1,7 @@
 #include "screen_history.h"
 #include "display.h"
 #include "modules/history/history_manager.h"
+#include "main_globals.h"
 
 static constexpr uint16_t SCR_GRAY  = 0x7BEF;
 

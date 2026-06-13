@@ -11,7 +11,5 @@ struct JBV1Data {
     bool valid() const;
 };
 
-extern JBV1Data g_jbv1;
-
 // Call from main loop to age out stale data
 void jbv1_tick(uint32_t nowMs);

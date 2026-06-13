@@ -1,6 +1,7 @@
 #include "screen_jbv1.h"
 #include "display.h"
 #include "modules/services/jbv1_client.h"
+#include "main_globals.h"
 
 // RGB565 gray (others from display_driver.h macros)
 static constexpr uint16_t SCR_GRAY = 0x7BEF;

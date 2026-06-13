@@ -25,4 +25,3 @@ private:
     int count_ = 0;
 };
 
-extern HistoryManager historyManager;
