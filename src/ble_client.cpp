@@ -169,6 +169,7 @@ int V1BLEClient::tryBackupBondsToSD() {
 
     StorageManager::SDTryLock sdLock(storageManager.getSDMutex());
     if (!sdLock) {
+        Serial.println("[BLE] WARN: tryBackupBondsToSD SD lock contended — backup deferred to next maintenance cycle");
         return -1;
     }
 
@@ -378,6 +379,8 @@ void V1BLEClient::cleanupConnection() {
             shouldConnect_ = false;
             hasTargetDevice_ = false;
             targetDevice_ = NimBLEAdvertisedDevice();
+        } else {
+            Serial.println("[BLE] WARN: cleanupConnection mutex timeout — shouldConnect/hasTargetDevice not cleared");
         }
     }
 

@@ -7,6 +7,7 @@
 #include "storage_manager.h"
 #include <SD_MMC.h>
 #include <LittleFS.h>
+#include <cerrno>
 
 // Global instance
 StorageManager storageManager;
@@ -48,7 +49,7 @@ bool StorageManager::begin() {
 
         return true;
     } else {
-        Serial.println("[Storage] SD_MMC.begin() failed");
+        Serial.printf("[Storage] SD_MMC.begin() failed (errno=%d)\n", errno);
     }
 #endif
 

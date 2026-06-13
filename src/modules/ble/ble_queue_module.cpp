@@ -352,10 +352,11 @@ void BleQueueModule::process() {
                 preview_->cancel();
                 previewActive = false;
             }
-            // Set flag and timestamp for main loop to drive display pipeline
-            // This decouples BLE processing from slow display updates
-            hadSuccessfulParse_ = true;
-            lastParsedTsMs_ = lastNotifyTsMs_;
+            // Set flag and timestamp for main loop to drive display pipeline.
+            // Use release ordering: display-loop reader uses acquire in getLastParsedTimestamp()
+            // and consumeParsedFlag() so it observes a consistent pair of values.
+            lastParsedTsMs_.store(lastNotifyTsMs_, std::memory_order_release);
+            hadSuccessfulParse_.store(true, std::memory_order_release);
             parsedEventPending = true;
             parsedEventDetail = packetId;
         }
@@ -364,7 +365,7 @@ void BleQueueModule::process() {
     if (parsedEventPending && bus_) {
         SystemEvent event;
         event.type = SystemEventType::BLE_FRAME_PARSED;
-        event.tsMs = lastParsedTsMs_;
+        event.tsMs = lastParsedTsMs_.load(std::memory_order_relaxed);
         event.seq = ++parsedEventSeq_;
         event.detail = parsedEventDetail;
         bus_->publish(event);

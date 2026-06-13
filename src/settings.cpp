@@ -95,6 +95,7 @@ void SettingsManager::clearDeferredPersistState() {
     deferredPersistPending_ = false;
     deferredPersistRetryScheduled_ = false;
     deferredPersistNextAttemptAtMs_ = 0;
+    deferredPersistRetryCount_ = 0;
 }
 
 void SettingsManager::begin() {
@@ -375,7 +376,12 @@ void SettingsManager::serviceDeferredPersist(uint32_t nowMs) {
     if (!persistSettingsAtomically()) {
         deferredPersistPending_ = true;
         deferredPersistRetryScheduled_ = true;
+        deferredPersistRetryCount_++;
         deferredPersistNextAttemptAtMs_ = nowMs + SETTINGS_DEFERRED_PERSIST_RETRY_BACKOFF_MS;
+        if (deferredPersistRetryCount_ >= 5) {
+            Serial.printf("[Settings] ERROR: Settings persist failed %u times — NVS may be full or corrupted\n",
+                          (unsigned)deferredPersistRetryCount_);
+        }
         return;
     }
 

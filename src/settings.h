@@ -788,6 +788,7 @@ private:
     bool deferredPersistPending_ = false;
     bool deferredPersistRetryScheduled_ = false;
     uint32_t deferredPersistNextAttemptAtMs_ = 0;
+    uint8_t deferredPersistRetryCount_ = 0;
     void bumpBackupRevision();
     void clearDeferredPersistState();
     bool persistSettingsAtomically();

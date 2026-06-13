@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <atomic>
 #include <vector>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
@@ -30,11 +31,13 @@ public:
                SystemEventBus* eventBus = nullptr,
                Config cfg = Config());
 
-    // Returns timestamp of last successfully parsed packet (for display latency tracking)
-    uint32_t getLastParsedTimestamp() const { return lastParsedTsMs_; }
+    // Returns timestamp of last successfully parsed packet (for display latency tracking).
+    // Atomic: written by BLE processing context, read by display loop on Core 1.
+    uint32_t getLastParsedTimestamp() const { return lastParsedTsMs_.load(std::memory_order_acquire); }
 
-    // Returns true if a packet was successfully parsed since last check (and clears flag)
-    bool consumeParsedFlag() { bool had = hadSuccessfulParse_; hadSuccessfulParse_ = false; return had; }
+    // Returns true if a packet was successfully parsed since last check (and clears flag).
+    // Atomic exchange: prevents TOCTOU race between BLE writer and display-loop reader.
+    bool consumeParsedFlag() { return hadSuccessfulParse_.exchange(false, std::memory_order_acq_rel); }
 
     // Callback entry from BLE notifications.
     void onNotify(const uint8_t* data, size_t length, uint16_t charUUID);
@@ -65,8 +68,8 @@ private:
     size_t rxReadPos_ = 0;  // Logical read pointer into rxBuffer (avoids front erases)
     unsigned long lastRxMillis_ = 0;
     uint32_t lastNotifyTsMs_ = 0;
-    uint32_t lastParsedTsMs_ = 0;      // Timestamp of last successful parse (for display latency)
-    bool hadSuccessfulParse_ = false;  // Flag: at least one packet parsed since last check
+    std::atomic<uint32_t> lastParsedTsMs_{0};     // Written by BLE context, read by display loop
+    std::atomic<bool> hadSuccessfulParse_{false};  // Written by BLE context, read by display loop
     uint32_t parsedEventSeq_ = 0;
     bool backpressureActive_ = false;
 
