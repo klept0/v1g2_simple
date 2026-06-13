@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Changed
+- Bumped `softprops/action-gh-release` from `v1` to `v2` in the release workflow to resolve the Node.js 20 deprecation warning (GitHub retires Node.js 20 runners on 2026-09-16).
+- Web installer link in README updated to the GitHub Pages URL (`https://klept0.github.io/v1g2_simple/install/`); removed stale `ajmdroid` account references.
+
+---
+
+## [4.0.2] - 2026-06-12
+
+### Added
+- JetBrains Mono, Roboto, and Atkinson Hyperlegible font options available in display settings (subsetted TTFs embedded as PROGMEM arrays via OpenFontRender).
+- `tools/create_font_headers.py` script to regenerate font headers from source TTFs using `fontTools` subsetting.
+- `deferredPersistRetryCount_` tracking in Settings; logs an error after ≥ 5 consecutive NVS persist failures.
+- `isWellFormedBleAddress()` validation in OBD runtime; malformed saved addresses are discarded at load time rather than propagated.
+
+### Fixed
+- `std::atomic` members (`lastParsedTsMs_`, `hadSuccessfulParse_`) in `BleQueueModule` required explicit move-assignment operator — implicit one is deleted by the standard, causing `test_ble_display_pipeline` to fail to compile on native PlatformIO builds.
+- `Serial.printf` call in `setSavedAddressFromBuffer()` was unguarded, causing `undefined reference to 'Serial'` linker errors in `test_obd_runtime` native builds. Wrapped in `#ifndef UNIT_TEST`.
+- `cleanupConnection()` now logs a warning when its 20 ms BLE mutex wait times out, making contention visible in serial output.
+- `tryBackupBondsToSD()` logs a warning when the SD lock is contended and defers the backup rather than silently dropping it.
+- `SD_MMC.begin()` failures now log `errno` for easier hardware-level diagnostics.
+- Web installer `ManifestURL` corrected from the original `ajmdroid` account to `klept0`.
+
+### Changed
+- `DisplayStyle` enum extended with `DISPLAY_STYLE_JETBRAINS_MONO` (1), `DISPLAY_STYLE_ROBOTO` (2), and `DISPLAY_STYLE_ATKINSON` (4) alongside the existing Classic (0) and Serpentine (3) styles.
+- `display_font_manager` extended with lazy-load paths and a `rendererForStyle()` dispatcher for the three new OFR fonts.
+- GitHub Actions `deploy-web-installer.yml`, `release-on-merge.yml`, and `refresh-web-installer-assets.yml`: removed `cname: v1simple.com` (domain not owned by this repo).
+
+---
+
 ## [4.0.1] - 2026-04-04
 
 ### Fixed
