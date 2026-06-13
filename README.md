@@ -250,6 +250,8 @@ pio test -e native -f test_packet_parser
 ./build.sh --upload-fs
 ```
 
+Authoritative filesystem upload path: `./build.sh --upload-fs` or `./build.sh --all`.
+
 CI runs on every push to `main`, `dev`, and `feature/*`. Tests must pass before firmware compiles.
 
 ---
