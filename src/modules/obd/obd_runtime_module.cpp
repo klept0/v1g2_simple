@@ -610,7 +610,9 @@ static bool isWellFormedBleAddress(const char* addr) {
 
 void ObdRuntimeModule::setSavedAddressFromBuffer(const char* address) {
     if (!isWellFormedBleAddress(address)) {
+#ifndef UNIT_TEST
         Serial.printf("[OBD] WARN: Ignoring malformed saved address '%s'\n", address ? address : "(null)");
+#endif
         savedAddress_[0] = '\0';
         return;
     }
