@@ -17,6 +17,31 @@ unsigned long mockMicros = 0;
 
 SettingsManager settingsManager;
 
+#include "../../src/modules/screens/screen_manager.h"
+#include "../../src/modules/history/history_manager.h"
+#include "../../src/modules/services/jbv1_client.h"
+
+// Stub globals required by main_globals.h externs used in tap_gesture_module
+ScreenManager screenManager;
+HistoryManager historyManager;
+JBV1Data g_jbv1;
+
+// ScreenManager stubs (render() not exercised in tap gesture tests)
+void ScreenManager::next() { uint8_t n = (static_cast<uint8_t>(current_) + 1) % static_cast<uint8_t>(ScreenType::COUNT); current_ = static_cast<ScreenType>(n); }
+void ScreenManager::previous() { uint8_t c = static_cast<uint8_t>(current_), cnt = static_cast<uint8_t>(ScreenType::COUNT); current_ = static_cast<ScreenType>(c == 0 ? cnt - 1 : c - 1); }
+void ScreenManager::set(ScreenType s) { if (static_cast<uint8_t>(s) < static_cast<uint8_t>(ScreenType::COUNT)) current_ = s; }
+void ScreenManager::forceRadar() { current_ = ScreenType::RADAR; }
+void ScreenManager::tick(bool hasAlert, uint32_t) { if (hasAlert && !lastHadAlert_) forceRadar(); lastHadAlert_ = hasAlert; }
+void ScreenManager::render(V1Display&, const DisplayBleContext&) {}
+
+// HistoryManager stubs
+void HistoryManager::addEncounter(const char*, const char*, uint32_t, uint32_t, uint8_t) {}
+void HistoryManager::clear() {}
+const Encounter& HistoryManager::get(int) const { static Encounter e{}; return e; }
+
+// JBV1Data stub
+bool JBV1Data::valid() const { return false; }
+
 #include "../../src/modules/quiet/quiet_coordinator_module.cpp"
 #include "../../src/modules/touch/tap_gesture_module.cpp"
 
@@ -77,12 +102,17 @@ void setUp() {
 
 void tearDown() {}
 
+// Swipe detection requires a touch-up event to classify a gesture as a tap.
+// Each tap is: queueTouch (down) + queueNoTouch (up) across two process() calls.
+
 void test_alert_tap_toggles_mute_immediately() {
     parser.setAlerts({makeAlert()});
     parser.state.muted = false;
     touch.queueTouch(40, 20);
+    touch.queueNoTouch();
 
-    processAt(200);
+    processAt(200);  // touch down — starts swipe tracking
+    processAt(201);  // touch up  — no swipe (dx=0), fires as tap → mute toggle
 
     TEST_ASSERT_EQUAL(1, bleClient.setMuteCalls);
     TEST_ASSERT_TRUE(bleClient.lastMuteValue);
@@ -93,19 +123,28 @@ void test_alert_tap_toggles_mute_immediately() {
 void test_idle_triple_tap_cycles_slot_and_pushes_when_connected() {
     ::settingsManager.settings.autoPushEnabled = true;
     bleClient.setConnected(true);
-    touch.queueTouch(10, 10);
-    touch.queueTouch(10, 10);
-    touch.queueTouch(10, 10);
 
+    // Tap 1: down at 200, up at 201
+    touch.queueTouch(10, 10);
+    touch.queueNoTouch();
     processAt(200);
+    processAt(201);
     TEST_ASSERT_EQUAL(0, display.drawProfileIndicatorCalls);
     TEST_ASSERT_EQUAL(0, autoPush.queueSlotPushCalls);
 
+    // Tap 2: down at 400, up at 401
+    touch.queueTouch(10, 10);
+    touch.queueNoTouch();
     processAt(400);
+    processAt(401);
     TEST_ASSERT_EQUAL(0, display.drawProfileIndicatorCalls);
     TEST_ASSERT_EQUAL(0, autoPush.queueSlotPushCalls);
 
+    // Tap 3: down at 600, up at 601 — triggers profile cycle
+    touch.queueTouch(10, 10);
+    touch.queueNoTouch();
     processAt(600);
+    processAt(601);
 
     TEST_ASSERT_EQUAL(1, ::settingsManager.settings.activeSlot);
     TEST_ASSERT_EQUAL(DisplayMode::IDLE, displayMode);
@@ -117,13 +156,21 @@ void test_idle_triple_tap_cycles_slot_and_pushes_when_connected() {
 }
 
 void test_idle_profile_cycle_resets_after_tap_window_expires() {
+    // Tap 1 at 200, tap 2 at 400, tap 3 released at 1201 (outside 1000ms window from tap 1)
     touch.queueTouch(10, 10);
-    touch.queueTouch(10, 10);
-    touch.queueTouch(10, 10);
-
+    touch.queueNoTouch();
     processAt(200);
+    processAt(201);
+
+    touch.queueTouch(10, 10);
+    touch.queueNoTouch();
     processAt(400);
+    processAt(401);
+
+    touch.queueTouch(10, 10);
+    touch.queueNoTouch();
     processAt(1201);
+    processAt(1202);
 
     TEST_ASSERT_EQUAL(0, display.drawProfileIndicatorCalls);
     TEST_ASSERT_EQUAL(0, autoPush.queueSlotPushCalls);

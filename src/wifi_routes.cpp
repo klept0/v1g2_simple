@@ -28,6 +28,7 @@
 #include "modules/obd/obd_runtime_module.h"
 #include "battery_manager.h"
 #include "time_service.h"
+#include "modules/wifi/wifi_jbv1_api_service.h"
 #include <LittleFS.h>
 
 bool WiFiManager::setupWebServer() {
@@ -507,6 +508,11 @@ bool WiFiManager::setupWebServer() {
                                       *speedSelector_,
                                       [](void* ctx) { return static_cast<WiFiManager*>(ctx)->checkRateLimit(); }, this,
                                       [](void* ctx) { static_cast<WiFiManager*>(ctx)->markUiActivity(); }, this);
+    });
+
+    // JBV1 driving data update
+    server_.on("/api/jbv1/update", HTTP_POST, [this]() {
+        WifiJBV1ApiService::handleApiUpdate(server_);
     });
 
     // Note: onNotFound is set earlier to handle LittleFS static files

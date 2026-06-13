@@ -45,6 +45,11 @@ class ObdRuntimeModule;
 class ObdBleClient;
 class SpeedSourceSelector;
 
+// Screen management
+class ScreenManager;
+class HistoryManager;
+struct JBV1Data;
+
 #ifndef UNIT_TEST
 class DisplayPipelineModule;
 #endif
@@ -88,6 +93,9 @@ extern MainRuntimeState mainRuntimeState;
 extern ObdRuntimeModule obdRuntimeModule;
 extern ObdBleClient obdBleClient;
 extern SpeedSourceSelector speedSourceSelector;
+extern ScreenManager screenManager;
+extern HistoryManager historyManager;
+extern JBV1Data g_jbv1;
 
 #ifndef UNIT_TEST
 extern DisplayPipelineModule displayPipelineModule;

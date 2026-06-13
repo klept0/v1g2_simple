@@ -104,6 +104,25 @@ Change the default password from the Settings page before putting the device on 
 
 ## Features
 
+### Screens
+
+The 640×172 display supports 5 swipeable screens. Swipe left to advance, swipe right to go back. Tap anywhere on a non-radar screen (when no alert is active) to return to radar. Any radar alert immediately forces the display back to Screen 1.
+
+| # | Screen | Description |
+|---|--------|-------------|
+| 1 | **Radar** | Standard V1 alert display (frequency, band, signal bars, direction arrow) — existing rendering unchanged |
+| 2 | **JBV1** | Driving data: speed, posted speed limit, delta, heading, satellite count, GPS accuracy. Updated via `POST /api/jbv1/update` |
+| 3 | **History** | Last 10 radar encounters with band, frequency, and time elapsed since the alert cleared |
+| 4 | **Diagnostics** | BLE connection status, RSSI, packet rate, last packet age, and firmware version |
+| 5 | **Clock** | Large 12-hour AM/PM clock with day and date, derived from web UI time push |
+
+**JBV1 data endpoint:**
+```bash
+curl -X POST http://192.168.35.5/api/jbv1/update \
+  -H "Content-Type: application/json" \
+  -d '{"speed":72,"speedLimit":65,"heading":"NW","gpsAccuracy":3,"satellites":8}'
+```
+
 ### Voice alerts
 
 Alerts are announced by concatenating individual audio clips at runtime. A Ka alert at 34.749 GHz ahead plays:
@@ -230,6 +249,8 @@ pio test -e native -f test_packet_parser
 # Filesystem upload only
 ./build.sh --upload-fs
 ```
+
+Authoritative filesystem upload path: `./build.sh --upload-fs` or `./build.sh --all`.
 
 CI runs on every push to `main`, `dev`, and `feature/*`. Tests must pass before firmware compiles.
 

@@ -43,6 +43,9 @@ LoopConnectionEarlyResult LoopConnectionEarlyModule::process(const LoopConnectio
         providers.readProxyConnected ? providers.readProxyConnected(providers.proxyConnectedContext) : false,
         providers.readConnectionRssi ? providers.readConnectionRssi(providers.connectionRssiContext) : 0,
         providers.readProxyRssi ? providers.readProxyRssi(providers.proxyRssiContext) : 0,
+        // TODO: populate packetsPerSecond and lastPacketAgeMs from BLE stats when available
+        0,  // packetsPerSecond
+        0,  // lastPacketAgeMs
     };
     displayEarlyCtx.bleReceiving = result.bleReceiving;
 

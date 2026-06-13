@@ -1,6 +1,9 @@
 #include "tap_gesture_module.h"
 #include "../quiet/quiet_coordinator_module.h"
 #include "../perf/debug_macros.h"
+#ifndef UNIT_TEST
+#include "main_globals.h"
+#endif
 
 #ifndef UNIT_TEST
 #include "modules/auto_push/auto_push_module.h"
@@ -76,30 +79,68 @@ void TapGestureModule::process(unsigned long nowMs) {
         }
     };
 
-    if (touch_->getTouchPoint(touchX, touchY)) {
-        if (nowMs - lastTapTime_ >= TAP_DEBOUNCE_MS) {
-            if (nowMs - lastTapTime_ <= TAP_WINDOW_MS) {
-                tapCount_++;
-            } else {
-                tapCount_ = 1;
-            }
-            lastTapTime_ = nowMs;
+    bool touched = touch_->getTouchPoint(touchX, touchY);
 
-            DBG_PRINTF("Tap detected: count=%d, x=%d, y=%d, hasAlert=%d\n", tapCount_, touchX, touchY, hasActiveAlert);
+    if (touched) {
+        if (!swipeTracking_) {
+            // Start tracking a new gesture
+            swipeTracking_      = true;
+            swipeTouchStartX_   = touchX;
+            swipeCurrentX_      = touchX;
+            swipeTouchStartMs_  = nowMs;
+        } else {
+            // Update current position during tracking
+            swipeCurrentX_ = touchX;
+        }
+    } else if (swipeTracking_) {
+        // Touch lifted — gesture ended
+        swipeTracking_ = false;
+        int16_t dx = swipeCurrentX_ - swipeTouchStartX_;
+        unsigned long duration = nowMs - swipeTouchStartMs_;
+        bool withinTime = (duration <= SWIPE_MAX_DURATION_MS);
 
-            if (hasActiveAlert && tapCount_ == 1) {
-                performMuteToggle("immediate tap");
-                tapCount_ = 0;
-                return;
-            }
+        if (withinTime && dx <= -SWIPE_THRESHOLD_PX) {
+            // Swipe left → next screen
+            screenManager.next();
+        } else if (withinTime && dx >= SWIPE_THRESHOLD_PX) {
+            // Swipe right → previous screen
+            screenManager.previous();
+        } else {
+            // Treat as tap
+            if (nowMs - lastTapTime_ >= TAP_DEBOUNCE_MS) {
+                if (nowMs - lastTapTime_ <= TAP_WINDOW_MS) {
+                    tapCount_++;
+                } else {
+                    tapCount_ = 1;
+                }
+                lastTapTime_ = nowMs;
 
-            if (!hasActiveAlert && tapCount_ >= PROFILE_CHANGE_TAP_COUNT) {
-                performProfileCycle();
-                tapCount_ = 0;
-            } else if (hasActiveAlert) {
-                DBG_PRINTF("Processing %d tap(s) as mute toggle\n", tapCount_);
-                performMuteToggle("deferred tap");
-                tapCount_ = 0;
+                DBG_PRINTF("Tap detected: count=%d, x=%d, y=%d, hasAlert=%d\n",
+                           tapCount_, swipeCurrentX_, touchY, hasActiveAlert);
+
+                if (!screenManager.isRadar() && !hasActiveAlert) {
+                    // Tap on non-radar screen when no alert → go back to radar
+                    screenManager.set(ScreenType::RADAR);
+                    tapCount_ = 0;
+                    return;
+                }
+
+                if (hasActiveAlert && tapCount_ == 1) {
+                    performMuteToggle("immediate tap");
+                    tapCount_ = 0;
+                    return;
+                }
+
+                if (!hasActiveAlert && tapCount_ >= PROFILE_CHANGE_TAP_COUNT) {
+                    if (screenManager.isRadar()) {
+                        performProfileCycle();
+                    }
+                    tapCount_ = 0;
+                } else if (hasActiveAlert) {
+                    DBG_PRINTF("Processing %d tap(s) as mute toggle\n", tapCount_);
+                    performMuteToggle("deferred tap");
+                    tapCount_ = 0;
+                }
             }
         }
     }
