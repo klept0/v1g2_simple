@@ -14,9 +14,7 @@ A touchscreen display for the Valentine One Gen2 radar detector.
 
 No tools needed — just a Chrome browser and USB cable:
 
-👉 **[Install via Hosted Web](https://esphome.github.io/esp-web-tools/?manifest=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fajmdroid%2Fv1g2_simple%40gh-pages%2Finstall%2Fmanifest.json)**
-
-Use the hosted installer during the 4.0.1 hotfix rollout. It bypasses the custom-domain HTTPS path and loads the published V1-Simple manifest directly.
+👉 **[Install via Hosted Web](https://klept0.github.io/v1g2_simple/install/)**
 
 1. Put device in bootloader mode (hold POWER + GEAR while plugging in USB)
 2. Click "Install V1-Simple" and select your device
@@ -32,7 +30,7 @@ Use the hosted installer during the 4.0.1 hotfix rollout. It bypasses the custom
 #### Build & Flash
 
 ```bash
-git clone https://github.com/ajmdroid/v1g2_simple
+git clone https://github.com/klept0/v1g2_simple
 cd v1g2_simple
 ./build.sh --all
 ```
