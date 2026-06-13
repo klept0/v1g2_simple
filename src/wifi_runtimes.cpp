@@ -516,7 +516,8 @@ DebugPerfFilesService::PerfFilesRuntime WiFiManager::makePerfFilesRuntime() {
 WifiVoicePackApiService::Runtime WiFiManager::makeVoicePackRuntime() {
     WifiVoicePackApiService::Runtime r;
     r.onPackActivated = [](const char* packName, void* ctx) {
-        static_cast<WiFiManager*>(ctx)->settingsManager_.setActiveVoicePack(String(packName));
+        (void)ctx;
+        settingsManager.setActiveVoicePack(String(packName));
     };
     r.ctx = this;
     return r;
