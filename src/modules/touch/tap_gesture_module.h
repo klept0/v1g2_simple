@@ -8,6 +8,7 @@
 #include "settings.h"
 #include "ble_client.h"
 #include "packet_parser.h"
+#include "modules/screens/screen_manager.h"
 
 class AutoPushModule;
 class AlertPersistenceModule;
@@ -43,4 +44,12 @@ private:
     static constexpr int PROFILE_CHANGE_TAP_COUNT = 3;
     static constexpr unsigned long TAP_WINDOW_MS = 600;
     static constexpr unsigned long TAP_DEBOUNCE_MS = 150;
+
+    // Swipe tracking
+    int16_t swipeTouchStartX_   = 0;
+    int16_t swipeCurrentX_      = 0;
+    bool    swipeTracking_      = false;
+    unsigned long swipeTouchStartMs_ = 0;
+    static constexpr int SWIPE_THRESHOLD_PX = 40;
+    static constexpr unsigned long SWIPE_MAX_DURATION_MS = 800;
 };

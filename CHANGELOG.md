@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Multi-screen navigation** — swipe left/right to cycle through 5 screens; tap center to return to radar from any non-radar screen. Any active radar alert immediately forces the display back to the radar screen.
+- **Screen 2 — JBV1 driving data** — shows speed, posted speed limit, speed delta, heading, satellite count, and GPS accuracy. Data fed via `POST /api/jbv1/update` with JSON payload `{"speed":72,"speedLimit":65,"heading":"NW","gpsAccuracy":3,"satellites":8}`. Data expires after 10 s of no updates.
+- **Screen 3 — Encounter history** — RAM-only circular buffer of the last 10 radar encounters (band, frequency, time ago). Cleared on boot.
+- **Screen 4 — Diagnostics** — BLE connection status, RSSI, packet rate, last packet age, and firmware identifier.
+- **Screen 5 — Clock/idle** — large time display (12-hour AM/PM) with day/date, derived from web UI time push or NTP fallback via `TimeService`.
+- **`ScreenManager`** — global `screenManager` handles screen selection, swipe/tap navigation routing, and alert-override forcing.
+- **`HistoryManager`** — global `historyManager` circular buffer (max 10 `Encounter` records).
+- **`JBV1Data` / `jbv1_tick()`** — global `g_jbv1` struct with `valid()` check (10 s staleness).
+- **`POST /api/jbv1/update`** — REST endpoint accepting JBV1 JSON payload; populates `g_jbv1`.
+- **`DisplayBleContext`** extended with `packetsPerSecond` and `lastPacketAgeMs` fields.
+
 - **Voice Packs** — upload custom µ-law (`.mul`) clip sets via the web UI (Audio → Voice Packs) to replace the built-in TTS voice. Any clip not present in a pack falls back to the default voice automatically, so partial packs are fully supported — you only need to provide the clips you want to change.
 
   **How to create a pack:**
