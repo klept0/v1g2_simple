@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Voice Packs** — upload custom µ-law (`.mul`) clip sets via the web UI (Audio → Voice Packs) to replace the built-in TTS voice. Any clip not present in a pack falls back to the default voice automatically, so partial packs are fully supported — you only need to provide the clips you want to change.
+
+  **How to create a pack:**
+
+  - *macOS (built-in TTS, no API key):* run `tools/generate_freq_audio.sh` then encode `.raw` → `.mul` with `ffmpeg -acodec pcm_mulaw`.
+  - *Google Gemini TTS (highest quality):* `pip install google-genai && python tools/generate_tts.py`; convert output WAVs to `.mul` with ffmpeg.
+  - *Custom recordings / any source:* convert with `ffmpeg -ar 22050 -ac 1 -acodec pcm_mulaw`.
+
+  Clip requirements: **µ-law (G.711), mono, 22050 Hz**, named to match the 118 entries in [`config/audio_asset_manifest.json`](config/audio_asset_manifest.json) (e.g. `band_ka.mul`, `tens_34.mul`, `dir_ahead.mul`). Upload via the web UI by entering a pack name and selecting `.mul` files; clips are written to `/audio/<packname>/` on LittleFS.
+
+  **API endpoints added:**
+  - `GET /api/audio/voice-packs` — list installed packs with clip counts and active flag
+  - `POST /api/audio/voice-pack/activate` — switch active pack; persists to NVS immediately
+  - `POST /api/audio/voice-pack/delete` — remove a pack and all its clips
+  - `POST /api/audio/voice-pack/upload?pack=<name>` — multipart upload of individual `.mul` clip files
+
+  **Settings:** `activeVoicePack` added to `V1Settings`; persisted in NVS under key `voicePack`; applied at boot alongside volume.
+
 ### Changed
 - Bumped `softprops/action-gh-release` from `v1` to `v2` in the release workflow to resolve the Node.js 20 deprecation warning (GitHub retires Node.js 20 runners on 2026-09-16).
 - Web installer link in README updated to the GitHub Pages URL (`https://klept0.github.io/v1g2_simple/install/`); removed stale `ajmdroid` account references.

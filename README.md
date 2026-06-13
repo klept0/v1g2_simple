@@ -187,6 +187,128 @@ Voice alert options:
 - **Volume Fade:** Reduce V1 volume after initial alert, restore for new threats
 - **Speed-Based Mute:** Mute V1 alerts below a configurable speed threshold (requires OBD)
 
+#### Voice Packs
+
+The Audio page includes a **Voice Packs** section that lets you upload custom clip sets to replace the built-in TTS voice. Any clip not present in a pack falls back to the default voice automatically — **partial packs are fully supported**, so you only need to upload the clips you want to change.
+
+---
+
+##### How the clip system works
+
+Each voice alert is assembled at runtime by concatenating individual audio clips. For example, a Ka-band alert at 34.749 GHz coming from ahead plays:
+
+```
+band_ka.mul  +  tens_34.mul  +  digit_7.mul  +  tens_49.mul  +  dir_ahead.mul
+   "Ka"           "thirty four"     "seven"        "forty nine"      "ahead"
+```
+
+The full list of required clip filenames is defined in [`config/audio_asset_manifest.json`](config/audio_asset_manifest.json):
+
+| Filename pattern | Count | Purpose |
+|---|---|---|
+| `band_ka.mul`, `band_k.mul`, `band_x.mul`, `band_laser.mul` | 4 | Band names |
+| `dir_ahead.mul`, `dir_behind.mul`, `dir_side.mul` | 3 | Directions |
+| `bogeys.mul` | 1 | "bogeys" word for count announcements |
+| `digit_0.mul` … `digit_9.mul` | 10 | Single digit (hundreds place of MHz) |
+| `tens_00.mul` … `tens_99.mul` | 100 | Two-digit numbers (GHz token + MHz last two digits) |
+
+**Total: 118 clips.** You only need to provide the ones you want to override.
+
+---
+
+##### Clip format
+
+All clips must be **µ-law encoded, mono, 22050 Hz** audio with the `.mul` extension.
+
+Convert any WAV file with ffmpeg:
+
+```bash
+ffmpeg -i input.wav -ar 22050 -ac 1 -acodec pcm_mulaw my_clip.mul
+```
+
+Requirements:
+- Sample rate: **22050 Hz** (device plays at this rate; other rates will sound wrong)
+- Channels: **mono** (1 channel)
+- Codec: **pcm_mulaw** (G.711 µ-law, 8-bit compressed)
+- Keep clips short — band clips should be under 0.5s, number clips under 0.3s for natural-sounding concatenation
+
+---
+
+##### Method 1 — macOS built-in TTS (fastest, no API key needed)
+
+Requires macOS with ffmpeg installed (`brew install ffmpeg`).
+
+```bash
+cd tools
+./generate_freq_audio.sh        # generates all 118 .raw files in tools/freq_audio/
+```
+
+This uses the macOS `say` command with the Samantha voice at a slightly faster rate. Edit `VOICE` and `RATE` at the top of the script to use a different voice (run `say -v '?'` to list available voices).
+
+After generation, the `.raw` files are raw 16-bit PCM — convert to `.mul` with ffmpeg:
+
+```bash
+for f in tools/freq_audio/*.raw; do
+  base=$(basename "$f" .raw)
+  ffmpeg -y -f s16le -ar 22050 -ac 1 -i "$f" \
+         -acodec pcm_mulaw "tools/freq_audio/mulaw/${base}.mul" 2>/dev/null
+done
+```
+
+---
+
+##### Method 2 — Google Gemini TTS (highest quality)
+
+Requires a Gemini API key and the `google-genai` Python package.
+
+```bash
+pip install google-genai
+export GEMINI_API_KEY=your_key_here
+python tools/generate_tts.py
+```
+
+The script generates WAV files using Gemini's TTS model. Convert to `.mul` with ffmpeg as shown above.
+
+---
+
+##### Method 3 — Record your own clips
+
+Record any audio source (your own voice, a text-to-speech app, a synthesiser) and convert with ffmpeg. Example starting from an MP3:
+
+```bash
+ffmpeg -i my_recording.mp3 -ar 22050 -ac 1 -acodec pcm_mulaw band_ka.mul
+```
+
+Tips for natural-sounding results:
+- Record in a quiet room or use noise reduction before converting
+- Match the loudness of your clips — inconsistent levels are noticeable when clips are concatenated
+- Keep brief pauses at the end of each clip (50–100 ms of silence) to avoid clipping between words
+
+---
+
+##### Uploading a voice pack
+
+1. Open the device web UI → **Audio** page
+2. Scroll to **Voice Packs**
+3. Enter a pack name (1–16 alphanumeric/underscore characters, e.g. `gemini` or `my_voice`)
+4. Click **Choose Files** and select your `.mul` files (you can select all 118 at once, or just the ones you want to override)
+5. Click **Upload to Pack** — each file is uploaded individually; progress is shown
+6. Once uploaded, click **Use** next to your new pack to activate it
+
+The active pack is saved to device storage and survives reboots. To revert to the built-in voice, click **Use** next to **Default**.
+
+---
+
+##### Troubleshooting voice packs
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Clip sounds pitched wrong | Wrong sample rate | Re-encode at exactly 22050 Hz |
+| Clip sounds distorted | Wrong codec | Use `-acodec pcm_mulaw` not `pcm_s16le` |
+| Clip plays but is silent | File is valid but empty | Re-record and re-convert |
+| Upload fails | File too large or LittleFS full | Keep clips short; delete unused packs |
+| Pack listed but clips still sound like default | Pack not activated | Click **Use** next to the pack name |
+
 ---
 
 ## Troubleshooting

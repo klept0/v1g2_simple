@@ -8,6 +8,7 @@
 #include "storage_manager.h"
 #include <Arduino.h>
 #include <LittleFS.h>
+#include <cstdarg>
 
 // ============================================================================
 // SD Card-based Frequency Voice Playback
@@ -18,6 +19,56 @@ static const char* AUDIO_PATH = "/audio";
 static fs::FS* audioFS = nullptr;  // Filesystem containing audio files
 static uint8_t amp_disable_fail_count = 0;
 static constexpr uint8_t AMP_DISABLE_MAX_RETRIES = 5;
+
+// Active voice pack name — "" means built-in default clips under /audio/
+static char s_activePackName[17] = "";
+
+void audio_set_voice_pack(const char* packName) {
+    if (!packName || packName[0] == '\0') {
+        s_activePackName[0] = '\0';
+    } else {
+        strncpy(s_activePackName, packName, 16);
+        s_activePackName[16] = '\0';
+    }
+}
+
+const char* audio_get_active_pack() {
+    return s_activePackName;
+}
+
+// Resolve path for a clip file. Prefers the active pack's copy when it exists,
+// falls back to the default /audio/<clip> so partial packs work correctly.
+static void resolveClipPath(char* buf, size_t bufSize, const char* clipName) {
+    if (s_activePackName[0] != '\0' && audioFS) {
+        char packPath[64];
+        snprintf(packPath, sizeof(packPath), "%s/%s/%s", AUDIO_PATH, s_activePackName, clipName);
+        if (audioFS->exists(packPath)) {
+            strncpy(buf, packPath, bufSize - 1);
+            buf[bufSize - 1] = '\0';
+            return;
+        }
+    }
+    snprintf(buf, bufSize, "%s/%s", AUDIO_PATH, clipName);
+}
+
+// Append a resolved clip path to params; clipName is a literal like "band_ka.mul".
+static void addClip(SDAudioTaskParams& p, const char* clipName) {
+    if (p.numClips < MAX_AUDIO_CLIPS) {
+        resolveClipPath(p.filePaths[p.numClips++], 48, clipName);
+    }
+}
+
+// Append a resolved clip path with a printf-style formatted clip name.
+__attribute__((format(printf, 2, 3)))
+static void addClipFmt(SDAudioTaskParams& p, const char* fmt, ...) {
+    if (p.numClips >= MAX_AUDIO_CLIPS) return;
+    char clipName[24];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(clipName, sizeof(clipName), fmt, args);
+    va_end(args);
+    resolveClipPath(p.filePaths[p.numClips++], 48, clipName);
+}
 
 // Initialize filesystem audio system
 // Audio files are stored in LittleFS (uploaded with firmware)
@@ -332,27 +383,17 @@ void play_frequency_voice(AlertBand band, uint16_t freqMHz, AlertDirection direc
             case AlertBand::X:  bandFile = "band_x.mul"; break;
             default: break;
         }
-        if (bandFile) {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/%s", AUDIO_PATH, bandFile);
-        }
+        if (bandFile) addClip(params, bandFile);
     }
 
     // 2-4. Frequency clips (if mode includes frequency)
     if (mode == VOICE_MODE_FREQ_ONLY || mode == VOICE_MODE_BAND_FREQ) {
-        // GHz token reuses two-digit number clips (e.g., "thirty four")
         int ghz = getGHz(band, freqMHz);
-        if (ghz > 0) {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/tens_%02d.mul", AUDIO_PATH, ghz);
-        }
+        if (ghz > 0) addClipFmt(params, "tens_%02d.mul", ghz);
 
-        // Hundreds digit of MHz (first digit after decimal point)
         int mhz = freqMHz % 1000;
-        int hundredsDigit = mhz / 100;
-        snprintf(params.filePaths[params.numClips++], 48, "%s/digit_%d.mul", AUDIO_PATH, hundredsDigit);
-
-        // Last two digits as natural number (tens file)
-        int lastTwo = mhz % 100;
-        snprintf(params.filePaths[params.numClips++], 48, "%s/tens_%02d.mul", AUDIO_PATH, lastTwo);
+        addClipFmt(params, "digit_%d.mul", mhz / 100);
+        addClipFmt(params, "tens_%02d.mul", mhz % 100);
     }
 
     // 5. Direction clip (if enabled)
@@ -363,21 +404,14 @@ void play_frequency_voice(AlertBand band, uint16_t freqMHz, AlertDirection direc
             case AlertDirection::BEHIND: dirFile = "dir_behind.mul"; break;
             case AlertDirection::SIDE:   dirFile = "dir_side.mul"; break;
         }
-        if (dirFile) {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/%s", AUDIO_PATH, dirFile);
-        }
+        if (dirFile) addClip(params, dirFile);
     }
 
     // 6-7. Bogey count (if > 1): "<count> bogeys"
-    if (bogeyCount > 1 && bogeyCount <= 10 && params.numClips < 6) {
-        // Add count clip: use digit_X for 2-9, tens_10 for 10
-        if (bogeyCount == 10) {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/tens_10.mul", AUDIO_PATH);
-        } else {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/digit_%d.mul", AUDIO_PATH, bogeyCount);
-        }
-        // Add "bogeys" clip
-        snprintf(params.filePaths[params.numClips++], 48, "%s/bogeys.mul", AUDIO_PATH);
+    if (bogeyCount > 1 && bogeyCount <= 10) {
+        if (bogeyCount == 10) addClip(params, "tens_10.mul");
+        else addClipFmt(params, "digit_%d.mul", bogeyCount);
+        addClip(params, "bogeys.mul");
         AUDIO_LOGF("[AUDIO] Adding bogey count: %d bogeys\n", bogeyCount);
     }
 
@@ -417,9 +451,7 @@ void play_band_only(AlertBand band) {
         case AlertBand::X:     bandFile = "band_x.mul"; break;
     }
 
-    if (bandFile) {
-        snprintf(params.filePaths[params.numClips++], 48, "%s/%s", AUDIO_PATH, bandFile);
-    }
+    if (bandFile) addClip(params, bandFile);
 
     // Start task using pre-allocated global params
     start_sd_audio_task(params);
@@ -452,18 +484,13 @@ void play_direction_only(AlertDirection direction, uint8_t bogeyCount) {
         case AlertDirection::BEHIND: dirFile = "dir_behind.mul"; break;
         case AlertDirection::SIDE:   dirFile = "dir_side.mul"; break;
     }
-    if (dirFile) {
-        snprintf(params.filePaths[params.numClips++], 48, "%s/%s", AUDIO_PATH, dirFile);
-    }
+    if (dirFile) addClip(params, dirFile);
 
     // Add bogey count if provided and > 1
     if (bogeyCount > 1 && bogeyCount <= 10) {
-        if (bogeyCount == 10) {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/tens_10.mul", AUDIO_PATH);
-        } else {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/digit_%d.mul", AUDIO_PATH, bogeyCount);
-        }
-        snprintf(params.filePaths[params.numClips++], 48, "%s/bogeys.mul", AUDIO_PATH);
+        if (bogeyCount == 10) addClip(params, "tens_10.mul");
+        else addClipFmt(params, "digit_%d.mul", bogeyCount);
+        addClip(params, "bogeys.mul");
         AUDIO_LOGF("[AUDIO] Adding bogey count: %d bogeys\n", bogeyCount);
     }
 
@@ -537,20 +564,14 @@ void play_threat_escalation(AlertBand band, uint16_t freqMHz, AlertDirection dir
         case AlertBand::X:  bandFile = "band_x.mul"; break;
         default: break;
     }
-    if (bandFile) {
-        snprintf(params.filePaths[params.numClips++], 48, "%s/%s", AUDIO_PATH, bandFile);
-    }
+    if (bandFile) addClip(params, bandFile);
 
-    // 2-4. Frequency clips (GHz token reuses two-digit number clips)
+    // 2-4. Frequency clips
     int ghz = getGHz(band, freqMHz);
-    if (ghz > 0) {
-        snprintf(params.filePaths[params.numClips++], 48, "%s/tens_%02d.mul", AUDIO_PATH, ghz);
-    }
+    if (ghz > 0) addClipFmt(params, "tens_%02d.mul", ghz);
     int mhz = freqMHz % 1000;
-    int hundredsDigit = mhz / 100;
-    snprintf(params.filePaths[params.numClips++], 48, "%s/digit_%d.mul", AUDIO_PATH, hundredsDigit);
-    int lastTwo = mhz % 100;
-    snprintf(params.filePaths[params.numClips++], 48, "%s/tens_%02d.mul", AUDIO_PATH, lastTwo);
+    addClipFmt(params, "digit_%d.mul", mhz / 100);
+    addClipFmt(params, "tens_%02d.mul", mhz % 100);
 
     // 5. Direction clip
     const char* dirFile = nullptr;
@@ -559,48 +580,34 @@ void play_threat_escalation(AlertBand band, uint16_t freqMHz, AlertDirection dir
         case AlertDirection::BEHIND: dirFile = "dir_behind.mul"; break;
         case AlertDirection::SIDE:   dirFile = "dir_side.mul"; break;
     }
-    if (dirFile) {
-        snprintf(params.filePaths[params.numClips++], 48, "%s/%s", AUDIO_PATH, dirFile);
-    }
+    if (dirFile) addClip(params, dirFile);
 
     // 6-7. Total bogey count if >= 2: "[N] bogeys"
-    if (total >= 2 && total <= 10 && params.numClips < MAX_AUDIO_CLIPS - 2) {
-        if (total == 10) {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/tens_10.mul", AUDIO_PATH);
-        } else {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/digit_%d.mul", AUDIO_PATH, total);
-        }
-        snprintf(params.filePaths[params.numClips++], 48, "%s/bogeys.mul", AUDIO_PATH);
+    if (total >= 2 && total <= 10) {
+        if (total == 10) addClip(params, "tens_10.mul");
+        else addClipFmt(params, "digit_%d.mul", total);
+        addClip(params, "bogeys.mul");
     }
 
-    // 8-9. Direction breakdown: "[N] ahead" (only if > 0)
-    if (ahead > 0 && ahead <= 10 && params.numClips < MAX_AUDIO_CLIPS - 2) {
-        if (ahead == 10) {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/tens_10.mul", AUDIO_PATH);
-        } else {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/digit_%d.mul", AUDIO_PATH, ahead);
-        }
-        snprintf(params.filePaths[params.numClips++], 48, "%s/dir_ahead.mul", AUDIO_PATH);
+    // 8-9. "[N] ahead"
+    if (ahead > 0 && ahead <= 10) {
+        if (ahead == 10) addClip(params, "tens_10.mul");
+        else addClipFmt(params, "digit_%d.mul", ahead);
+        addClip(params, "dir_ahead.mul");
     }
 
-    // 10-11. "[N] behind" (only if > 0)
-    if (behind > 0 && behind <= 10 && params.numClips < MAX_AUDIO_CLIPS - 2) {
-        if (behind == 10) {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/tens_10.mul", AUDIO_PATH);
-        } else {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/digit_%d.mul", AUDIO_PATH, behind);
-        }
-        snprintf(params.filePaths[params.numClips++], 48, "%s/dir_behind.mul", AUDIO_PATH);
+    // 10-11. "[N] behind"
+    if (behind > 0 && behind <= 10) {
+        if (behind == 10) addClip(params, "tens_10.mul");
+        else addClipFmt(params, "digit_%d.mul", behind);
+        addClip(params, "dir_behind.mul");
     }
 
-    // 12. "[N] side" (only if > 0, may be truncated if clips exhausted)
-    if (side > 0 && side <= 10 && params.numClips < MAX_AUDIO_CLIPS - 2) {
-        if (side == 10) {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/tens_10.mul", AUDIO_PATH);
-        } else {
-            snprintf(params.filePaths[params.numClips++], 48, "%s/digit_%d.mul", AUDIO_PATH, side);
-        }
-        snprintf(params.filePaths[params.numClips++], 48, "%s/dir_side.mul", AUDIO_PATH);
+    // 12. "[N] side"
+    if (side > 0 && side <= 10) {
+        if (side == 10) addClip(params, "tens_10.mul");
+        else addClipFmt(params, "digit_%d.mul", side);
+        addClip(params, "dir_side.mul");
     }
 
     AUDIO_LOGF("[AUDIO] Playing threat escalation: %d clips\n", params.numClips);

@@ -166,6 +166,9 @@ struct V1Settings {
     uint8_t speedMuteHysteresisMph;  // Unmute at threshold + hysteresis (1-10 mph)
     uint8_t speedMuteVolume;         // V1 volume when speed-muted (0-9, 0xFF = voice-only)
 
+    // Voice pack (custom uploadable clip sets, "" = built-in default)
+    String activeVoicePack;
+
     // Auto-push on connection settings
     bool autoPushEnabled;        // Enable auto-push profile on V1 connection
     int activeSlot;              // Which slot is active: 0=Default, 1=Highway, 2=Comfort
@@ -710,6 +713,7 @@ public:
     void setSecondaryX(bool enabled);
     void setAlertVolumeFade(bool enabled, uint8_t delaySec, uint8_t volume);
     void setSpeedMute(bool enabled, uint8_t thresholdMph, uint8_t hysteresisMph);
+    void setActiveVoicePack(const String& packName);
     void setLastV1Address(const String& addr);
 
     // Get active slot configuration

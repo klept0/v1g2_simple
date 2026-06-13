@@ -195,9 +195,11 @@ void initializeTouchAndDisplayControls() {
     pinMode(BOOT_BUTTON_GPIO, INPUT_PULLUP);
     const V1Settings& displaySettings = settingsManager.get();
     display.setBrightness(displaySettings.brightness);  // Apply saved brightness
-    audio_set_volume(displaySettings.voiceVolume);      // Apply saved voice volume
-    SerialLog.printf("[Settings] Applied saved brightness: %d, voice volume: %d\n",
-                     displaySettings.brightness, displaySettings.voiceVolume);
+    audio_set_volume(displaySettings.voiceVolume);
+    audio_set_voice_pack(displaySettings.activeVoicePack.c_str());
+    SerialLog.printf("[Settings] Applied saved brightness: %d, voice volume: %d, voice pack: '%s'\n",
+                     displaySettings.brightness, displaySettings.voiceVolume,
+                     displaySettings.activeVoicePack.c_str());
 }
 
 namespace {

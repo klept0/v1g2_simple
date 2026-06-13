@@ -80,6 +80,7 @@ inline constexpr const char* kNvsVoiceDirection    = "voiceDir";
 inline constexpr const char* kNvsVoiceBogeys       = "voiceBogeys";
 inline constexpr const char* kNvsMuteVoiceAtVol0   = "muteVoiceVol0";
 inline constexpr const char* kNvsVoiceVolume       = "voiceVol";
+inline constexpr const char* kNvsVoicePack         = "voicePack";
 
 // ── Secondary alerts ──────────────────────────────────────────────────────
 inline constexpr const char* kNvsSecondaryAlerts = "secAlerts";

@@ -15,6 +15,7 @@
 #include "battery_manager.h"
 #include "modules/wifi/wifi_autopush_api_service.h"
 #include "modules/wifi/wifi_audio_api_service.h"
+#include "modules/wifi/wifi_voice_pack_api_service.h"
 #include "modules/wifi/wifi_display_colors_api_service.h"
 #include "modules/wifi/wifi_settings_api_service.h"
 #include "modules/wifi/wifi_status_api_service.h"
@@ -510,4 +511,14 @@ DebugPerfFilesService::PerfFilesRuntime WiFiManager::makePerfFilesRuntime() {
         // ctx
         nullptr,
     };
+}
+
+WifiVoicePackApiService::Runtime WiFiManager::makeVoicePackRuntime() {
+    WifiVoicePackApiService::Runtime r;
+    r.onPackActivated = [](const char* packName, void* ctx) {
+        (void)ctx;
+        settingsManager.setActiveVoicePack(String(packName));
+    };
+    r.ctx = this;
+    return r;
 }
