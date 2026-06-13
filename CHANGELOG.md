@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [4.1.0] - 2026-06-13
+
 ### Added
 - **Multi-screen navigation** — swipe left/right to cycle through 5 screens; tap center to return to radar from any non-radar screen. Any active radar alert immediately forces the display back to the radar screen.
 - **Screen 2 — JBV1 driving data** — shows speed, posted speed limit, speed delta, heading, satellite count, and GPS accuracy. Data fed via `POST /api/jbv1/update` with JSON payload `{"speed":72,"speedLimit":65,"heading":"NW","gpsAccuracy":3,"satellites":8}`. Data expires after 10 s of no updates.
