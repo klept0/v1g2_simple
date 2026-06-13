@@ -11,6 +11,7 @@
 #include "modules/debug/debug_perf_files_service.h"
 #include "modules/wifi/backup_api_service.h"
 #include "modules/wifi/wifi_audio_api_service.h"
+#include "modules/wifi/wifi_voice_pack_api_service.h"
 #include "modules/wifi/wifi_client_api_service.h"
 #include "modules/wifi/wifi_control_api_service.h"
 #include "modules/wifi/wifi_display_colors_api_service.h"
@@ -308,6 +309,25 @@ bool WiFiManager::setupWebServer() {
     server_.on("/api/audio/settings", HTTP_POST, [this]() {
         WifiAudioApiService::handleApiSave(server_, makeAudioRuntime());
     });
+
+    // Voice pack routes
+    server_.on("/api/audio/voice-packs", HTTP_GET, [this]() {
+        WifiVoicePackApiService::handleApiList(server_, makeVoicePackRuntime());
+    });
+    server_.on("/api/audio/voice-pack/activate", HTTP_POST, [this]() {
+        WifiVoicePackApiService::handleApiActivate(
+            server_, makeVoicePackRuntime(),
+            [](void* ctx) { return static_cast<WiFiManager*>(ctx)->checkRateLimit(); }, this);
+    });
+    server_.on("/api/audio/voice-pack/delete", HTTP_POST, [this]() {
+        WifiVoicePackApiService::handleApiDelete(
+            server_, makeVoicePackRuntime(),
+            [](void* ctx) { return static_cast<WiFiManager*>(ctx)->checkRateLimit(); }, this);
+    });
+    server_.on("/api/audio/voice-pack/upload", HTTP_POST,
+        [this]() { WifiVoicePackApiService::handleApiUploadDone(server_, makeVoicePackRuntime()); },
+        [this]() { WifiVoicePackApiService::handleApiUploadFile(server_); }
+    );
 
     // Settings backup/restore API routes
     server_.on("/api/settings/backup", HTTP_GET, [this]() {

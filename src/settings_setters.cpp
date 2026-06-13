@@ -286,6 +286,17 @@ void SettingsManager::setSpeedMute(bool enabled, uint8_t thresholdMph,
 }
 
 
+void SettingsManager::setActiveVoicePack(const String& packName) {
+    // Pack names: alphanumeric + underscore, max 16 chars; empty = built-in default
+    String sanitized;
+    for (size_t i = 0; i < packName.length() && sanitized.length() < 16; i++) {
+        char c = packName[i];
+        if (isalnum(c) || c == '_') sanitized += c;
+    }
+    settings_.activeVoicePack = sanitized;
+    save();
+}
+
 const AutoPushSlot& SettingsManager::getActiveSlot() const {
     return settings_.autoPushSlotView(settings_.activeSlot).config;
 }

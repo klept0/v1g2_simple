@@ -187,6 +187,21 @@ Voice alert options:
 - **Volume Fade:** Reduce V1 volume after initial alert, restore for new threats
 - **Speed-Based Mute:** Mute V1 alerts below a configurable speed threshold (requires OBD)
 
+#### Voice Packs
+
+The Audio page includes a **Voice Packs** section that lets you upload custom clip sets to replace the built-in TTS announcements.
+
+**Clip format:** µ-law encoded mono audio at 22050 Hz (`.mul`). Generate from a WAV file:
+
+```bash
+# Convert WAV → raw PCM
+ffmpeg -i input.wav -ar 22050 -ac 1 -acodec pcm_mulaw output.mul
+```
+
+Upload clips via **Audio → Voice Packs → Upload Clips**. The pack name must be 1–16 alphanumeric/underscore characters. Clips are named to match the [audio manifest](config/audio_asset_manifest.json) (e.g. `band_ka.mul`, `tens_34.mul`, `dir_ahead.mul`). Any clip not present in the pack falls back to the default voice automatically — partial packs are fully supported.
+
+To regenerate the full built-in clip set from scratch, use `tools/generate_freq_audio.sh` (macOS Samantha voice) or `tools/generate_tts.py` (Google Gemini TTS).
+
 ---
 
 ## Troubleshooting

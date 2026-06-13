@@ -31,6 +31,15 @@
 	let loading = $state(true);
 	let saving = $state(false);
 	let message = $state(null);
+
+	// Voice pack state
+	let packs = $state([]);
+	let activePack = $state('');
+	let packMessage = $state(null);
+	let packLoading = $state(false);
+	let uploadPackName = $state('');
+	let uploadFiles = $state(null);
+	let uploadProgress = $state(null);
 	
 	// Voice mode options for dropdown
 	const voiceModes = [
@@ -41,8 +50,106 @@
 	];
 	
 	onMount(async () => {
-		await fetchSettings();
+		await Promise.all([fetchSettings(), fetchPacks()]);
 	});
+
+	async function fetchPacks() {
+		packLoading = true;
+		try {
+			const res = await fetchWithTimeout('/api/audio/voice-packs');
+			if (res.ok) {
+				const data = await res.json();
+				packs = data.packs ?? [];
+				activePack = data.activePack ?? '';
+			}
+		} catch (e) {
+			// non-fatal — pack list just won't show
+		} finally {
+			packLoading = false;
+		}
+	}
+
+	async function activatePackApi(packName) {
+		packMessage = null;
+		const params = new URLSearchParams({ pack: packName });
+		try {
+			const res = await fetchWithTimeout('/api/audio/voice-pack/activate', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: params
+			});
+			if (res.ok) {
+				activePack = packName;
+				packMessage = { type: 'success', text: `Activated: ${packName || 'Default'}` };
+				await fetchPacks();
+			} else {
+				packMessage = { type: 'error', text: 'Failed to activate pack' };
+			}
+		} catch (e) {
+			packMessage = { type: 'error', text: 'Connection error' };
+		}
+	}
+
+	async function deletePackApi(packName) {
+		if (!confirm(`Delete voice pack "${packName}"? This cannot be undone.`)) return;
+		packMessage = null;
+		const params = new URLSearchParams({ pack: packName });
+		try {
+			const res = await fetchWithTimeout('/api/audio/voice-pack/delete', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: params
+			});
+			if (res.ok) {
+				packMessage = { type: 'success', text: `Deleted pack: ${packName}` };
+				await fetchPacks();
+			} else {
+				packMessage = { type: 'error', text: 'Failed to delete pack' };
+			}
+		} catch (e) {
+			packMessage = { type: 'error', text: 'Connection error' };
+		}
+	}
+
+	async function uploadPackFiles() {
+		if (!uploadFiles || uploadFiles.length === 0) {
+			packMessage = { type: 'error', text: 'Select at least one .mul file' };
+			return;
+		}
+		if (!uploadPackName || !/^[a-zA-Z0-9_]{1,16}$/.test(uploadPackName)) {
+			packMessage = { type: 'error', text: 'Pack name must be 1-16 alphanumeric/underscore characters' };
+			return;
+		}
+		packMessage = null;
+		let done = 0;
+		const total = uploadFiles.length;
+		for (const file of uploadFiles) {
+			uploadProgress = `Uploading ${file.name} (${done + 1}/${total})…`;
+			const form = new FormData();
+			form.append('file', file, file.name);
+			try {
+				const res = await fetch(`/api/audio/voice-pack/upload?pack=${encodeURIComponent(uploadPackName)}`, {
+					method: 'POST',
+					body: form
+				});
+				if (!res.ok) {
+					packMessage = { type: 'error', text: `Upload failed for ${file.name}` };
+					uploadProgress = null;
+					return;
+				}
+			} catch (e) {
+				packMessage = { type: 'error', text: `Connection error uploading ${file.name}` };
+				uploadProgress = null;
+				return;
+			}
+			done++;
+		}
+		uploadProgress = null;
+		uploadFiles = null;
+		packMessage = { type: 'success', text: `Uploaded ${done} clip(s) to pack "${uploadPackName}"` };
+		uploadPackName = '';
+		await fetchPacks();
+	}
 	
 	async function fetchSettings() {
 		loading = true;
@@ -519,9 +626,114 @@
 			</div>
 		</div>
 		
+		<!-- Voice Packs -->
+		<div class="surface-card">
+			<div class="card-body">
+				<CardSectionHead
+					title="Voice Packs"
+					subtitle="Upload custom .mul clip sets to replace the built-in announcements. Missing clips fall back to the default voice."
+				/>
+
+				{#if packMessage}
+					<div class="alert {packMessage.type === 'error' ? 'alert-error' : 'alert-success'} mb-3">
+						<span>{packMessage.text}</span>
+					</div>
+				{/if}
+
+				<!-- Pack list -->
+				{#if packLoading}
+					<div class="flex justify-center py-4">
+						<span class="loading loading-spinner loading-md"></span>
+					</div>
+				{:else}
+					<div class="space-y-2 mb-4">
+						{#each packs as pack}
+							<div class="flex items-center justify-between p-3 rounded-lg border border-base-300">
+								<div>
+									<span class="font-medium">{pack.label || 'Default'}</span>
+									<span class="copy-caption-soft ml-2">{pack.clipCount} clips</span>
+									{#if pack.active}
+										<span class="badge badge-primary badge-sm ml-2">Active</span>
+									{/if}
+								</div>
+								<div class="flex gap-2">
+									{#if !pack.active}
+										<button
+											class="btn btn-sm btn-outline"
+											onclick={() => activatePackApi(pack.name)}
+										>Use</button>
+									{/if}
+									{#if pack.name !== ''}
+										<button
+											class="btn btn-sm btn-error btn-outline"
+											onclick={() => deletePackApi(pack.name)}
+										>Delete</button>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Upload new pack -->
+				<div class="divider text-sm">Upload Clips</div>
+				<div class="space-y-3">
+					<div class="form-control">
+						<label class="label" for="pack-name-input">
+							<span class="label-text font-medium">Pack Name</span>
+						</label>
+						<input
+							id="pack-name-input"
+							type="text"
+							class="input input-bordered w-full"
+							placeholder="e.g. my_voice"
+							maxlength="16"
+							pattern="[a-zA-Z0-9_]+"
+							bind:value={uploadPackName}
+						/>
+						<p class="copy-caption-soft mt-1">Alphanumeric and underscores only, max 16 chars</p>
+					</div>
+					<div class="form-control">
+						<label class="label" for="pack-file-input">
+							<span class="label-text font-medium">Clip Files (.mul)</span>
+						</label>
+						<input
+							id="pack-file-input"
+							type="file"
+							class="file-input file-input-bordered w-full"
+							accept=".mul"
+							multiple
+							onchange={(e) => uploadFiles = Array.from(e.target.files)}
+						/>
+						<p class="copy-caption-soft mt-1">
+							Select one or more .mul files. Generate from WAV with
+							<code>tools/generate_freq_audio.sh</code> then <code>tools/wav_to_header.py</code>.
+							Clip names must match the manifest (e.g. <code>band_ka.mul</code>, <code>tens_34.mul</code>).
+						</p>
+					</div>
+					{#if uploadProgress}
+						<div class="alert alert-info">
+							<span class="loading loading-spinner loading-sm"></span>
+							<span>{uploadProgress}</span>
+						</div>
+					{/if}
+					<button
+						class="btn btn-secondary btn-block"
+						onclick={uploadPackFiles}
+						disabled={!!uploadProgress}
+					>
+						{#if uploadProgress}
+							<span class="loading loading-spinner loading-sm"></span>
+						{/if}
+						Upload to Pack
+					</button>
+				</div>
+			</div>
+		</div>
+
 		<!-- Save Button -->
-		<button 
-			class="btn btn-primary btn-block" 
+		<button
+			class="btn btn-primary btn-block"
 			onclick={saveSettings}
 			disabled={saving}
 		>

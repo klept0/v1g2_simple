@@ -57,6 +57,11 @@ void play_threat_escalation(AlertBand band, uint16_t freqMHz, AlertDirection dir
 // Play band-only announcement (e.g., "Ka", "K", "X", "Laser")
 void play_band_only(AlertBand band);
 
+// Voice pack selection — set active pack name (empty = built-in default).
+// Must be called from the main task before any play_* call.
+void audio_set_voice_pack(const char* packName);
+const char* audio_get_active_pack();
+
 // Initialize SD audio (call after storage manager is ready)
 void audio_init_sd();
 

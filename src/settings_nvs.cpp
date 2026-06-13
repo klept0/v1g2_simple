@@ -388,6 +388,7 @@ bool SettingsManager::writeSettingsToNamespace(const char* ns) {
     written += prefs.putUChar(kNvsSpeedMuteThreshold, settings_.speedMuteThresholdMph);
     written += prefs.putUChar(kNvsSpeedMuteHysteresis, settings_.speedMuteHysteresisMph);
     written += prefs.putUChar(kNvsSpeedMuteVolume, settings_.speedMuteVolume);
+    written += prefs.putString(kNvsVoicePack, settings_.activeVoicePack);
     written += prefs.putBool(kNvsAutoPush, settings_.autoPushEnabled);
     written += prefs.putInt(kNvsActiveSlot, settings_.activeSlot);
     written += prefs.putString(kNvsSlot0Name, settings_.slot0Name);

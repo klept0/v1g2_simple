@@ -29,6 +29,10 @@ namespace WifiAudioApiService {
 struct Runtime;
 }
 
+namespace WifiVoicePackApiService {
+struct Runtime;
+}
+
 namespace WifiSettingsApiService {
 struct Runtime;
 }
@@ -319,6 +323,7 @@ private:
     WifiAutoPushApiService::Runtime makeAutoPushRuntime();
     WifiDisplayColorsApiService::Runtime makeDisplayColorsRuntime();
     WifiAudioApiService::Runtime makeAudioRuntime();
+    WifiVoicePackApiService::Runtime makeVoicePackRuntime();
     WifiStatusApiService::StatusRuntime makeStatusRuntime();
     WifiSettingsApiService::Runtime makeSettingsRuntime();
     WifiClientApiService::Runtime makeWifiClientRuntime();

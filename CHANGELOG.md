@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Voice Packs** — upload custom µ-law (`.mul`) clip sets via the web UI to replace built-in TTS announcements. Missing clips fall back to the default voice automatically so partial packs are fully supported.
+  - New API endpoints: `GET /api/audio/voice-packs`, `POST /api/audio/voice-pack/activate`, `POST /api/audio/voice-pack/delete`, `POST /api/audio/voice-pack/upload`
+  - Pack clips stored in `/audio/<packname>/` on LittleFS; pack selection persisted in NVS (`voicePack` key)
+  - Audio page gains a Voice Packs section: list installed packs, activate/delete, and upload new clip files
+
 ### Changed
 - Bumped `softprops/action-gh-release` from `v1` to `v2` in the release workflow to resolve the Node.js 20 deprecation warning (GitHub retires Node.js 20 runners on 2026-09-16).
 - Web installer link in README updated to the GitHub Pages URL (`https://klept0.github.io/v1g2_simple/install/`); removed stale `ajmdroid` account references.

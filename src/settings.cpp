@@ -271,6 +271,8 @@ void SettingsManager::load() {
         settings_.speedMuteVolume = (raw <= 9 || raw == 0xFF) ? raw : 0xFF;
     }
 
+    settings_.activeVoicePack = preferences_.getString(kNvsVoicePack, "");
+
     settings_.autoPushEnabled = preferences_.getBool(kNvsAutoPush, true);  // Default to enabled for profiles to work
     settings_.activeSlot = preferences_.getInt(kNvsActiveSlot, 0);
     if (settings_.activeSlot < 0 || settings_.activeSlot > 2) {
