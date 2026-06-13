@@ -16,6 +16,34 @@ class V1ProfileManager;
 
 class BleQueueModule {
 public:
+    BleQueueModule() = default;
+
+    // std::atomic members delete the implicit move-assignment; provide one explicitly
+    // so tests can reset the object with `module = BleQueueModule{}`.
+    BleQueueModule& operator=(BleQueueModule&& o) noexcept {
+        if (this != &o) {
+            ble_      = o.ble_;      o.ble_      = nullptr;
+            parser_   = o.parser_;  o.parser_   = nullptr;
+            profiles_ = o.profiles_; o.profiles_ = nullptr;
+            preview_  = o.preview_; o.preview_  = nullptr;
+            power_    = o.power_;   o.power_    = nullptr;
+            bus_      = o.bus_;     o.bus_      = nullptr;
+            queueHandle_ = o.queueHandle_; o.queueHandle_ = nullptr;
+            rxBuffer_  = std::move(o.rxBuffer_);
+            rxReadPos_ = o.rxReadPos_;
+            lastRxMillis_ = o.lastRxMillis_;
+            lastNotifyTsMs_ = o.lastNotifyTsMs_;
+            lastParsedTsMs_.store(o.lastParsedTsMs_.load(std::memory_order_relaxed),
+                                  std::memory_order_relaxed);
+            hadSuccessfulParse_.store(o.hadSuccessfulParse_.load(std::memory_order_relaxed),
+                                      std::memory_order_relaxed);
+            parsedEventSeq_    = o.parsedEventSeq_;
+            backpressureActive_ = o.backpressureActive_;
+            config_ = o.config_;
+        }
+        return *this;
+    }
+
     struct Config {
         size_t queueDepth;
         size_t rxBufferCap;
