@@ -1,7 +1,9 @@
 #include "tap_gesture_module.h"
 #include "../quiet/quiet_coordinator_module.h"
 #include "../perf/debug_macros.h"
+#ifndef UNIT_TEST
 #include "main_globals.h"
+#endif
 
 #ifndef UNIT_TEST
 #include "modules/auto_push/auto_push_module.h"
