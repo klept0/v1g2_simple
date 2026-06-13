@@ -52,7 +52,7 @@ Current train (`v4.0.1`) highlights:
 
 No development tools needed — just a Chrome browser and USB cable:
 
-👉 **[Install via Hosted Web](https://esphome.github.io/esp-web-tools/?manifest=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fajmdroid%2Fv1g2_simple%40gh-pages%2Finstall%2Fmanifest.json)**
+👉 **[Install via Hosted Web](https://klept0.github.io/v1g2_simple/install/)**
 
 Use the hosted installer during the 4.0.1 hotfix rollout. It bypasses the custom-domain HTTPS path and loads the published V1-Simple manifest directly.
 
@@ -64,7 +64,7 @@ Use the hosted installer during the 4.0.1 hotfix rollout. It bypasses the custom
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/ajmdroid/v1g2_simple
+git clone https://github.com/klept0/v1g2_simple
 cd v1g2_simple
 
 # 2. Build and flash everything (recommended)
@@ -123,7 +123,7 @@ Complete Windows-specific walkthrough for building and flashing.
 **2. Clone and build:**
 
 ```bash
-git clone https://github.com/ajmdroid/v1g2_simple
+git clone https://github.com/klept0/v1g2_simple
 cd v1g2_simple
 code .
 ```

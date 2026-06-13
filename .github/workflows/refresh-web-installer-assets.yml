@@ -124,7 +124,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./.artifacts/web-installer
-          cname: v1simple.com
 
       - name: Summary
         run: |

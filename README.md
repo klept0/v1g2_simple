@@ -338,6 +338,8 @@ Observability/testing authority lives in `docs/OBSERVABILITY.md`. Each topic has
 
 ## Credits
 
+Originally forked from [ajmdroid/v1g2_simple](https://github.com/ajmdroid/v1g2_simple) — the first public version of this project.
+
 Built on [Kenny Garreau's V1G2-T4S3](https://github.com/kennygarreau/v1g2-t4s3) - go star his repo!
 
 **MIT License** - Use at your own risk. No warranty.

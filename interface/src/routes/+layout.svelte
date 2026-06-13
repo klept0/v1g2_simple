@@ -184,7 +184,7 @@
 			<div class="flex flex-wrap items-center justify-center gap-2">
 				<BrandMark compact />
 				<span class="copy-muted">•</span>
-				<a href="https://github.com/ajmdroid/v1g2_simple" class="link link-primary">GitHub</a>
+				<a href="https://github.com/klept0/v1g2_simple" class="link link-primary">GitHub</a>
 			</div>
 		</aside>
 	</footer>
