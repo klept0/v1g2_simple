@@ -595,7 +595,25 @@ bool ObdRuntimeModule::shouldDisconnectAfterPollingError(ObdFailureReason reason
     }
 }
 
+static bool isWellFormedBleAddress(const char* addr) {
+    if (!addr || addr[0] == '\0') return true;  // empty = no device, valid
+    if (strlen(addr) != 17) return false;
+    for (int i = 0; i < 17; ++i) {
+        if ((i + 1) % 3 == 0) {
+            if (addr[i] != ':') return false;
+        } else {
+            if (!isxdigit(static_cast<unsigned char>(addr[i]))) return false;
+        }
+    }
+    return true;
+}
+
 void ObdRuntimeModule::setSavedAddressFromBuffer(const char* address) {
+    if (!isWellFormedBleAddress(address)) {
+        Serial.printf("[OBD] WARN: Ignoring malformed saved address '%s'\n", address ? address : "(null)");
+        savedAddress_[0] = '\0';
+        return;
+    }
     copyString(savedAddress_, sizeof(savedAddress_), address);
 }
 
