@@ -128,10 +128,11 @@
 			const form = new FormData();
 			form.append('file', file, file.name);
 			try {
-				const res = await fetch(`/api/audio/voice-pack/upload?pack=${encodeURIComponent(uploadPackName)}`, {
-					method: 'POST',
-					body: form
-				});
+				const res = await fetchWithTimeout(
+					`/api/audio/voice-pack/upload?pack=${encodeURIComponent(uploadPackName)}`,
+					{ method: 'POST', body: form },
+					30000  // 30s per clip — larger than normal requests
+				);
 				if (!res.ok) {
 					packMessage = { type: 'error', text: `Upload failed for ${file.name}` };
 					uploadProgress = null;
