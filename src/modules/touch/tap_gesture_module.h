@@ -45,11 +45,7 @@ private:
     static constexpr unsigned long TAP_WINDOW_MS = 600;
     static constexpr unsigned long TAP_DEBOUNCE_MS = 150;
 
-    // Swipe tracking
-    int16_t swipeTouchStartX_   = 0;
-    int16_t swipeCurrentX_      = 0;
-    bool    swipeTracking_      = false;
-    unsigned long swipeTouchStartMs_ = 0;
-    static constexpr int SWIPE_THRESHOLD_PX = 40;
-    static constexpr unsigned long SWIPE_MAX_DURATION_MS = 800;
+    // Zone-based screen navigation: left/right 25% of 640px display
+    static constexpr int16_t NAV_LEFT_ZONE_PX  = 160;  // x < 160 → previous screen
+    static constexpr int16_t NAV_RIGHT_ZONE_PX = 480;  // x > 480 → next screen
 };
