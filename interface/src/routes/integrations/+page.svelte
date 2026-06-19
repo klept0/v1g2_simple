@@ -32,6 +32,11 @@
 
 			<div class="divider my-1">Tasker Setup</div>
 
+			<div class="alert alert-info text-sm py-2">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+				<span>Want to skip the manual steps? <a href="https://github.com/klept0/v1g2_simple/raw/main/docs/v1simple_jbv1_tasker.prf.xml" class="link font-semibold" target="_blank">Download the Tasker profile</a> and import it via <strong>Tasker → ⋮ → Data → Restore</strong>. Change the SSID inside the file if your network name differs from <code>v1simple</code>.</span>
+			</div>
+
 			<p class="copy-caption font-semibold">Step 1 — Create a Profile (auto-start on v1simple Wi-Fi)</p>
 			<ol class="list-decimal list-inside copy-body space-y-1 ml-2">
 				<li>Tap <strong>+</strong> → <strong>State</strong> → <strong>Net</strong> → <strong>Wi-Fi Connected</strong></li>
