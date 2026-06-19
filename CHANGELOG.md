@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.1] - 2026-06-19
+
+### Fixed
+- **Touch navigation**: Replaced broken swipe detection with zone-based tap navigation. The AXS15231B touch IC fires only a single rising-edge event per tap (`getTouchPoint()` returns `true` once, then `false` while held), so swipe position accumulation never worked. Navigation is now: tap left 25% of screen (x < 160) = previous screen, tap right 25% (x > 480) = next screen, center tap on non-radar = back to radar, center triple-tap on radar = profile cycle.
+- **Profile cycling**: Triple-tap on the radar screen (center zone, no active alert, within 600 ms) now reliably cycles profiles.
+- **Web UI hamburger menu**: DaisyUI v4 dropdown requires `tabindex="0"` on both the trigger `<button>` and the `<ul>`; without it the `:focus-within` rule never fires on touch devices.
+
+### Added
+- **JBV1 setup instructions** on the Integrations page: Wi-Fi connection requirement, endpoint URL (`http://192.168.4.1/api/jbv1/update`), recommended push interval, full JSON API reference.
+
+
+---
+
 ## [4.1.0] - 2026-06-13
 
 ### Added
