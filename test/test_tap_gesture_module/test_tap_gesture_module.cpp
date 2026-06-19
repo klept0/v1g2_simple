@@ -57,6 +57,10 @@ DisplayMode displayMode = DisplayMode::LIVE;
 QuietCoordinatorModule quiet;
 TapGestureModule module;
 
+// Center X (320) — within 160..480 center zone, not triggering zone nav
+static constexpr int16_t CENTER_X = 320;
+static constexpr int16_t CENTER_Y = 86;
+
 AlertData makeAlert() {
     return AlertData::create(BAND_KA, DIR_FRONT, 4, 0, 34520, true, true);
 }
@@ -85,6 +89,7 @@ void setUp() {
     autoPush.reset();
     alertPersistence.reset();
     displayMode = DisplayMode::LIVE;
+    screenManager = ScreenManager{};  // reset to RADAR between tests
 
     module = TapGestureModule{};
     quiet.begin(&bleClient, &parser);
@@ -102,17 +107,16 @@ void setUp() {
 
 void tearDown() {}
 
-// Swipe detection requires a touch-up event to classify a gesture as a tap.
-// Each tap is: queueTouch (down) + queueNoTouch (up) across two process() calls.
+// getTouchPoint() returns true only once per physical tap (rising edge from AXS15231B).
+// Each test call to processAt() with a queued touch is one tap event.
 
 void test_alert_tap_toggles_mute_immediately() {
     parser.setAlerts({makeAlert()});
     parser.state.muted = false;
-    touch.queueTouch(40, 20);
-    touch.queueNoTouch();
+    // Alert active: any x position mutes (alert check runs before zone check)
+    touch.queueTouch(CENTER_X, CENTER_Y);
 
-    processAt(200);  // touch down — starts swipe tracking
-    processAt(201);  // touch up  — no swipe (dx=0), fires as tap → mute toggle
+    processAt(200);
 
     TEST_ASSERT_EQUAL(1, bleClient.setMuteCalls);
     TEST_ASSERT_TRUE(bleClient.lastMuteValue);
@@ -124,27 +128,19 @@ void test_idle_triple_tap_cycles_slot_and_pushes_when_connected() {
     ::settingsManager.settings.autoPushEnabled = true;
     bleClient.setConnected(true);
 
-    // Tap 1: down at 200, up at 201
-    touch.queueTouch(10, 10);
-    touch.queueNoTouch();
+    // Three center-zone taps within TAP_WINDOW_MS (600ms) — each 200ms apart
+    touch.queueTouch(CENTER_X, CENTER_Y);
     processAt(200);
-    processAt(201);
     TEST_ASSERT_EQUAL(0, display.drawProfileIndicatorCalls);
     TEST_ASSERT_EQUAL(0, autoPush.queueSlotPushCalls);
 
-    // Tap 2: down at 400, up at 401
-    touch.queueTouch(10, 10);
-    touch.queueNoTouch();
+    touch.queueTouch(CENTER_X, CENTER_Y);
     processAt(400);
-    processAt(401);
     TEST_ASSERT_EQUAL(0, display.drawProfileIndicatorCalls);
     TEST_ASSERT_EQUAL(0, autoPush.queueSlotPushCalls);
 
-    // Tap 3: down at 600, up at 601 — triggers profile cycle
-    touch.queueTouch(10, 10);
-    touch.queueNoTouch();
+    touch.queueTouch(CENTER_X, CENTER_Y);
     processAt(600);
-    processAt(601);
 
     TEST_ASSERT_EQUAL(1, ::settingsManager.settings.activeSlot);
     TEST_ASSERT_EQUAL(DisplayMode::IDLE, displayMode);
@@ -156,21 +152,16 @@ void test_idle_triple_tap_cycles_slot_and_pushes_when_connected() {
 }
 
 void test_idle_profile_cycle_resets_after_tap_window_expires() {
-    // Tap 1 at 200, tap 2 at 400, tap 3 released at 1201 (outside 1000ms window from tap 1)
-    touch.queueTouch(10, 10);
-    touch.queueNoTouch();
+    // Tap 1 at 200ms, tap 2 at 400ms — within window
+    // Tap 3 at 1201ms — 801ms after tap 2, exceeds TAP_WINDOW_MS (600ms), resets count
+    touch.queueTouch(CENTER_X, CENTER_Y);
     processAt(200);
-    processAt(201);
 
-    touch.queueTouch(10, 10);
-    touch.queueNoTouch();
+    touch.queueTouch(CENTER_X, CENTER_Y);
     processAt(400);
-    processAt(401);
 
-    touch.queueTouch(10, 10);
-    touch.queueNoTouch();
+    touch.queueTouch(CENTER_X, CENTER_Y);
     processAt(1201);
-    processAt(1202);
 
     TEST_ASSERT_EQUAL(0, display.drawProfileIndicatorCalls);
     TEST_ASSERT_EQUAL(0, autoPush.queueSlotPushCalls);

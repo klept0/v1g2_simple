@@ -106,7 +106,17 @@ Change the default password from the Settings page before putting the device on 
 
 ### Screens
 
-The 640×172 display supports 5 swipeable screens. Swipe left to advance, swipe right to go back. Tap anywhere on a non-radar screen (when no alert is active) to return to radar. Any radar alert immediately forces the display back to Screen 1.
+The 640×172 display supports 5 screens with zone-based tap navigation:
+
+| Touch zone | Action |
+|------------|--------|
+| Left 25% of screen (x < 160) | Previous screen |
+| Right 25% of screen (x > 480) | Next screen |
+| Center (no active alert, non-radar screen) | Return to radar |
+| Center × 3 taps within 600ms (radar screen, no alert) | Cycle profile |
+| Any tap while alert is active | Mute/unmute |
+
+Any active radar alert immediately forces the display back to Screen 1.
 
 | # | Screen | Description |
 |---|--------|-------------|

@@ -137,12 +137,12 @@
 	<nav class="navbar surface-chrome border-b" aria-label="Main navigation">
 		<div class="navbar-start">
 			<div class="dropdown">
-			<button type="button" aria-label="Open navigation menu" aria-expanded="false" class="btn btn-ghost lg:hidden">
+			<button tabindex="0" type="button" aria-label="Open navigation menu" class="btn btn-ghost lg:hidden">
 				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
 				</svg>
 			</button>
-			<ul class="menu menu-sm dropdown-content mt-3 z-[1] w-52 surface-menu" role="menu">
+			<ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] w-52 surface-menu" role="menu">
 					{#each navLinks as link}
 						<li><a href={link.href} class="nav-link" class:active={isActivePath(link.href)}>{link.label}</a></li>
 					{/each}
