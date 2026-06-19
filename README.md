@@ -121,17 +121,18 @@ Any active radar alert immediately forces the display back to Screen 1.
 | # | Screen | Description |
 |---|--------|-------------|
 | 1 | **Radar** | Standard V1 alert display (frequency, band, signal bars, direction arrow) — existing rendering unchanged |
-| 2 | **JBV1** | Driving data: speed, posted speed limit, delta, heading, satellite count, GPS accuracy. Updated via `POST /api/jbv1/update` |
+| 2 | **JBV1** | Driving data: speed, heading, GPS accuracy. Fed via Tasker on Android — see Integrations page in the web UI for setup |
 | 3 | **History** | Last 10 radar encounters with band, frequency, and time elapsed since the alert cleared |
 | 4 | **Diagnostics** | BLE connection status, RSSI, packet rate, last packet age, and firmware version |
 | 5 | **Clock** | Large 12-hour AM/PM clock with day and date, derived from web UI time push |
 
-**JBV1 data endpoint:**
+**JBV1 data endpoint** (fed by a Tasker task on Android — full setup on the Integrations page):
 ```bash
-curl -X POST http://192.168.35.5/api/jbv1/update \
+curl -X POST http://192.168.4.1/api/jbv1/update \
   -H "Content-Type: application/json" \
-  -d '{"speed":72,"speedLimit":65,"heading":"NW","gpsAccuracy":3,"satellites":8}'
+  -d '{"speed":72,"heading":"287","gpsAccuracy":3,"satellites":8}'
 ```
+> Speed limit is not available from JBV1 via Tasker; the delta field will remain blank.
 
 ### Voice alerts
 

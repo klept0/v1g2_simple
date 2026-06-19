@@ -16,43 +16,83 @@
 	<!-- JBV1 Integration -->
 	<div class="card surface-card">
 		<div class="card-body gap-4">
-			<h2 class="card-title">JBV1 (GPS / Speed Display)</h2>
+			<h2 class="card-title">JBV1 — GPS &amp; Speed Display</h2>
 			<p class="copy-body">
-				JBV1 is a companion app that streams speed, posted speed limit, GPS heading, satellite count,
-				and GPS accuracy to v1simple over Wi-Fi. This data is displayed on the <strong>JBV1 screen</strong>
-				(swipe right from the radar screen).
+				The JBV1 screen on v1simple shows speed, GPS accuracy, and heading pulled live from your
+				Android phone via <strong>Tasker</strong>. Data is pushed over Wi-Fi every 2 seconds and
+				expires after 10 s of no updates.
 			</p>
 
 			<div class="divider my-1">Requirements</div>
 			<ul class="list-disc list-inside copy-body space-y-1">
-				<li>Your phone must be connected to the <strong>v1simple Wi-Fi hotspot</strong>.</li>
-				<li>JBV1 app must be configured to push data to the v1simple REST endpoint.</li>
-				<li>Data expires after <strong>10 seconds</strong> of no updates — the JBV1 screen will show "NO JBV1 DATA" until updates resume.</li>
+				<li>Android phone with <strong>Tasker</strong> installed.</li>
+				<li>Phone connected to the <strong>v1simple Wi-Fi hotspot</strong> (check SSID/password on the <a href="/settings" class="link link-primary">Settings</a> page).</li>
+				<li>Android location permission granted to Tasker.</li>
 			</ul>
 
-			<div class="divider my-1">Setup</div>
-			<ol class="list-decimal list-inside copy-body space-y-2">
-				<li>Connect your phone to the v1simple Wi-Fi network (SSID and password are shown on the <a href="/settings" class="link link-primary">Settings</a> page).</li>
-				<li>In the JBV1 app, enable the <strong>REST push</strong> or <strong>HTTP export</strong> feature and set the endpoint URL to:
-					<pre class="bg-base-200 rounded p-2 mt-1 text-sm overflow-x-auto">http://192.168.4.1/api/jbv1/update</pre>
-				</li>
-				<li>Set the push interval to <strong>1–2 seconds</strong> for smooth updates.</li>
-				<li>Navigate to the JBV1 screen on the display — tap the <strong>right zone</strong> (right quarter of the screen) to advance screens.</li>
+			<div class="divider my-1">Tasker Setup</div>
+
+			<p class="copy-caption font-semibold">Step 1 — Create a Profile (auto-start on v1simple Wi-Fi)</p>
+			<ol class="list-decimal list-inside copy-body space-y-1 ml-2">
+				<li>Tap <strong>+</strong> → <strong>State</strong> → <strong>Net</strong> → <strong>Wi-Fi Connected</strong></li>
+				<li>Set <strong>SSID</strong> to your v1simple network name</li>
+				<li>Back arrow → <strong>New Task</strong> → name it <code>v1simple GPS Push</code></li>
 			</ol>
 
+			<p class="copy-caption font-semibold mt-2">Step 2 — Build the task (add actions in order)</p>
+			<div class="overflow-x-auto">
+				<table class="table table-sm text-sm">
+					<thead><tr><th>#</th><th>Action</th><th>Settings</th></tr></thead>
+					<tbody>
+						<tr><td>1</td><td>Variable Set</td><td><code>%LOCSPEED_MPH</code> = <code>%LOCSPEED * 2.23694</code> &nbsp;☑ Do Maths</td></tr>
+						<tr><td>2</td><td>Variable Set</td><td><code>%LOCACC_M</code> = <code>%LOCACC</code></td></tr>
+						<tr><td>3</td><td>Net → HTTP Request</td><td>See below</td></tr>
+						<tr><td>4</td><td>Task → Wait</td><td>2 seconds</td></tr>
+						<tr><td>5</td><td>Task → Go To</td><td>Action #1 (loops indefinitely)</td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<p class="copy-caption font-semibold mt-2">Step 3 — HTTP Request action config</p>
+			<ul class="list-disc list-inside copy-body space-y-1 ml-2">
+				<li><strong>Method:</strong> POST</li>
+				<li><strong>URL:</strong> <code>http://192.168.4.1/api/jbv1/update</code></li>
+				<li><strong>Content Type:</strong> <code>application/json</code></li>
+				<li><strong>Body:</strong></li>
+			</ul>
+			<pre class="bg-base-200 rounded p-2 text-sm overflow-x-auto ml-2">{`{"speed":%LOCSPEED_MPH,"heading":"%LOCBEAR","gpsAccuracy":%LOCACC_M,"satellites":0}`}</pre>
+
+			<p class="copy-caption font-semibold mt-2">Step 4 — Exit Task (clean up on disconnect)</p>
+			<ol class="list-decimal list-inside copy-body space-y-1 ml-2">
+				<li>Tap the profile → <strong>Exit Task</strong> → <strong>New Task</strong></li>
+				<li>Add: <strong>Task → Stop</strong> → check <em>All tasks named</em> → <code>v1simple GPS Push</code></li>
+			</ol>
+
+			<div class="divider my-1">What you get</div>
+			<ul class="list-disc list-inside copy-body space-y-1">
+				<li><strong>Speed</strong> — converted from Android GPS (m/s → MPH)</li>
+				<li><strong>Heading</strong> — GPS bearing in degrees (<code>%LOCBEAR</code>); displayed as-is</li>
+				<li><strong>GPS Accuracy</strong> — horizontal accuracy in metres</li>
+			</ul>
+			<p class="copy-caption">
+				<strong>Speed limit</strong> is not available — JBV1 knows it internally but does not share it with Tasker or any external app.
+				The delta field on the JBV1 screen will remain blank until a speed limit source is available.
+				Satellite count requires the <strong>AutoLocation</strong> Tasker plugin; without it the field shows 0.
+			</p>
+
 			<div class="divider my-1">API Reference</div>
-			<p class="copy-caption">The endpoint accepts a JSON POST body:</p>
+			<p class="copy-caption">The endpoint accepts a JSON POST. All fields are optional — only present fields are updated.</p>
 			<pre class="bg-base-200 rounded p-2 text-sm overflow-x-auto">{`POST /api/jbv1/update
 Content-Type: application/json
 
 {
-  "speed": 72,
-  "speedLimit": 65,
-  "heading": "NW",
-  "gpsAccuracy": 3,
-  "satellites": 8
+  "speed": 72,        // integer MPH
+  "speedLimit": 65,   // integer MPH (optional — omit if unknown)
+  "heading": "NW",    // string or bearing degrees
+  "gpsAccuracy": 3,   // integer metres
+  "satellites": 8     // integer
 }`}</pre>
-			<p class="copy-caption">All fields are optional — only present fields are updated. Returns <code>{`{"ok":true}`}</code> on success.</p>
+			<p class="copy-caption">Returns <code>{`{"ok":true}`}</code> on success. Data expires after <strong>10 seconds</strong> of no updates.</p>
 		</div>
 	</div>
 </div>
