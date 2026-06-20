@@ -436,6 +436,15 @@ bool SettingsManager::writeSettingsToNamespace(const char* ns) {
     written += prefs.putBool(kNvsLockoutEnabled, settings_.lockoutEnabled);
     written += prefs.putUChar(kNvsLockoutMph, settings_.lockoutThresholdMph);
 
+    // Smart brightness engine
+    written += prefs.putBool(kNvsBrightEngEn,    settings_.brightEngEnabled);
+    written += prefs.putUChar(kNvsBrtDay,         settings_.brtDay);
+    written += prefs.putUChar(kNvsBrtNight,       settings_.brtNight);
+    written += prefs.putUChar(kNvsBrtIdle,        settings_.brtIdle);
+    written += prefs.putUChar(kNvsBrtAlert,       settings_.brtAlert);
+    written += prefs.putUChar(kNvsBrtMute,        settings_.brtMute);
+    written += prefs.putUShort(kNvsBrtIdleSec,    settings_.brtIdleSec);
+
     // Driving modes
     written += prefs.putUChar(kNvsDrivingMode, static_cast<uint8_t>(settings_.activeDrivingMode));
     static const char* dmBrightKeys[] = { kNvsDm0Bright, kNvsDm1Bright, kNvsDm2Bright, kNvsDm3Bright };

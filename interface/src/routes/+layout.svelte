@@ -34,6 +34,7 @@
 		{ href: '/colors', label: 'Colors' },
 		{ href: '/audio', label: 'Audio' },
 		{ href: '/modes', label: 'Driving Modes' },
+		{ href: '/brightness', label: 'Brightness' },
 		{ href: '/history', label: 'History' },
 		{ href: '/integrations', label: 'Integrations' },
 		{ href: '/settings', label: 'Settings' }

@@ -178,6 +178,15 @@ inline constexpr const char* kNvsDm3PrioArrow = "dm3prio";
 inline constexpr const char* kNvsLockoutEnabled = "lockoutEn";
 inline constexpr const char* kNvsLockoutMph     = "lockoutMph";
 
+// ── Smart brightness engine ───────────────────────────────────────────────
+inline constexpr const char* kNvsBrightEngEn    = "brightEng";
+inline constexpr const char* kNvsBrtDay         = "brtDay";
+inline constexpr const char* kNvsBrtNight       = "brtNight";
+inline constexpr const char* kNvsBrtIdle        = "brtIdle";
+inline constexpr const char* kNvsBrtAlert       = "brtAlert";
+inline constexpr const char* kNvsBrtMute        = "brtMute";
+inline constexpr const char* kNvsBrtIdleSec     = "brtIdleSec";
+
 // ── Separate namespaces ───────────────────────────────────────────────────
 // Namespace: v1wifi_secret (WIFI_CLIENT_NS)
 inline constexpr const char* kNvsWifiPassword = "password";

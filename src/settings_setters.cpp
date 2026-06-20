@@ -684,3 +684,10 @@ void SettingsManager::setLockoutThresholdMph(uint8_t mph) {
     settings_.lockoutThresholdMph = std::min<uint8_t>(mph, 50);
     save();
 }
+void SettingsManager::setBrightEngEnabled(bool en)  { settings_.brightEngEnabled = en;                            save(); }
+void SettingsManager::setBrtDay(uint8_t v)          { settings_.brtDay   = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtNight(uint8_t v)        { settings_.brtNight = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtIdle(uint8_t v)         { settings_.brtIdle  = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtAlert(uint8_t v)        { settings_.brtAlert = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtMute(uint8_t v)         { settings_.brtMute  = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtIdleSec(uint16_t sec)   { settings_.brtIdleSec = sec > 3600 ? 3600 : sec;            save(); }

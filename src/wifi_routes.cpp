@@ -28,6 +28,7 @@
 #include "modules/wifi/wifi_drive_mode_api_service.h"
 #include "modules/wifi/wifi_history_api_service.h"
 #include "modules/wifi/wifi_lockout_api_service.h"
+#include "modules/wifi/wifi_brightness_api_service.h"
 #include "modules/safety/driving_safety_lockout.h"
 #include "modules/obd/obd_runtime_module.h"
 #include "battery_manager.h"
@@ -317,6 +318,15 @@ bool WiFiManager::setupWebServer() {
     });
     server_.on("/api/drive/lockout", HTTP_POST, [this]() {
         WifiLockoutApiService::handleApiSave(server_, makeLockoutRuntime());
+    });
+
+    // Smart brightness engine routes
+    server_.on("/api/display/brightness", HTTP_GET, [this]() {
+        WifiBrightnessApiService::handleApiGet(server_, makeBrightnessRuntime());
+    });
+    server_.on("/api/display/brightness", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
+        WifiBrightnessApiService::handleApiSave(server_, makeBrightnessRuntime());
     });
 
     // Encounter history routes

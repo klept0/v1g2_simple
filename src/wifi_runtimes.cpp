@@ -28,6 +28,8 @@
 #include "modules/wifi/wifi_history_api_service.h"
 #include "modules/history/encounter_history.h"
 #include "modules/wifi/wifi_lockout_api_service.h"
+#include "modules/wifi/wifi_brightness_api_service.h"
+#include "modules/brightness/smart_brightness_engine.h"
 #include "modules/safety/driving_safety_lockout.h"
 #include "backup_payload_builder.h"
 #include "storage_manager.h"
@@ -555,6 +557,21 @@ WifiHistoryApiService::Runtime WiFiManager::makeHistoryRuntime() {
     r.ctx = this;
     r.getHistory = [](void* /*ctx*/) -> EncounterHistory* {
         return &encounterHistory;
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
+    return r;
+}
+
+WifiBrightnessApiService::Runtime WiFiManager::makeBrightnessRuntime() {
+    WifiBrightnessApiService::Runtime r;
+    r.ctx = this;
+    r.getSettings = [](void* /*ctx*/) -> SettingsManager* {
+        return &settingsManager;
+    };
+    r.getEngine = [](void* /*ctx*/) -> SmartBrightnessEngine* {
+        return &smartBrightnessEngine;
     };
     r.checkRateLimit = [](void* ctx) {
         return static_cast<WiFiManager*>(ctx)->checkRateLimit();

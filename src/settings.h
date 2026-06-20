@@ -277,6 +277,15 @@ struct V1Settings {
     bool    lockoutEnabled;         // Block config changes above speed threshold
     uint8_t lockoutThresholdMph;    // Speed threshold (mph) — default 5
 
+    // Smart Brightness Engine
+    bool    brightEngEnabled;       // Master enable for smart brightness logic
+    uint8_t brtDay;                 // Base brightness for day/normal use
+    uint8_t brtNight;               // Base brightness for night use
+    uint8_t brtIdle;                // Brightness after idle dim timeout
+    uint8_t brtAlert;               // Brightness boost during active alert
+    uint8_t brtMute;                // Brightness during muted alert
+    uint16_t brtIdleSec;            // Idle dim timeout (seconds); 0 = disabled
+
     // Default constructor with sensible defaults
     V1Settings() :
         enableWifi(true),
@@ -388,7 +397,14 @@ struct V1Settings {
             defaultDrivingModeConfig(DrivingMode::Night),
         },
         lockoutEnabled(true),
-        lockoutThresholdMph(5) {}
+        lockoutThresholdMph(5),
+        brightEngEnabled(true),
+        brtDay(200),
+        brtNight(80),
+        brtIdle(50),
+        brtAlert(255),
+        brtMute(120),
+        brtIdleSec(30) {}
 
     static uint8_t normalizeAutoPushSlotIndex(int slotNum) {
         return slotNum == 1 ? 1 : (slotNum == 2 ? 2 : 0);
@@ -815,6 +831,22 @@ public:
     uint8_t getLockoutThresholdMph() const { return settings_.lockoutThresholdMph; }
     void    setLockoutEnabled(bool enabled);
     void    setLockoutThresholdMph(uint8_t mph);
+
+    // Smart brightness engine
+    bool     isBrightEngEnabled() const  { return settings_.brightEngEnabled; }
+    uint8_t  getBrtDay() const           { return settings_.brtDay; }
+    uint8_t  getBrtNight() const         { return settings_.brtNight; }
+    uint8_t  getBrtIdle() const          { return settings_.brtIdle; }
+    uint8_t  getBrtAlert() const         { return settings_.brtAlert; }
+    uint8_t  getBrtMute() const          { return settings_.brtMute; }
+    uint16_t getBrtIdleSec() const       { return settings_.brtIdleSec; }
+    void setBrightEngEnabled(bool en);
+    void setBrtDay(uint8_t v);
+    void setBrtNight(uint8_t v);
+    void setBrtIdle(uint8_t v);
+    void setBrtAlert(uint8_t v);
+    void setBrtMute(uint8_t v);
+    void setBrtIdleSec(uint16_t sec);
 
     // Save all settings to flash
     void save();

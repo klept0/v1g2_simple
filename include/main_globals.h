@@ -47,6 +47,7 @@ class SpeedSourceSelector;
 class DashboardModule;
 class EncounterHistory;
 class DrivingSafetyLockout;
+class SmartBrightnessEngine;
 
 #ifndef UNIT_TEST
 class DisplayPipelineModule;
@@ -94,6 +95,7 @@ extern SpeedSourceSelector speedSourceSelector;
 extern DashboardModule dashboardModule;
 extern EncounterHistory encounterHistory;
 extern DrivingSafetyLockout drivingSafetyLockout;
+extern SmartBrightnessEngine smartBrightnessEngine;
 
 #ifndef UNIT_TEST
 extern DisplayPipelineModule displayPipelineModule;

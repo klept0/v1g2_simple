@@ -329,6 +329,18 @@ void SettingsManager::load() {
     settings_.lockoutEnabled      = preferences_.getBool(kNvsLockoutEnabled, true);
     settings_.lockoutThresholdMph = clampU8(preferences_.getUChar(kNvsLockoutMph, 5), 0, 50);
 
+    // Smart brightness engine
+    settings_.brightEngEnabled = preferences_.getBool(kNvsBrightEngEn, true);
+    settings_.brtDay           = clampU8(preferences_.getUChar(kNvsBrtDay,   200), 10, 255);
+    settings_.brtNight         = clampU8(preferences_.getUChar(kNvsBrtNight,  80), 10, 255);
+    settings_.brtIdle          = clampU8(preferences_.getUChar(kNvsBrtIdle,   50), 10, 255);
+    settings_.brtAlert         = clampU8(preferences_.getUChar(kNvsBrtAlert, 255), 10, 255);
+    settings_.brtMute          = clampU8(preferences_.getUChar(kNvsBrtMute,  120), 10, 255);
+    {
+        uint16_t s = preferences_.getUShort(kNvsBrtIdleSec, 30);
+        settings_.brtIdleSec = s > 3600 ? 3600 : s;
+    }
+
     // Driving modes
     settings_.activeDrivingMode = static_cast<DrivingMode>(
         clampU8(preferences_.getUChar(kNvsDrivingMode, 0), 0, kDrivingModeCount - 1));
