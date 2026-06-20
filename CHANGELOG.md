@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.2.1] - 2026-06-20
+
+### Fixed
+- **LASER text truncated on OFR fonts** — uppercase `R` was missing from the PROGMEM font subsets (JetBrains Mono, Roboto, Atkinson Hyperlegible), causing "LASER" to render as "LASE". Added `R` to `DISPLAY_CHARS` in `tools/create_font_headers.py` and regenerated all three font headers.
+- **Toggle page touch zones swapped** — on the AXS15231B with `rotation=1`, touch X is mirrored relative to display X. The WiFi AP and Mute=0 buttons responded to each other's taps. Remapped zones: `touchX < 213` → Mute=0 (right), `213–426` → BLE Proxy (center), `≥ 427` → WiFi AP (left).
+- **Mute button label malformed** — `"Mute→0"` embedded raw UTF-8 bytes (`\xE2\x86\x92`) that the GFX bitmap font cannot render. Replaced with plain ASCII `"Mute=0"`.
+
+---
+
 ## [4.2.0] - 2026-06-19
 
 ### Added
@@ -183,6 +192,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 4.2.1 | 2026-06-20 | Fix LASER truncation on OFR fonts; fix toggle touch zones; fix Mute label |
 | 4.2.0 | 2026-06-19 | Five display fonts; radar-only display; removed JBV1/History/Diag/Clock screens |
 | 4.1.1 | 2026-06-19 | Zone-based tap navigation, web UI hamburger fix |
 | 4.1.0 | 2026-06-13 | Multi-screen navigation, JBV1 screen, voice packs |
