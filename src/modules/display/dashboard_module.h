@@ -8,6 +8,7 @@ class PacketParser;
 class SettingsManager;
 class V1BLEClient;
 class ObdRuntimeModule;
+class PhoneCompanionModule;
 
 // All data needed to render the driving dashboard in one snapshot.
 struct DashboardData {
@@ -37,6 +38,18 @@ struct DashboardData {
     Band      lastBand      = BAND_NONE;
     uint32_t  lastFreqMhz   = 0;
     Direction lastDirection = DIR_NONE;
+
+    // Phone companion data (valid when phoneDataValid == true)
+    bool     phoneDataValid  = false;
+    bool     hasHeading      = false;
+    uint16_t heading         = 0;
+    bool     hasGpsAccuracy  = false;
+    float    gpsAccuracyM    = 0.0f;
+    bool     hasRoadName     = false;
+    char     roadName[33]    = {};
+    bool     hasPhoneBattery = false;
+    uint8_t  phoneBattery    = 0;
+    uint32_t phoneAgeMs      = UINT32_MAX;
 };
 
 class DashboardModule {
@@ -45,7 +58,8 @@ public:
                PacketParser* parser,
                SettingsManager* settings,
                V1BLEClient* bleClient,
-               ObdRuntimeModule* obd);
+               ObdRuntimeModule* obd,
+               PhoneCompanionModule* phone = nullptr);
 
     bool isActive() const { return active_; }
     void toggle() { active_ = !active_; }
@@ -68,6 +82,7 @@ private:
     SettingsManager* settings_ = nullptr;
     V1BLEClient*     ble_      = nullptr;
     ObdRuntimeModule* obd_     = nullptr;
+    PhoneCompanionModule* phone_ = nullptr;
 
     uint32_t lastRedrawMs_ = 0;
 

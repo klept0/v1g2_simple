@@ -29,6 +29,8 @@
 #include "modules/history/encounter_history.h"
 #include "modules/wifi/wifi_lockout_api_service.h"
 #include "modules/wifi/wifi_brightness_api_service.h"
+#include "modules/wifi/wifi_phone_companion_api_service.h"
+#include "modules/phone/phone_companion_module.h"
 #include "modules/brightness/smart_brightness_engine.h"
 #include "modules/safety/driving_safety_lockout.h"
 #include "backup_payload_builder.h"
@@ -572,6 +574,21 @@ WifiBrightnessApiService::Runtime WiFiManager::makeBrightnessRuntime() {
     };
     r.getEngine = [](void* /*ctx*/) -> SmartBrightnessEngine* {
         return &smartBrightnessEngine;
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
+    return r;
+}
+
+WifiPhoneCompanionApiService::Runtime WiFiManager::makePhoneCompanionRuntime() {
+    WifiPhoneCompanionApiService::Runtime r;
+    r.ctx = this;
+    r.getCompanion = [](void* /*ctx*/) -> PhoneCompanionModule* {
+        return &phoneCompanionModule;
+    };
+    r.nowMs = [](void* /*ctx*/) -> uint32_t {
+        return (uint32_t)millis();
     };
     r.checkRateLimit = [](void* ctx) {
         return static_cast<WiFiManager*>(ctx)->checkRateLimit();

@@ -6,6 +6,7 @@
 #include "battery_manager.h"
 #include "wifi_manager.h"
 #include "modules/obd/obd_runtime_module.h"
+#include "modules/phone/phone_companion_module.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -13,12 +14,14 @@ void DashboardModule::begin(V1Display* display,
                             PacketParser* parser,
                             SettingsManager* settings,
                             V1BLEClient* bleClient,
-                            ObdRuntimeModule* obd) {
+                            ObdRuntimeModule* obd,
+                            PhoneCompanionModule* phone) {
     display_  = display;
     parser_   = parser;
     settings_ = settings;
     ble_      = bleClient;
     obd_      = obd;
+    phone_    = phone;
 }
 
 DashboardData DashboardModule::snapshot(uint32_t nowMs) const {
@@ -83,6 +86,23 @@ DashboardData DashboardModule::snapshot(uint32_t nowMs) const {
             d.lastBand      = lastAlertCache_.lastBand;
             d.lastFreqMhz   = lastAlertCache_.lastFreqMhz;
             d.lastDirection = lastAlertCache_.lastDirection;
+        }
+    }
+
+    // Phone companion data
+    if (phone_ && phone_->isValid(nowMs)) {
+        const PhoneCompanionData& pd = phone_->data();
+        d.phoneDataValid  = true;
+        d.phoneAgeMs      = phone_->ageMs(nowMs);
+        d.hasHeading      = pd.hasHeading;
+        d.heading         = pd.heading;
+        d.hasGpsAccuracy  = pd.hasGpsAccuracy;
+        d.gpsAccuracyM    = pd.gpsAccuracyM;
+        d.hasPhoneBattery = pd.hasPhoneBattery;
+        d.phoneBattery    = pd.phoneBattery;
+        if (pd.hasRoadName) {
+            d.hasRoadName = true;
+            strncpy(d.roadName, pd.roadName, sizeof(d.roadName) - 1);
         }
     }
 

@@ -139,6 +139,8 @@ void V1Display::showDashboard(const DashboardData& data) {
         x += 6;
         x = drawStatusDot(tft_.get(), x, dotY, "WiFi", data.wifiApActive);
         x += 6;
+        x = drawStatusDot(tft_.get(), x, dotY, "PHONE", data.phoneDataValid);
+        x += 6;
 
         // Battery (show if present)
         if (data.hasBattery) {
@@ -328,6 +330,39 @@ void V1Display::showDashboard(const DashboardData& data) {
             tft_->setTextColor(DASH_DIM, DASH_BG);
             GFX_setTextDatum(TC_DATUM);
             GFX_drawString(tft_.get(), "NO RECENT ALERTS", W / 2, rowCy - 3);
+        }
+    }
+
+    // Phone companion info — right side of alert row (X=440..W)
+    if (data.phoneDataValid) {
+        const int16_t px = 440;
+        const int16_t py = ALERT_ROW_Y + 4;
+        tft_->setTextSize(1);
+
+        if (data.hasRoadName && data.roadName[0]) {
+            tft_->setTextColor(DASH_CYAN, DASH_BG);
+            tft_->setCursor(px, py);
+            tft_->print(data.roadName);
+        }
+
+        if (data.hasHeading) {
+            static const char* const kCards[] = {
+                "N","NE","E","SE","S","SW","W","NW"
+            };
+            char headBuf[12];
+            const char* card = kCards[((data.heading + 22) / 45) % 8];
+            snprintf(headBuf, sizeof(headBuf), "%s %u\xb0", card, (unsigned)data.heading);
+            tft_->setTextColor(DASH_WHITE, DASH_BG);
+            tft_->setCursor(px, py + 12);
+            tft_->print(headBuf);
+        }
+
+        if (data.hasPhoneBattery) {
+            char battBuf[10];
+            snprintf(battBuf, sizeof(battBuf), "Ph:%u%%", (unsigned)data.phoneBattery);
+            tft_->setTextColor(data.phoneBattery < 20 ? DASH_RED : DASH_GREY, DASH_BG);
+            tft_->setCursor(px + 100, py + 12);
+            tft_->print(battBuf);
         }
     }
 

@@ -48,6 +48,7 @@ class DashboardModule;
 class EncounterHistory;
 class DrivingSafetyLockout;
 class SmartBrightnessEngine;
+class PhoneCompanionModule;
 
 #ifndef UNIT_TEST
 class DisplayPipelineModule;
@@ -96,6 +97,7 @@ extern DashboardModule dashboardModule;
 extern EncounterHistory encounterHistory;
 extern DrivingSafetyLockout drivingSafetyLockout;
 extern SmartBrightnessEngine smartBrightnessEngine;
+extern PhoneCompanionModule phoneCompanionModule;
 
 #ifndef UNIT_TEST
 extern DisplayPipelineModule displayPipelineModule;

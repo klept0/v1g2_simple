@@ -84,6 +84,7 @@
 #include "modules/history/encounter_history.h"
 #include "modules/safety/driving_safety_lockout.h"
 #include "modules/brightness/smart_brightness_engine.h"
+#include "modules/phone/phone_companion_module.h"
 #include "modules/obd/obd_settings_sync_module.h"
 #include "modules/wifi/wifi_boot_policy.h"
 #include "modules/wifi/wifi_auto_start_module.h"
@@ -186,6 +187,7 @@ DashboardModule dashboardModule;
 EncounterHistory encounterHistory;
 DrivingSafetyLockout drivingSafetyLockout;
 SmartBrightnessEngine smartBrightnessEngine;
+PhoneCompanionModule phoneCompanionModule;
 WifiVisualSyncModule wifiVisualSyncModule;
 WifiProcessCadenceModule wifiProcessCadenceModule;
 WifiRuntimeModule wifiRuntimeModule;
@@ -832,9 +834,11 @@ static void configureRuntimeSensorModules() {
         settingsManager.get().speedMuteHysteresisMph,
         settingsManager.get().speedMuteVolume);
     dashboardModule.begin(&display, &parser, &settingsManager,
-                          &bleClient, &obdRuntimeModule);
+                          &bleClient, &obdRuntimeModule,
+                          &phoneCompanionModule);
     drivingSafetyLockout.begin(&speedSourceSelector, &settingsManager);
     smartBrightnessEngine.begin(&display, &settingsManager, millis());
+    speedSourceSelector.wirePhoneSource(&phoneCompanionModule);
 }
 
 static void configureRuntimeCoreModules() {

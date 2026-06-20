@@ -29,6 +29,7 @@
 #include "modules/wifi/wifi_history_api_service.h"
 #include "modules/wifi/wifi_lockout_api_service.h"
 #include "modules/wifi/wifi_brightness_api_service.h"
+#include "modules/wifi/wifi_phone_companion_api_service.h"
 #include "modules/safety/driving_safety_lockout.h"
 #include "modules/obd/obd_runtime_module.h"
 #include "battery_manager.h"
@@ -327,6 +328,14 @@ bool WiFiManager::setupWebServer() {
     server_.on("/api/display/brightness", HTTP_POST, [this]() {
         if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiBrightnessApiService::handleApiSave(server_, makeBrightnessRuntime());
+    });
+
+    // Phone companion routes
+    server_.on("/api/drive/update", HTTP_POST, [this]() {
+        WifiPhoneCompanionApiService::handleApiUpdate(server_, makePhoneCompanionRuntime());
+    });
+    server_.on("/api/drive/status", HTTP_GET, [this]() {
+        WifiPhoneCompanionApiService::handleApiStatus(server_, makePhoneCompanionRuntime());
     });
 
     // Encounter history routes
