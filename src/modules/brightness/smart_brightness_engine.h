@@ -7,6 +7,13 @@ class SettingsManager;
 
 // Manages display brightness in response to alerts, mute state, and idle timeout.
 // Call process() every loop iteration; call notifyActivity() on touch events.
+enum class SmartBrightnessState : uint8_t {
+    DayActive,
+    IdleDim,
+    AlertBoosted,
+    AlertMuted,
+};
+
 class SmartBrightnessEngine {
 public:
     void begin(V1Display* display, SettingsManager* settings, uint32_t nowMs);
@@ -22,17 +29,15 @@ public:
     void setDayBase(uint8_t brightness, uint32_t nowMs);
 
 private:
-    enum class State : uint8_t { DayActive, IdleDim, AlertBoosted, AlertMuted };
-
     void applyBrightness(uint8_t level);
 
-    V1Display*      display_  = nullptr;
+    V1Display*       display_  = nullptr;
     SettingsManager* settings_ = nullptr;
 
-    State    state_           = State::DayActive;
-    uint32_t lastActivityMs_  = 0;
-    uint8_t  dayBase_         = 200;  // mirrors brtDay or last driving-mode brightness
-    uint8_t  currentLevel_    = 255;  // track last applied value to skip no-ops
-    bool     prevHasAlerts_   = false;
-    bool     prevIsMuted_     = false;
+    SmartBrightnessState state_        = SmartBrightnessState::DayActive;
+    uint32_t             lastActivityMs_  = 0;
+    uint8_t              dayBase_         = 200;
+    uint8_t              currentLevel_    = 255;
+    bool                 prevHasAlerts_   = false;
+    bool                 prevIsMuted_     = false;
 };
