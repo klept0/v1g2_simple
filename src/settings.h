@@ -198,6 +198,13 @@ struct V1Settings {
     uint8_t speedMuteHysteresisMph;  // Unmute at threshold + hysteresis (1-10 mph)
     uint8_t speedMuteVolume;         // V1 volume when speed-muted (0-9, 0xFF = voice-only)
 
+    // Voice alert enhancements (Phase 7)
+    uint8_t voiceBandFilter;           // Bitmask of bands to suppress (0 = all enabled; bit: 1=X,2=K,4=Ka,8=Laser)
+    bool voiceFirstAlertOnly;          // Announce each alert id once per encounter only
+    bool voiceDirectionChangeOnly;     // Re-announce only on direction change (not cooldown)
+    bool startupSoundEnabled;          // Play chime on boot
+    bool shutdownSoundEnabled;         // Play chime on power-off
+
     // Voice pack (custom uploadable clip sets, "" = built-in default)
     String activeVoicePack;
 
@@ -352,6 +359,11 @@ struct V1Settings {
         speedMuteThresholdMph(25),       // 25 mph default (city driving)
         speedMuteHysteresisMph(3),       // 3 mph hysteresis band
         speedMuteVolume(0xFF),           // Voice-only by default (no V1 volume change)
+        voiceBandFilter(0),              // No bands suppressed by default
+        voiceFirstAlertOnly(false),      // Repeat announcements allowed by default
+        voiceDirectionChangeOnly(false), // Re-announce on cooldown by default
+        startupSoundEnabled(true),       // Play startup chime by default
+        shutdownSoundEnabled(true),      // Play shutdown chime by default
         autoPushEnabled(false),
         activeSlot(0),
         slot0Name("DEFAULT"),
@@ -575,6 +587,22 @@ struct AudioSettingsUpdate {
 
     bool hasSpeedMuteVolume = false;
     uint8_t speedMuteVolume = 0xFF;      // 0xFF = voice-only (no V1 volume change)
+
+    // Phase 7 voice enhancements
+    bool hasVoiceBandFilter = false;
+    uint8_t voiceBandFilter = 0;
+
+    bool hasVoiceFirstAlertOnly = false;
+    bool voiceFirstAlertOnly = false;
+
+    bool hasVoiceDirectionChangeOnly = false;
+    bool voiceDirectionChangeOnly = false;
+
+    bool hasStartupSoundEnabled = false;
+    bool startupSoundEnabled = false;
+
+    bool hasShutdownSoundEnabled = false;
+    bool shutdownSoundEnabled = false;
 };
 
 struct DisplaySettingsUpdate {
@@ -847,6 +875,18 @@ public:
     void setBrtAlert(uint8_t v);
     void setBrtMute(uint8_t v);
     void setBrtIdleSec(uint16_t sec);
+
+    // Voice alert enhancements
+    uint8_t getVoiceBandFilter() const        { return settings_.voiceBandFilter; }
+    bool    isVoiceFirstAlertOnly() const      { return settings_.voiceFirstAlertOnly; }
+    bool    isVoiceDirectionChangeOnly() const  { return settings_.voiceDirectionChangeOnly; }
+    bool    isStartupSoundEnabled() const      { return settings_.startupSoundEnabled; }
+    bool    isShutdownSoundEnabled() const     { return settings_.shutdownSoundEnabled; }
+    void setVoiceBandFilter(uint8_t mask);
+    void setVoiceFirstAlertOnly(bool v);
+    void setVoiceDirectionChangeOnly(bool v);
+    void setStartupSoundEnabled(bool v);
+    void setShutdownSoundEnabled(bool v);
 
     // Save all settings to flash
     void save();

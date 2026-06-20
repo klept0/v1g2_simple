@@ -26,6 +26,12 @@
 		speedMuteThresholdMph: 25,
 		speedMuteHysteresisMph: 3,
 		speedMuteVolume: 255,
+		// Voice alert enhancements (Phase 7)
+		voiceBandFilter: 0,
+		voiceFirstAlertOnly: false,
+		voiceDirectionChangeOnly: false,
+		startupSoundEnabled: true,
+		shutdownSoundEnabled: true,
 	});
 	
 	let loading = $state(true);
@@ -178,6 +184,12 @@
 				settings.speedMuteThresholdMph = data.speedMuteThresholdMph ?? 25;
 				settings.speedMuteHysteresisMph = data.speedMuteHysteresisMph ?? 3;
 				settings.speedMuteVolume = data.speedMuteVolume ?? 255;
+				// Voice alert enhancements
+				settings.voiceBandFilter = data.voiceBandFilter ?? 0;
+				settings.voiceFirstAlertOnly = data.voiceFirstAlertOnly ?? false;
+				settings.voiceDirectionChangeOnly = data.voiceDirectionChangeOnly ?? false;
+				settings.startupSoundEnabled = data.startupSoundEnabled ?? true;
+				settings.shutdownSoundEnabled = data.shutdownSoundEnabled ?? true;
 			}
 		} catch (e) {
 			message = { type: 'error', text: 'Failed to load settings' };
@@ -212,7 +224,12 @@
 			params.append('speedMuteThresholdMph', settings.speedMuteThresholdMph);
 			params.append('speedMuteHysteresisMph', settings.speedMuteHysteresisMph);
 			params.append('speedMuteVolume', settings.speedMuteVolume);
-			
+			params.append('voiceBandFilter', settings.voiceBandFilter);
+			params.append('voiceFirstAlertOnly', settings.voiceFirstAlertOnly);
+			params.append('voiceDirectionChangeOnly', settings.voiceDirectionChangeOnly);
+			params.append('startupSoundEnabled', settings.startupSoundEnabled);
+			params.append('shutdownSoundEnabled', settings.shutdownSoundEnabled);
+
 			const res = await fetchWithTimeout('/api/audio/settings', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -729,6 +746,68 @@
 						Upload to Pack
 					</button>
 				</div>
+			</div>
+		</div>
+
+		<!-- Voice Alert Enhancements -->
+		<CardSectionHead title="Voice Alert Filters" />
+		<div class="card bg-base-200 shadow">
+			<div class="card-body gap-3">
+				<label class="flex items-center gap-3 cursor-pointer">
+					<input type="checkbox" class="checkbox checkbox-sm" bind:checked={settings.voiceFirstAlertOnly} />
+					<div>
+						<div class="font-medium text-sm">First alert only</div>
+						<div class="text-xs text-base-content/60">Announce each radar encounter once; suppress repeats.</div>
+					</div>
+				</label>
+
+				<label class="flex items-center gap-3 cursor-pointer">
+					<input type="checkbox" class="checkbox checkbox-sm" bind:checked={settings.voiceDirectionChangeOnly} />
+					<div>
+						<div class="font-medium text-sm">Direction changes only</div>
+						<div class="text-xs text-base-content/60">Re-announce only when the alert direction changes; suppress bogey-count-change repeats.</div>
+					</div>
+				</label>
+
+				<div>
+					<div class="font-medium text-sm mb-1">Suppress voice for bands</div>
+					<div class="text-xs text-base-content/60 mb-2">Bands checked below will never trigger a voice announcement.</div>
+					<div class="flex gap-4 flex-wrap">
+						{#each [['X', 0x01], ['K', 0x02], ['Ka', 0x04], ['Laser', 0x08]] as [label, bit]}
+							<label class="flex items-center gap-1 cursor-pointer text-sm">
+								<input type="checkbox"
+									class="checkbox checkbox-xs"
+									checked={!!(settings.voiceBandFilter & bit)}
+									onchange={(e) => {
+										if (e.target.checked) settings.voiceBandFilter |= bit;
+										else settings.voiceBandFilter &= ~bit;
+									}}
+								/>
+								{label}
+							</label>
+						{/each}
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<CardSectionHead title="Power Sounds" />
+		<div class="card bg-base-200 shadow">
+			<div class="card-body gap-3">
+				<label class="flex items-center gap-3 cursor-pointer">
+					<input type="checkbox" class="checkbox checkbox-sm" bind:checked={settings.startupSoundEnabled} />
+					<div>
+						<div class="font-medium text-sm">Startup chime</div>
+						<div class="text-xs text-base-content/60">Play ascending tone on power-on.</div>
+					</div>
+				</label>
+				<label class="flex items-center gap-3 cursor-pointer">
+					<input type="checkbox" class="checkbox checkbox-sm" bind:checked={settings.shutdownSoundEnabled} />
+					<div>
+						<div class="font-medium text-sm">Shutdown chime</div>
+						<div class="text-xs text-base-content/60">Play descending tone on power-off.</div>
+					</div>
+				</label>
 			</div>
 		</div>
 

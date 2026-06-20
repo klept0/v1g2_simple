@@ -178,6 +178,13 @@ inline constexpr const char* kNvsDm3PrioArrow = "dm3prio";
 inline constexpr const char* kNvsLockoutEnabled = "lockoutEn";
 inline constexpr const char* kNvsLockoutMph     = "lockoutMph";
 
+// ── Voice alert enhancements (Phase 7) ───────────────────────────────────
+inline constexpr const char* kNvsVoiceBandFilter     = "voiceBandFilt";
+inline constexpr const char* kNvsVoiceFirstOnly      = "voiceFirst";
+inline constexpr const char* kNvsVoiceDirOnly        = "voiceDirOnly";
+inline constexpr const char* kNvsStartupSound        = "startupSnd";
+inline constexpr const char* kNvsShutdownSound       = "shutdownSnd";
+
 // ── Smart brightness engine ───────────────────────────────────────────────
 inline constexpr const char* kNvsBrightEngEn    = "brightEng";
 inline constexpr const char* kNvsBrtDay         = "brtDay";

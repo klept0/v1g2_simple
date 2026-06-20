@@ -271,6 +271,13 @@ void SettingsManager::load() {
         settings_.speedMuteVolume = (raw <= 9 || raw == 0xFF) ? raw : 0xFF;
     }
 
+    // Voice alert enhancements
+    settings_.voiceBandFilter        = preferences_.getUChar(kNvsVoiceBandFilter, 0);
+    settings_.voiceFirstAlertOnly     = preferences_.getBool(kNvsVoiceFirstOnly, false);
+    settings_.voiceDirectionChangeOnly = preferences_.getBool(kNvsVoiceDirOnly, false);
+    settings_.startupSoundEnabled     = preferences_.getBool(kNvsStartupSound, true);
+    settings_.shutdownSoundEnabled    = preferences_.getBool(kNvsShutdownSound, true);
+
     settings_.activeVoicePack = preferences_.getString(kNvsVoicePack, "");
 
     settings_.autoPushEnabled = preferences_.getBool(kNvsAutoPush, true);  // Default to enabled for profiles to work

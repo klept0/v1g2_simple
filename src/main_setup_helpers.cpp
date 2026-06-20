@@ -73,6 +73,11 @@ V1ConnectedAutoPushSelection resolveV1ConnectedAutoPushSelection(const V1Setting
 }  // namespace
 
 void prepareForShutdown(void* /*context*/) {
+    if (settingsManager.isShutdownSoundEnabled()) {
+        play_shutdown_chime();
+        delay(120);  // Let chime start before WiFi teardown kills audio tasks
+    }
+
     if (wifiManager.isWifiServiceActive()) {
         Serial.println("[Battery] Stopping WiFi before shutdown flush...");
         wifiManager.stopSetupMode(true, "poweroff");
@@ -208,6 +213,10 @@ void initializeTouchAndDisplayControls() {
     SerialLog.printf("[Settings] Applied saved brightness: %d, voice volume: %d, voice pack: '%s'\n",
                      displaySettings.brightness, displaySettings.voiceVolume,
                      displaySettings.activeVoicePack.c_str());
+
+    if (displaySettings.startupSoundEnabled) {
+        play_startup_chime();
+    }
 }
 
 namespace {

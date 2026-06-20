@@ -83,6 +83,17 @@ static bool isValidAnnounceBand(Band band) {
     return band == BAND_LASER || band == BAND_KA || band == BAND_K || band == BAND_X;
 }
 
+// Band to voiceBandFilter bitmask: bit0=X, bit1=K, bit2=Ka, bit3=Laser
+static uint8_t bandToBit(Band band) {
+    switch (band) {
+        case BAND_X:     return 0x01;
+        case BAND_K:     return 0x02;
+        case BAND_KA:    return 0x04;
+        case BAND_LASER: return 0x08;
+        default:         return 0x00;
+    }
+}
+
 // ============================================================================
 // Main Decision Method
 // ============================================================================
@@ -137,6 +148,12 @@ VoiceAction VoiceModule::process(const VoiceContext& ctx) {
     if (alertChanged && cooldownPassed) {
         if (!isValidAnnounceBand(priority.band)) return action;
 
+        // Band filter: skip bands the user has suppressed for voice
+        if (s.voiceBandFilter & bandToBit(priority.band)) return action;
+
+        // First-alert-only: suppress repeat announcement of a previously heard alert
+        if (s.voiceFirstAlertOnly && isAlertAnnounced(priority.band, currentFreq)) return action;
+
         resetDirectionThrottle(ctx.now);
 
         action.type = VoiceAction::Type::ANNOUNCE_PRIORITY;
@@ -176,8 +193,9 @@ VoiceAction VoiceModule::process(const VoiceContext& ctx) {
     }
 
     // Case 3: Bogey Count Changed (same alert, same direction)
+    // Suppressed when voiceDirectionChangeOnly is set — only direction changes trigger re-announce.
     if (!alertChanged && !directionChanged && bogeyCountChanged &&
-        bogeyCountCooldownPassed && s.announceBogeyCount) {
+        bogeyCountCooldownPassed && s.announceBogeyCount && !s.voiceDirectionChangeOnly) {
         uint8_t previousBogeyCount = getLastBogeyCount();
 
         action.type = VoiceAction::Type::ANNOUNCE_DIRECTION;
@@ -207,8 +225,11 @@ VoiceAction VoiceModule::process(const VoiceContext& ctx) {
             // Skip if already announced
             if (isAlertAnnounced(alert.band, alertFreq)) continue;
 
-            // Check band filter
+            // Check secondary band toggle
             if (!isBandEnabledForSecondary(alert.band, s)) continue;
+
+            // Check voice band filter (user per-band suppression)
+            if (s.voiceBandFilter & bandToBit(alert.band)) continue;
 
             if (!isValidAnnounceBand(alert.band)) continue;
 

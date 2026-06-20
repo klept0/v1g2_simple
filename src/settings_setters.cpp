@@ -516,6 +516,21 @@ void SettingsManager::applyAudioSettingsUpdate(const AudioSettingsUpdate& update
         const uint8_t val = (update.speedMuteVolume <= 9) ? update.speedMuteVolume : 0xFF;
         changed |= assignIfChanged(settings_.speedMuteVolume, val);
     }
+    if (update.hasVoiceBandFilter) {
+        changed |= assignIfChanged(settings_.voiceBandFilter, update.voiceBandFilter);
+    }
+    if (update.hasVoiceFirstAlertOnly) {
+        changed |= assignIfChanged(settings_.voiceFirstAlertOnly, update.voiceFirstAlertOnly);
+    }
+    if (update.hasVoiceDirectionChangeOnly) {
+        changed |= assignIfChanged(settings_.voiceDirectionChangeOnly, update.voiceDirectionChangeOnly);
+    }
+    if (update.hasStartupSoundEnabled) {
+        changed |= assignIfChanged(settings_.startupSoundEnabled, update.startupSoundEnabled);
+    }
+    if (update.hasShutdownSoundEnabled) {
+        changed |= assignIfChanged(settings_.shutdownSoundEnabled, update.shutdownSoundEnabled);
+    }
 
     if (changed) {
         persistSettingsByMode(*this, persistMode);
@@ -691,3 +706,8 @@ void SettingsManager::setBrtIdle(uint8_t v)         { settings_.brtIdle  = std::
 void SettingsManager::setBrtAlert(uint8_t v)        { settings_.brtAlert = std::max<uint8_t>(10, v);             save(); }
 void SettingsManager::setBrtMute(uint8_t v)         { settings_.brtMute  = std::max<uint8_t>(10, v);             save(); }
 void SettingsManager::setBrtIdleSec(uint16_t sec)   { settings_.brtIdleSec = sec > 3600 ? 3600 : sec;            save(); }
+void SettingsManager::setVoiceBandFilter(uint8_t mask)  { settings_.voiceBandFilter = mask;      save(); }
+void SettingsManager::setVoiceFirstAlertOnly(bool v)    { settings_.voiceFirstAlertOnly = v;     save(); }
+void SettingsManager::setVoiceDirectionChangeOnly(bool v){ settings_.voiceDirectionChangeOnly = v; save(); }
+void SettingsManager::setStartupSoundEnabled(bool v)    { settings_.startupSoundEnabled = v;     save(); }
+void SettingsManager::setShutdownSoundEnabled(bool v)   { settings_.shutdownSoundEnabled = v;    save(); }
