@@ -76,6 +76,10 @@ public:
     int showSettingsSlidersCalls = 0;
     int updateSettingsSlidersCalls = 0;
     int hideBrightnessSliderCalls = 0;
+    int showTogglesPageCalls = 0;
+    bool lastTogglesWifi = false;
+    bool lastTogglesProxy = false;
+    bool lastTogglesMuteZero = false;
     int lastSettingsBrightness = 0;
     int lastSettingsVolume = 0;
     int lastSettingsActiveSlider = -1;
@@ -132,6 +136,10 @@ public:
         showSettingsSlidersCalls = 0;
         updateSettingsSlidersCalls = 0;
         hideBrightnessSliderCalls = 0;
+        showTogglesPageCalls = 0;
+        lastTogglesWifi = false;
+        lastTogglesProxy = false;
+        lastTogglesMuteZero = false;
         lastSettingsBrightness = 0;
         lastSettingsVolume = 0;
         lastSettingsActiveSlider = -1;
@@ -252,6 +260,12 @@ public:
     }
     void hideBrightnessSlider() { hideBrightnessSliderCalls++; }
     int getActiveSliderFromTouch(int16_t /*touchY*/) { return activeSliderFromTouch; }
+    void showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn) {
+        showTogglesPageCalls++;
+        lastTogglesWifi     = wifiOn;
+        lastTogglesProxy    = proxyOn;
+        lastTogglesMuteZero = muteZeroOn;
+    }
     
     // Static methods
     static void resetChangeTracking() { resetChangeTrackingCalls++; }
