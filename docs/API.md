@@ -17,6 +17,12 @@ Complete API documentation for the V1-Simple web interface and REST endpoints.
 - [Auto-Push](#auto-push)
 - [Audio Settings](#audio-settings)
 - [Display Colors](#display-colors)
+- [Display Brightness](#display-brightness)
+- [Driving Modes](#driving-modes)
+- [Driving Safety Lockout](#driving-safety-lockout)
+- [Encounter History](#encounter-history)
+- [Phone Companion](#phone-companion)
+- [Setup Wizard](#setup-wizard)
 - [OBD](#obd)
 - [WiFi Client](#wifi-client)
 - [Debug](#debug)
@@ -987,6 +993,287 @@ Start playback of the loaded V1 test scenario.
 ### POST /api/debug/v1-scenario/stop
 
 Stop the currently running V1 test scenario.
+
+---
+
+## Display Brightness
+
+### GET /api/display/brightness
+
+Returns all Smart Brightness Engine settings.
+
+**Response:**
+```json
+{
+  "enabled": true,
+  "brtDay": 200,
+  "brtNight": 80,
+  "brtIdle": 50,
+  "brtAlert": 255,
+  "brtMute": 120,
+  "brtIdleSec": 30
+}
+```
+
+| Field | Type | Range | Description |
+|---|---|---|---|
+| `enabled` | bool | — | Engine enabled (auto-adjusts brightness) |
+| `brtDay` | int | 10–255 | Base brightness (day/active) |
+| `brtNight` | int | 10–255 | Night base brightness |
+| `brtIdle` | int | 10–255 | Idle-dim brightness level |
+| `brtAlert` | int | 10–255 | Boost brightness when alert is active |
+| `brtMute` | int | 10–255 | Brightness while alert is muted |
+| `brtIdleSec` | int | 0–3600 | Seconds before idle dim; 0 = disabled |
+
+---
+
+### POST /api/display/brightness
+
+Save brightness settings. All fields optional; only present fields are applied. Blocked at speed by safety lockout.
+
+**Request body (JSON):**
+```json
+{
+  "enabled": true,
+  "brtDay": 200,
+  "brtNight": 80,
+  "brtIdle": 50,
+  "brtAlert": 255,
+  "brtMute": 120,
+  "brtIdleSec": 30
+}
+```
+
+**Response:** same as GET.
+
+---
+
+## Driving Modes
+
+### GET /api/drive/mode
+
+Returns current driving mode and per-mode configurations.
+
+**Response:**
+```json
+{
+  "active": "Normal",
+  "modes": {
+    "Normal":  { "brightness": 200, "voiceVolume": 80, "alertPersistSec": 0, "priorityArrowOnly": false },
+    "Quiet":   { "brightness": 80,  "voiceVolume": 30, "alertPersistSec": 3, "priorityArrowOnly": true  },
+    "Highway": { "brightness": 200, "voiceVolume": 80, "alertPersistSec": 0, "priorityArrowOnly": false },
+    "Night":   { "brightness": 50,  "voiceVolume": 50, "alertPersistSec": 5, "priorityArrowOnly": false }
+  }
+}
+```
+
+---
+
+### POST /api/drive/mode
+
+Switch active driving mode.
+
+**Request body (JSON):**
+```json
+{ "mode": "Quiet" }
+```
+
+Valid values: `"Normal"`, `"Quiet"`, `"Highway"`, `"Night"`.
+
+**Response:** same as GET with updated `active` field.
+
+---
+
+## Driving Safety Lockout
+
+### GET /api/drive/lockout
+
+Returns lockout configuration and current state.
+
+**Response:**
+```json
+{
+  "enabled": true,
+  "thresholdMph": 5,
+  "isLocked": false,
+  "speedMph": 0.0,
+  "speedValid": false
+}
+```
+
+| Field | Description |
+|---|---|
+| `isLocked` | `true` when speed exceeds threshold |
+| `speedValid` | `true` when a fresh OBD or phone speed is available |
+
+---
+
+### POST /api/drive/lockout
+
+Configure lockout threshold and enable/disable.
+
+**Request body (JSON):**
+```json
+{ "enabled": true, "thresholdMph": 5 }
+```
+
+Both fields optional. `thresholdMph` clamped to 1–99.
+
+**Response:** same as GET.
+
+**Blocked routes (HTTP 423 when locked):** profile save/delete, pull/push, device name/profile/delete, display settings/reset, audio settings, settings restore, WiFi scan/connect/disconnect/forget, brightness save.
+
+---
+
+## Encounter History
+
+### GET /api/history
+
+Returns the encounter log (most recent first, up to 50 entries by default).
+
+**Response:**
+```json
+{
+  "entries": [
+    {
+      "id": "e-1234567890",
+      "ts": 1739650000,
+      "band": "Ka",
+      "freqMhz": 34749,
+      "direction": "Ahead",
+      "bogeys": 1,
+      "bars": 5,
+      "speedMph": 62.0,
+      "slot": 0,
+      "v1Mode": "L",
+      "muted": false,
+      "falseAlert": false
+    }
+  ],
+  "count": 1
+}
+```
+
+---
+
+### POST /api/history/clear
+
+Delete all encounter history entries.
+
+**Response:** `{ "ok": true }`
+
+---
+
+### GET /api/history/export.csv
+
+Download encounter history as a CSV file.
+
+**Response:** `text/csv` attachment — columns: `id`, `ts`, `band`, `freqMhz`, `direction`, `bogeys`, `bars`, `speedMph`, `slot`, `v1Mode`, `muted`, `falseAlert`.
+
+---
+
+### POST /api/history/mark-false
+
+Toggle the `falseAlert` flag on an entry.
+
+**Request body (JSON):**
+```json
+{ "id": "e-1234567890", "falseAlert": true }
+```
+
+**Response:** `{ "ok": true }`
+
+---
+
+## Phone Companion
+
+Allows external apps (Tasker, Automate, Shortcuts, etc.) to push real-time telemetry to the device over WiFi. Phone speed integrates as a fallback speed source when OBD is unavailable.
+
+### POST /api/drive/update
+
+Push a telemetry update from a companion app. Only `source` is required; all other fields are optional.
+
+**Request body (JSON):**
+```json
+{
+  "source": "tasker",
+  "speed": 62.0,
+  "speed_unit": "mph",
+  "heading": 270,
+  "gps_accuracy": 3.5,
+  "road_name": "I-95 N",
+  "phone_battery": 85
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `source` | string | **Yes** | Identifies the sending app (e.g. `"tasker"`, `"automate"`) |
+| `speed` | number | No | Current speed |
+| `speed_unit` | string | No | `"mph"` (default) or `"kph"` |
+| `heading` | int | No | Compass heading in degrees 0–359 |
+| `gps_accuracy` | number | No | GPS accuracy radius in metres |
+| `road_name` | string | No | Current road name (max 32 chars) |
+| `phone_battery` | int | No | Phone battery percentage 0–100 |
+
+Data is considered stale after **5 seconds** with no update.
+
+**Response:** `{ "ok": true }`
+
+---
+
+### GET /api/drive/status
+
+Returns the current phone companion snapshot.
+
+**Response:**
+```json
+{
+  "valid": true,
+  "ageMs": 1200,
+  "source": "tasker",
+  "speedMph": 62.0,
+  "heading": 270,
+  "gpsAccuracyM": 3.5,
+  "roadName": "I-95 N",
+  "phoneBattery": 85
+}
+```
+
+`valid: false` when no data has been received or data is stale. Optional fields are omitted when not provided.
+
+---
+
+## Setup Wizard
+
+### GET /api/setup/wizard
+
+Returns the current wizard state.
+
+**Response:**
+```json
+{ "done": false, "step": 0 }
+```
+
+| Field | Description |
+|---|---|
+| `done` | `true` once the wizard has been completed or skipped |
+| `step` | Last active step index (0–7) |
+
+---
+
+### POST /api/setup/wizard
+
+Update wizard state. Both fields optional.
+
+**Request body (JSON):**
+```json
+{ "step": 3, "done": false }
+```
+
+`step` is clamped to 0–7.
+
+**Response:** same as GET with updated values.
 
 ---
 

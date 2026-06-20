@@ -14,10 +14,18 @@
 
 Feature-by-feature release history is maintained in `CHANGELOG.md`.
 
-Current train (`v4.2.1`) highlights:
+Current train (`v4.3.0`) highlights:
+- **Smart Brightness Engine** — auto-adjusts display brightness on alert, mute, and idle timeout. All five levels configurable (`/brightness`).
+- **Driving Safety Lockout** — blocks destructive configuration changes when OBD/phone speed exceeds threshold (default 5 mph).
+- **Quick Driving Modes** — Normal / Quiet / Highway / Night presets, each a one-tap config bundle. Active mode NVS-persisted.
+- **Driving Dashboard** — idle screen showing speed, connections, profile, mute state, and last-seen alert summary. Single-tap to toggle.
+- **Encounter History** — every alert onset logged to LittleFS; browse, export CSV, and mark false alerts from `/history`.
+- **Phone Companion API** — push GPS speed, heading, road name, and phone battery from Tasker/Automate via `POST /api/drive/update`. Phone speed integrates as OBD fallback.
+- **Voice Alert Filters** — per-band suppression (X/K/Ka/Laser), first-alert-only mode, and direction-change-only mode.
+- **Startup/shutdown chimes** — synthesized two-note tones on power on and off (individually toggle-able from `/audio`).
+- **Setup Wizard** — 8-step first-run wizard at `/setup` (optional, skippable, repeatable).
 - Five display fonts: Classic (7-segment), JetBrains Mono, Roboto, Serpentine, and Atkinson Hyperlegible.
 - BOOT button two-page settings UI: Page 1 (brightness/volume sliders), Page 2 (WiFi AP / BLE Proxy / Mute=0 toggles).
-- Display now shows only the radar view; multi-screen navigation and the JBV1, History, Diagnostics, and Clock screens have been removed.
 
 
 ---
@@ -227,8 +235,16 @@ A touchscreen remote display for the Valentine One Gen2 radar detector. Connects
 2. **BLE Server (Proxy):** Advertises as "V1-Proxy" for companion app compatibility
 3. **Tap-to-Mute:** Single/double tap during alert toggles mute
 4. **Triple-Tap Profile Cycle:** Switch between 3 auto-push slots when idle
-5. **Web Configuration:** AP mode at 192.168.35.5 for settings
-6. **Full Color Customization:** Per-element RGB565 colors via web UI
+5. **Driving Dashboard:** Single-tap when idle to show speed, connections, and last-alert summary
+6. **Web Configuration:** AP mode at 192.168.35.5 for settings
+7. **Full Color Customization:** Per-element RGB565 colors via web UI
+8. **Smart Brightness Engine:** Alert boost, idle dim, mute dim — all configurable
+9. **Driving Safety Lockout:** Blocks config changes when moving above threshold
+10. **Driving Modes:** Normal / Quiet / Highway / Night presets
+11. **Encounter History:** LittleFS ring buffer, CSV export, false-alert tagging
+12. **Phone Companion API:** Receive GPS data from Tasker/Automate over WiFi
+13. **Voice Filters:** Per-band suppression, first-alert-only, direction-change-only
+14. **Setup Wizard:** 8-step first-run guide at `/setup`
 
 **Source:** [src/main.cpp](../src/main.cpp), [src/ble_client.cpp](../src/ble_client.cpp)
 
@@ -1166,14 +1182,18 @@ The web interface is built with SvelteKit and daisyUI (TailwindCSS). Source is i
 
 | Route | File | Purpose |
 |-------|------|---------|
-| `/` | `+page.svelte` | Home - connection status, quick links |
-| `/settings` | `settings/+page.svelte` | WiFi AP, BLE proxy settings |
-| `/audio` | `audio/+page.svelte` | Voice alert settings, volume fade |
+| `/` | `+page.svelte` | Dashboard — connection status, first-run wizard banner |
+| `/setup` | `setup/+page.svelte` | Setup Wizard — 8-step first-run guide (optional, repeatable) |
+| `/settings` | `settings/+page.svelte` | WiFi AP, BLE proxy, backup/restore |
+| `/audio` | `audio/+page.svelte` | Voice alert settings, volume fade, chimes, band filters |
+| `/brightness` | `brightness/+page.svelte` | Smart brightness levels and idle-dim timeout |
+| `/modes` | `modes/+page.svelte` | Driving mode presets and safety lockout |
+| `/history` | `history/+page.svelte` | Encounter log, CSV export, false-alert marking |
 | `/colors` | `colors/+page.svelte` | Color customization |
 | `/autopush` | `autopush/+page.svelte` | Auto-push slot configuration |
 | `/profiles` | `profiles/+page.svelte` | V1 profile management |
 | `/devices` | `devices/+page.svelte` | Known V1 device management |
-| `/integrations` | `integrations/+page.svelte` | External integration settings (OBD) |
+| `/integrations` | `integrations/+page.svelte` | OBD and phone companion integration docs |
 | `/dev` | `dev/+page.svelte` | Debug tools: metrics, perf files, V1 scenarios, panic log |
 
 ### Settings Page (`/settings`)
@@ -1217,9 +1237,91 @@ OBD must be connected and polling for speed mute to operate. If OBD disconnects,
 
 **Speaker Volume:** Slider to control ES8311 DAC output level (0-100%)
 
+**Voice Alert Filters:**
+- **Per-band suppress:** Bitmask toggle (X / K / Ka / Laser) — checked bands are silenced entirely
+- **First-alert-only:** Suppress voice repeats once a frequency has been announced in this encounter
+- **Direction-change-only:** Suppress bogey-count repeats; only re-announce when direction changes
+
+**Power Sounds:**
+- **Startup chime:** Two ascending synthesized tones on power-on
+- **Shutdown chime:** Two descending synthesized tones on power-off
+
 Voice alerts announce through the built-in speaker when no phone app is connected via BLE proxy. Priority alerts are announced immediately; secondary alerts wait for priority to stabilize. Smart threat escalation detects when secondary alerts ramp up from weak (≤2 bars) to strong (≥4 bars sustained) and announces with full context.
 
 **Source:** [interface/src/routes/audio/+page.svelte](../interface/src/routes/audio/+page.svelte)
+
+### Brightness Page (`/brightness`)
+
+Controls the Smart Brightness Engine:
+
+- **Enable Smart Brightness:** Master toggle. When disabled, the manual brightness slider (BOOT Page 1) is the only control.
+- **Day/Active:** Base brightness level when no alert is present and device is not idle.
+- **Night:** A secondary base level; switched programmatically by driving mode presets.
+- **Idle Dim:** Reduced level applied after the idle timeout. Touch or an incoming alert wakes the display.
+- **Alert Boost:** Brightness applied when radar alerts are active.
+- **Alert Muted:** Brightness applied while an alert is active but muted.
+- **Idle Timeout:** Seconds of inactivity before dimming (0 = disabled, max 3600).
+
+**API:** `GET/POST /api/display/brightness`
+
+**Source:** [interface/src/routes/brightness/+page.svelte](../interface/src/routes/brightness/+page.svelte)
+
+### Driving Modes Page (`/modes`)
+
+**Quick Driving Modes** — four presets that each configure a bundle of settings in one tap:
+
+| Mode | Brightness | Voice Vol | Alert Persist | Priority Arrow |
+|---|---|---|---|---|
+| Normal | 200 | 80% | 0s | Off |
+| Quiet | 80 | 30% | 3s | On |
+| Highway | 200 | 80% | 0s | Off |
+| Night | 50 | 50% | 5s | Off |
+
+**Safety Lockout** — prevents configuration changes while moving:
+- **Enable:** Toggle lockout on/off.
+- **Threshold:** Speed in mph above which the device locks (1–99 mph, default 5).
+- While locked, POST routes return HTTP 423 (`{"error":"Unavailable while vehicle is moving"}`).
+- Speed unavailability (no OBD, no phone data) is treated as "not locked" (safe fallback).
+
+**API:** `GET/POST /api/drive/mode`, `GET/POST /api/drive/lockout`
+
+**Source:** [interface/src/routes/modes/+page.svelte](../interface/src/routes/modes/+page.svelte)
+
+### History Page (`/history`)
+
+Encounter history log: one entry per alert onset (idle → live transition).
+
+**Columns:** timestamp, band, frequency (GHz), direction, bogey count, signal bars, speed (mph), profile slot, V1 mode, muted, false-alert flag.
+
+**Actions:**
+- **Export CSV** — download the full log as a comma-separated file.
+- **Clear** — delete all entries (irreversible).
+- **Mark False Alert** — toggle the `falseAlert` flag on individual entries.
+
+Ring buffer: 50 entries by default (max 250); oldest entries are pruned when the buffer is full.
+
+**API:** `GET /api/history`, `POST /api/history/clear`, `GET /api/history/export.csv`, `POST /api/history/mark-false`
+
+**Source:** [interface/src/routes/history/+page.svelte](../interface/src/routes/history/+page.svelte)
+
+### Setup Wizard (`/setup`)
+
+8-step first-run wizard. Each step includes a description and a pointer to the relevant settings page:
+
+1. Welcome
+2. Pair Valentine One (`/devices`)
+3. Configure WiFi (`/settings`)
+4. Configure OBD (`/integrations`)
+5. Select Driving Mode (`/modes`)
+6. Brightness Calibration (`/brightness`)
+7. Speaker Test (`/audio`)
+8. Backup Configuration (`/autopush`)
+
+The wizard is **optional**, **skippable** (Skip All button), and **repeatable** (accessible from the nav at any time). Wizard state (`done`, `step`) is NVS-persisted and restored on reconnect. A first-run banner appears on the home dashboard until the wizard is completed or dismissed.
+
+**API:** `GET/POST /api/setup/wizard`
+
+**Source:** [interface/src/routes/setup/+page.svelte](../interface/src/routes/setup/+page.svelte)
 
 ### Colors Page (`/colors`)
 
