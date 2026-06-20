@@ -652,3 +652,25 @@ bool SettingsManager::applyObdSettingsUpdate(const ObdSettingsUpdate& update,
 
     return changed;
 }
+
+void SettingsManager::setDrivingModeConfig(int mode, const DrivingModeConfig& cfg) {
+    if (mode < 0 || mode >= kDrivingModeCount) return;
+    settings_.drivingModeConfigs[mode] = cfg;
+    save();
+}
+
+void SettingsManager::applyDrivingMode(DrivingMode mode) {
+    const int idx = static_cast<int>(mode);
+    if (idx < 0 || idx >= kDrivingModeCount) return;
+    const DrivingModeConfig& cfg = settings_.drivingModeConfigs[idx];
+
+    settings_.activeDrivingMode = mode;
+    settings_.brightness        = cfg.brightness;
+    settings_.voiceVolume       = cfg.voiceVolume;
+
+    const int slot = settings_.activeSlot;
+    settings_.autoPushSlotView(slot).alertPersist   = cfg.alertPersistSec;
+    settings_.autoPushSlotView(slot).priorityArrow  = cfg.priorityArrowOnly;
+
+    save();
+}

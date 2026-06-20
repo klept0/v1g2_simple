@@ -33,6 +33,7 @@
 		{ href: '/devices', label: 'Devices' },
 		{ href: '/colors', label: 'Colors' },
 		{ href: '/audio', label: 'Audio' },
+		{ href: '/modes', label: 'Driving Modes' },
 		{ href: '/integrations', label: 'Integrations' },
 		{ href: '/settings', label: 'Settings' }
 	];

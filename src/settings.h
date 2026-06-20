@@ -74,6 +74,32 @@ enum VoiceAlertMode {
     VOICE_MODE_BAND_FREQ = 3     // Band + frequency ("Ka 34.7")
 };
 
+// Driving mode identifiers
+enum class DrivingMode : uint8_t {
+    Normal  = 0,
+    Quiet   = 1,
+    Highway = 2,
+    Night   = 3,
+};
+constexpr int kDrivingModeCount = 4;
+
+// Per-mode default values (user-configurable)
+struct DrivingModeConfig {
+    uint8_t brightness;
+    uint8_t voiceVolume;
+    uint8_t alertPersistSec;
+    bool    priorityArrowOnly;
+};
+
+inline DrivingModeConfig defaultDrivingModeConfig(DrivingMode mode) {
+    switch (mode) {
+        case DrivingMode::Quiet:   return { 100, 40, 0, true  };
+        case DrivingMode::Highway: return { 220, 75, 3, false };
+        case DrivingMode::Night:   return {  50, 50, 0, false };
+        default:                   return { 200, 75, 0, false };  // Normal
+    }
+}
+
 // Auto-push profile slot
 struct AutoPushSlot {
     String profileName;
@@ -243,6 +269,10 @@ struct V1Settings {
     uint8_t obdSavedAddrType;    // Saved BLE address type (0=public, 1=random)
     int8_t obdMinRssi;           // Minimum RSSI for scan acceptance (dBm)
 
+    // Quick Driving Modes
+    DrivingMode activeDrivingMode;
+    DrivingModeConfig drivingModeConfigs[kDrivingModeCount];
+
     // Default constructor with sensible defaults
     V1Settings() :
         enableWifi(true),
@@ -345,7 +375,14 @@ struct V1Settings {
         obdSavedAddress(""),     // No saved device
         obdSavedName(""),        // No friendly name
         obdSavedAddrType(0),     // Default PUBLIC address type
-        obdMinRssi(-90) {}       // Default -90 dBm minimum RSSI
+        obdMinRssi(-90),         // Default -90 dBm minimum RSSI
+        activeDrivingMode(DrivingMode::Normal),
+        drivingModeConfigs{
+            defaultDrivingModeConfig(DrivingMode::Normal),
+            defaultDrivingModeConfig(DrivingMode::Quiet),
+            defaultDrivingModeConfig(DrivingMode::Highway),
+            defaultDrivingModeConfig(DrivingMode::Night),
+        } {}
 
     static uint8_t normalizeAutoPushSlotIndex(int slotNum) {
         return slotNum == 1 ? 1 : (slotNum == 2 ? 2 : 0);
@@ -757,6 +794,15 @@ public:
     // Batch update methods (don't auto-save, call save() after)
     void updateBrightness(uint8_t brightness) { settings_.brightness = brightness; }
     void updateVoiceVolume(uint8_t volume) { settings_.voiceVolume = volume; }
+
+    // Driving modes
+    DrivingMode getActiveDrivingMode() const { return settings_.activeDrivingMode; }
+    const DrivingModeConfig& getDrivingModeConfig(int mode) const {
+        if (mode < 0 || mode >= kDrivingModeCount) mode = 0;
+        return settings_.drivingModeConfigs[mode];
+    }
+    void setDrivingModeConfig(int mode, const DrivingModeConfig& cfg);
+    void applyDrivingMode(DrivingMode mode);
 
     // Save all settings to flash
     void save();

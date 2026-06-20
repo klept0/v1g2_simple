@@ -432,6 +432,19 @@ bool SettingsManager::writeSettingsToNamespace(const char* ns) {
     written += prefs.putUChar(kNvsObdAddressType, settings_.obdSavedAddrType);
     written += prefs.putChar(kNvsObdMinRssi, settings_.obdMinRssi);
 
+    // Driving modes
+    written += prefs.putUChar(kNvsDrivingMode, static_cast<uint8_t>(settings_.activeDrivingMode));
+    static const char* dmBrightKeys[] = { kNvsDm0Bright, kNvsDm1Bright, kNvsDm2Bright, kNvsDm3Bright };
+    static const char* dmVolKeys[]    = { kNvsDm0Volume, kNvsDm1Volume, kNvsDm2Volume, kNvsDm3Volume };
+    static const char* dmPersistKeys[]= { kNvsDm0Persist,kNvsDm1Persist,kNvsDm2Persist,kNvsDm3Persist };
+    static const char* dmPrioKeys[]   = { kNvsDm0PrioArrow,kNvsDm1PrioArrow,kNvsDm2PrioArrow,kNvsDm3PrioArrow };
+    for (int i = 0; i < kDrivingModeCount; i++) {
+        written += prefs.putUChar(dmBrightKeys[i],  settings_.drivingModeConfigs[i].brightness);
+        written += prefs.putUChar(dmVolKeys[i],     settings_.drivingModeConfigs[i].voiceVolume);
+        written += prefs.putUChar(dmPersistKeys[i], settings_.drivingModeConfigs[i].alertPersistSec);
+        written += prefs.putBool(dmPrioKeys[i],     settings_.drivingModeConfigs[i].priorityArrowOnly);
+    }
+
     // NVS validity marker - used to detect if NVS was wiped.
     // Written LAST so its presence proves the entire write completed.
     written += prefs.putInt(kNvsValid, SETTINGS_VERSION);

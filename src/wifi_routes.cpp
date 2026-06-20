@@ -25,6 +25,7 @@
 #include "modules/wifi/wifi_v1_devices_api_service.h"
 #include "modules/speed/speed_source_selector.h"
 #include "modules/obd/obd_api_service.h"
+#include "modules/wifi/wifi_drive_mode_api_service.h"
 #include "modules/obd/obd_runtime_module.h"
 #include "battery_manager.h"
 #include "time_service.h"
@@ -300,6 +301,14 @@ bool WiFiManager::setupWebServer() {
             server_,
             makeDisplayColorsRuntime(),
             [](void* ctx) { return static_cast<WiFiManager*>(ctx)->checkRateLimit(); }, this);
+    });
+
+    // Driving mode routes
+    server_.on("/api/drive/mode", HTTP_GET, [this]() {
+        WifiDriveModeApiService::handleApiGet(server_, makeDriveModeRuntime());
+    });
+    server_.on("/api/drive/mode", HTTP_POST, [this]() {
+        WifiDriveModeApiService::handleApiSave(server_, makeDriveModeRuntime());
     });
 
     // Audio settings routes

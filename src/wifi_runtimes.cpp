@@ -24,6 +24,7 @@
 #include "modules/wifi/wifi_v1_devices_api_service.h"
 #include "modules/wifi/backup_api_service.h"
 #include "modules/debug/debug_perf_files_service.h"
+#include "modules/wifi/wifi_drive_mode_api_service.h"
 #include "backup_payload_builder.h"
 #include "storage_manager.h"
 #include "perf_sd_logger.h"
@@ -520,5 +521,27 @@ WifiVoicePackApiService::Runtime WiFiManager::makeVoicePackRuntime() {
         settingsManager.setActiveVoicePack(String(packName));
     };
     r.ctx = this;
+    return r;
+}
+
+WifiDriveModeApiService::Runtime WiFiManager::makeDriveModeRuntime() {
+    WifiDriveModeApiService::Runtime r;
+    r.ctx = this;
+    r.getActiveMode = [](void* /*ctx*/) -> DrivingMode {
+        return settingsManager.getActiveDrivingMode();
+    };
+    r.getModeConfig = [](int mode, void* /*ctx*/) -> const DrivingModeConfig& {
+        return settingsManager.getDrivingModeConfig(mode);
+    };
+    r.applyMode = [](DrivingMode mode, void* /*ctx*/) {
+        settingsManager.applyDrivingMode(mode);
+        display.setBrightness(settingsManager.get().brightness);
+    };
+    r.setModeConfig = [](int mode, const DrivingModeConfig& cfg, void* /*ctx*/) {
+        settingsManager.setDrivingModeConfig(mode, cfg);
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
     return r;
 }

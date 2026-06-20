@@ -325,6 +325,21 @@ void SettingsManager::load() {
     settings_.obdMinRssi = static_cast<int8_t>(
         preferences_.getChar(kNvsObdMinRssi, -90));
 
+    // Driving modes
+    settings_.activeDrivingMode = static_cast<DrivingMode>(
+        clampU8(preferences_.getUChar(kNvsDrivingMode, 0), 0, kDrivingModeCount - 1));
+    static const char* dmBrightKeys[] = { kNvsDm0Bright, kNvsDm1Bright, kNvsDm2Bright, kNvsDm3Bright };
+    static const char* dmVolKeys[]    = { kNvsDm0Volume, kNvsDm1Volume, kNvsDm2Volume, kNvsDm3Volume };
+    static const char* dmPersistKeys[]= { kNvsDm0Persist,kNvsDm1Persist,kNvsDm2Persist,kNvsDm3Persist };
+    static const char* dmPrioKeys[]   = { kNvsDm0PrioArrow,kNvsDm1PrioArrow,kNvsDm2PrioArrow,kNvsDm3PrioArrow };
+    for (int i = 0; i < kDrivingModeCount; i++) {
+        DrivingModeConfig def = defaultDrivingModeConfig(static_cast<DrivingMode>(i));
+        settings_.drivingModeConfigs[i].brightness      = preferences_.getUChar(dmBrightKeys[i],  def.brightness);
+        settings_.drivingModeConfigs[i].voiceVolume     = clampU8(preferences_.getUChar(dmVolKeys[i], def.voiceVolume), 0, 100);
+        settings_.drivingModeConfigs[i].alertPersistSec = clampU8(preferences_.getUChar(dmPersistKeys[i], def.alertPersistSec), 0, 5);
+        settings_.drivingModeConfigs[i].priorityArrowOnly = preferences_.getBool(dmPrioKeys[i], def.priorityArrowOnly);
+    }
+
     preferences_.end();
 
     Serial.printf("[Settings] OK wifi=%s proxy=%s bright=%d autoPush=%s\n",
