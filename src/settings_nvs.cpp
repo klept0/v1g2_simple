@@ -450,6 +450,10 @@ bool SettingsManager::writeSettingsToNamespace(const char* ns) {
     written += prefs.putUChar(kNvsBrtMute,        settings_.brtMute);
     written += prefs.putUShort(kNvsBrtIdleSec,    settings_.brtIdleSec);
 
+    // Setup wizard
+    written += prefs.putBool(kNvsWzdDone, settings_.wzdDone);
+    written += prefs.putUChar(kNvsWzdStep, settings_.wzdStep);
+
     // Driving modes
     written += prefs.putUChar(kNvsDrivingMode, static_cast<uint8_t>(settings_.activeDrivingMode));
     static const char* dmBrightKeys[] = { kNvsDm0Bright, kNvsDm1Bright, kNvsDm2Bright, kNvsDm3Bright };

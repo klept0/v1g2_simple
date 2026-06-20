@@ -711,3 +711,5 @@ void SettingsManager::setVoiceFirstAlertOnly(bool v)    { settings_.voiceFirstAl
 void SettingsManager::setVoiceDirectionChangeOnly(bool v){ settings_.voiceDirectionChangeOnly = v; save(); }
 void SettingsManager::setStartupSoundEnabled(bool v)    { settings_.startupSoundEnabled = v;     save(); }
 void SettingsManager::setShutdownSoundEnabled(bool v)   { settings_.shutdownSoundEnabled = v;    save(); }
+void SettingsManager::setWzdDone(bool v)                { settings_.wzdDone = v;                 save(); }
+void SettingsManager::setWzdStep(uint8_t step)          { settings_.wzdStep = step > 7 ? 7 : step; save(); }

@@ -31,6 +31,7 @@
 #include "modules/wifi/wifi_brightness_api_service.h"
 #include "modules/wifi/wifi_phone_companion_api_service.h"
 #include "modules/phone/phone_companion_module.h"
+#include "modules/wifi/wifi_wizard_api_service.h"
 #include "modules/brightness/smart_brightness_engine.h"
 #include "modules/safety/driving_safety_lockout.h"
 #include "backup_payload_builder.h"
@@ -592,6 +593,15 @@ WifiPhoneCompanionApiService::Runtime WiFiManager::makePhoneCompanionRuntime() {
     };
     r.checkRateLimit = [](void* ctx) {
         return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
+    return r;
+}
+
+WifiWizardApiService::Runtime WiFiManager::makeWizardRuntime() {
+    WifiWizardApiService::Runtime r;
+    r.ctx = this;
+    r.getSettings = [](void* /*ctx*/) -> SettingsManager* {
+        return &settingsManager;
     };
     return r;
 }

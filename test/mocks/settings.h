@@ -123,6 +123,10 @@ struct V1Settings {
     bool voiceDirectionChangeOnly = false;
     bool startupSoundEnabled = true;
     bool shutdownSoundEnabled = true;
+
+    // Setup wizard
+    bool    wzdDone = false;
+    uint8_t wzdStep = 0;
     
     // Speed mute
     bool speedMuteEnabled = false;

@@ -194,6 +194,10 @@ inline constexpr const char* kNvsBrtAlert       = "brtAlert";
 inline constexpr const char* kNvsBrtMute        = "brtMute";
 inline constexpr const char* kNvsBrtIdleSec     = "brtIdleSec";
 
+// ── Setup Wizard ──────────────────────────────────────────────────────────
+inline constexpr const char* kNvsWzdDone = "wzdDone";
+inline constexpr const char* kNvsWzdStep = "wzdStep";
+
 // ── Separate namespaces ───────────────────────────────────────────────────
 // Namespace: v1wifi_secret (WIFI_CLIENT_NS)
 inline constexpr const char* kNvsWifiPassword = "password";

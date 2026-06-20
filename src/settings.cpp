@@ -363,6 +363,10 @@ void SettingsManager::load() {
         settings_.drivingModeConfigs[i].priorityArrowOnly = preferences_.getBool(dmPrioKeys[i], def.priorityArrowOnly);
     }
 
+    // Setup wizard
+    settings_.wzdDone = preferences_.getBool(kNvsWzdDone, false);
+    settings_.wzdStep = clampU8(preferences_.getUChar(kNvsWzdStep, 0), 0, 7);
+
     preferences_.end();
 
     Serial.printf("[Settings] OK wifi=%s proxy=%s bright=%d autoPush=%s\n",

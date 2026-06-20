@@ -37,7 +37,8 @@
 		{ href: '/brightness', label: 'Brightness' },
 		{ href: '/history', label: 'History' },
 		{ href: '/integrations', label: 'Integrations' },
-		{ href: '/settings', label: 'Settings' }
+		{ href: '/settings', label: 'Settings' },
+		{ href: '/setup', label: 'Setup Wizard' }
 	];
 	const advancedLinks = [{ href: '/dev', label: 'Development' }];
 

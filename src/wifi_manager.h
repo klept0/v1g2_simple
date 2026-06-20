@@ -77,6 +77,10 @@ namespace WifiPhoneCompanionApiService {
 struct Runtime;
 }
 
+namespace WifiWizardApiService {
+struct Runtime;
+}
+
 class ObdRuntimeModule;
 class SpeedSourceSelector;
 
@@ -355,6 +359,7 @@ private:
     WifiLockoutApiService::Runtime makeLockoutRuntime();
     WifiBrightnessApiService::Runtime makeBrightnessRuntime();
     WifiPhoneCompanionApiService::Runtime makePhoneCompanionRuntime();
+    WifiWizardApiService::Runtime makeWizardRuntime();
     DebugPerfFilesService::PerfFilesRuntime makePerfFilesRuntime();
 
     // API endpoints

@@ -293,6 +293,10 @@ struct V1Settings {
     uint8_t brtMute;                // Brightness during muted alert
     uint16_t brtIdleSec;            // Idle dim timeout (seconds); 0 = disabled
 
+    // Setup wizard state
+    bool    wzdDone;  // true once the user has completed or skipped the wizard
+    uint8_t wzdStep;  // last active step (0-7)
+
     // Default constructor with sensible defaults
     V1Settings() :
         enableWifi(true),
@@ -416,7 +420,9 @@ struct V1Settings {
         brtIdle(50),
         brtAlert(255),
         brtMute(120),
-        brtIdleSec(30) {}
+        brtIdleSec(30),
+        wzdDone(false),
+        wzdStep(0) {}
 
     static uint8_t normalizeAutoPushSlotIndex(int slotNum) {
         return slotNum == 1 ? 1 : (slotNum == 2 ? 2 : 0);
@@ -887,6 +893,12 @@ public:
     void setVoiceDirectionChangeOnly(bool v);
     void setStartupSoundEnabled(bool v);
     void setShutdownSoundEnabled(bool v);
+
+    // Setup wizard
+    bool    isWzdDone() const    { return settings_.wzdDone; }
+    uint8_t getWzdStep() const   { return settings_.wzdStep; }
+    void setWzdDone(bool v);
+    void setWzdStep(uint8_t step);
 
     // Save all settings to flash
     void save();

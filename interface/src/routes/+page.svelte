@@ -3,6 +3,7 @@
 	import BrandMark from '$lib/components/BrandMark.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import StatusAlert from '$lib/components/StatusAlert.svelte';
+	import { fetchWithTimeout } from '$lib/utils/poll';
 	import {
 		retainRuntimeStatus,
 		runtimeStatus,
@@ -10,7 +11,18 @@
 		runtimeStatusLoading
 	} from '$lib/stores/runtimeStatus.svelte.js';
 
-	onMount(() => retainRuntimeStatus({ needsStatus: true }));
+	let showWizardBanner = $state(false);
+
+	onMount(async () => {
+		retainRuntimeStatus({ needsStatus: true });
+		try {
+			const res = await fetchWithTimeout('/api/setup/wizard');
+			if (res.ok) {
+				const data = await res.json();
+				showWizardBanner = !data.done;
+			}
+		} catch (_) {}
+	});
 
 	function formatUptime(seconds) {
 		const d = Math.floor(seconds / 86400);
@@ -30,6 +42,13 @@
 
 <div class="page-stack">
 	<PageHeader title="Dashboard" subtitle="Live system status and quick health checks." />
+
+	{#if showWizardBanner}
+		<div class="wizard-banner">
+			<span>👋 Welcome! Run the <a href="/setup">Setup Wizard</a> to get started.</span>
+			<button class="wizard-banner-dismiss" onclick={() => (showWizardBanner = false)}>✕</button>
+		</div>
+	{/if}
 
 	{#if $runtimeStatus.alert?.active}
 		<div class="surface-alert alert-warning warning-strong animate-pulse" role="alert" aria-live="assertive">
@@ -124,3 +143,33 @@
 
 	<StatusAlert message={$runtimeStatusError} fallbackType="error" />
 </div>
+
+<style>
+	.wizard-banner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		background: var(--accent-dim, #1e3a5f);
+		border: 1px solid var(--accent, #3b82f6);
+		border-radius: 6px;
+		padding: 0.6rem 1rem;
+		font-size: 0.9rem;
+		color: var(--text-primary, #fff);
+		margin-bottom: 0.5rem;
+	}
+
+	.wizard-banner a {
+		color: var(--accent, #3b82f6);
+		font-weight: 600;
+	}
+
+	.wizard-banner-dismiss {
+		background: none;
+		border: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		padding: 0 0.25rem;
+		font-size: 1rem;
+		line-height: 1;
+	}
+</style>
