@@ -176,7 +176,39 @@ Configure at `http://192.168.35.5/colors`.
 
 ### BLE proxy
 
-When enabled, the device re-advertises V1 data under a configurable name (default: `V1-Proxy`), allowing a phone app to connect simultaneously. The proxy and the display operate independently — the display does not depend on the phone app being present.
+When enabled, v1simple re-advertises V1 data under a configurable BLE device name (default: **`V1-Proxy`**), so a phone app can connect simultaneously without interfering with the display. The display and the proxy are fully independent — neither requires the other.
+
+#### Enabling
+
+- **Web UI:** Settings → BLE Proxy → toggle on, set device name, save.
+- **On-device:** BOOT short-press × 2 → toggle page → tap **BLE Proxy**.
+
+#### Connecting a phone app
+
+Any app that speaks the Valentine One BLE protocol (e.g. **YaV1**, **V1Driver**) can connect:
+
+1. Enable BLE proxy on v1simple (blue dot appears in the status bar when advertising).
+2. Open the phone app and scan for BLE devices.
+3. Select **`V1-Proxy`** (or your custom name) — do **not** select the V1 directly.
+4. The app receives the same packet stream as the display in real time.
+
+#### BLE service details (for app developers)
+
+| Item | Value |
+|---|---|
+| **Service UUID** | `92A0AFF4-9E05-11E2-AA59-F23C91AEC05E` |
+| **Display data (short) — NOTIFY** | `92A0B2CE-9E05-11E2-AA59-F23C91AEC05E` |
+| **Display data (long) — NOTIFY** | `92A0B4E0-9E05-11E2-AA59-F23C91AEC05E` |
+| **Command write (short) — WRITE NR** | `92A0B6D4-9E05-11E2-AA59-F23C91AEC05E` |
+| **Command write (long) — WRITE NR** | `92A0B8D2-9E05-11E2-AA59-F23C91AEC05E` |
+
+These are the standard Valentine One Gen2 BLE UUIDs — v1simple proxies them verbatim, so any existing V1G2-compatible app works without modification. Phone commands (profile changes, mute) written to the command characteristics are forwarded to the V1.
+
+#### Notes
+
+- Auto-mute: voice alerts are silenced while a phone app is connected to the proxy (configurable).
+- The proxy and the V1 BLE client run on the same radio but on different NimBLE roles (server + client simultaneously).
+- Configurable device name (max 32 chars) lets you distinguish multiple units on the same vehicle.
 
 ---
 
