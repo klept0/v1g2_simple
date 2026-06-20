@@ -184,14 +184,16 @@ bool TouchUiModule::handleToggleTouch() {
     int16_t touchX, touchY;
     if (!touchHandler_->getTouchPoint(touchX, touchY)) return false;
 
-    // Three equal-width buttons across 640px
-    // Button 0: 0–213   WiFi AP
-    // Button 1: 213–427 BLE Proxy
-    // Button 2: 427–640 Mute→0
+    // Three equal-width buttons across 640px.
+    // Touch X is mirrored vs. display X on this panel (rotation=1),
+    // so the rightmost visual button (Mute) maps to the lowest touchX values.
+    // Button 2 (Mute):     touchX 0..212   → visual right
+    // Button 1 (BLE Proxy): touchX 213..426 → visual center
+    // Button 0 (WiFi AP):   touchX 427..640 → visual left
     int btn = -1;
-    if (touchX < 213)       btn = 0;
-    else if (touchX < 427)  btn = 1;
-    else                    btn = 2;
+    if (touchX < 213)       btn = 2;  // Mute (right side visually)
+    else if (touchX < 427)  btn = 1;  // BLE Proxy (center)
+    else                    btn = 0;  // WiFi AP (left side visually)
 
     if (btn == 0) {
         // Toggle WiFi AP

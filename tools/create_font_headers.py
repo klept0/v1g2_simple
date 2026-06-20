@@ -21,7 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 INCLUDE_DIR = REPO_ROOT / "include"
 
 # Characters actually rendered by the display (bands, digits, compass, labels)
-DISPLAY_CHARS = "0123456789KaUuXLNESWMPABCDkghz .:-/%+"
+DISPLAY_CHARS = "0123456789KaUuXLNESWMPABCDRkghz .:-/%+"
 
 FONTS = [
     {
@@ -47,7 +47,7 @@ FONTS = [
 
 def subset_ttf(src: Path, out: Path, chars: str) -> None:
     result = subprocess.run(
-        [sys.executable, "-m", "fonttools", "subset", str(src),
+        [str(Path(sys.executable).parent / "fonttools"), "subset", str(src),
          f"--text={chars}", f"--output-file={out}"],
         capture_output=True, text=True
     )
