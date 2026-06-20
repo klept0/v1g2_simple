@@ -98,24 +98,15 @@ Change the default password from the Settings page before putting the device on 
 | Gesture | When | Function |
 |---|---|---|
 | Single tap | Alert active | Mute / unmute the alert |
-| Triple tap | No alert | Cycle profile slot (0 → 1 → 2 → 0) |
+| Triple tap within 600 ms | No active alert | Cycle profile slot (0 → 1 → 2 → 0) |
 
 ---
 
 ## Features
 
-### Screens
+### Screen
 
-The 640×172 display shows a single radar screen.
-
-| Tap gesture | Action |
-|-------------|--------|
-| Any tap while alert is active | Mute/unmute |
-| Triple tap within 600ms (no active alert) | Cycle profile |
-
-| # | Screen | Description |
-|---|--------|-------------|
-| 1 | **Radar** | Standard V1 alert display (frequency, band, signal bars, direction arrow) |
+The 640×172 display shows the radar screen: live frequency, band indicators, signal bars (6-level front/rear), direction arrow, and bogey counter.
 
 ### Voice alerts
 
@@ -170,7 +161,7 @@ Configure at `http://192.168.35.5/profiles` and `http://192.168.35.5/autopush`.
 
 ### Display customization
 
-Every color on the display is individually configurable — band indicators, direction arrows, signal bars (6 levels), bogey counter, frequency readout, status icons (WiFi, BLE, RSSI, battery), and muted/persisted states. Two display fonts: **Classic** (7-segment style) and **Serpentine**, plus JetBrains Mono, Roboto, and Atkinson Hyperlegible.
+Every color on the display is individually configurable — band indicators, direction arrows, signal bars (6 levels), bogey counter, frequency readout, status icons (WiFi, BLE, RSSI, battery), and muted/persisted states. Five display fonts: **Classic** (7-segment), **JetBrains Mono**, **Roboto**, **Serpentine**, and **Atkinson Hyperlegible** — switch any time from the Colors page.
 
 Configure at `http://192.168.35.5/colors`.
 
@@ -215,7 +206,7 @@ interface/              SvelteKit web UI (compiled to static files in data/)
   src/routes/           One directory per page
   src/lib/              Shared components, utilities, fetchWithTimeout
 config/                 Audio asset manifest (118 clip definitions)
-tools/                  TTS generation scripts
+tools/                  TTS generation + font subsetting scripts
 test/                   76 native unit test suites (PlatformIO native env)
 .github/workflows/      CI: build + test, release, Pages deploy
 ```
