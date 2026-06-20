@@ -764,7 +764,7 @@ static void configureAlertAudioDisplayPipeline() {
             entry.signalBars   = (priority.direction & DIR_FRONT)
                                    ? priority.frontStrength : priority.rearStrength;
             entry.bogeyCount   = static_cast<uint8_t>(parser.getAlertCount());
-            entry.speedMph     = speedSourceSelector.getSpeedMph();
+            entry.speedMph     = speedSourceSelector.selectedSpeed().speedMph;
             entry.muted        = state.muted;
             entry.modeChar     = state.hasMode ? state.modeChar : 0;
 

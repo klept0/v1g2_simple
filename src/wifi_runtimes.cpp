@@ -43,6 +43,11 @@
 #include "time_service.h"
 #include "../include/config.h"
 
+extern EncounterHistory      encounterHistory;
+extern SmartBrightnessEngine smartBrightnessEngine;
+extern PhoneCompanionModule  phoneCompanionModule;
+extern DrivingSafetyLockout  drivingSafetyLockout;
+
 WifiAutoPushApiService::Runtime WiFiManager::makeAutoPushRuntime() {
     return WifiAutoPushApiService::Runtime{
         [](WifiAutoPushApiService::SlotsSnapshot& snapshot, void* /*ctx*/) {
