@@ -149,7 +149,7 @@ void V1Display::showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn) {
     Btn buttons[3] = {
         { 0,         "WiFi AP",   wifiOn      },
         { btnW,      "BLE Proxy", proxyOn     },
-        { btnW * 2,  "Mute\xE2\x86\x920",  muteZeroOn  },  // "Mute→0"
+        { btnW * 2,  "Mute=0",   muteZeroOn  },
     };
 
     tft_->setTextSize(1);
