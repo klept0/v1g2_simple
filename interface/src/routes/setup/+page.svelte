@@ -131,7 +131,7 @@
 		saveState(0, false);
 	}
 
-	$derived: const progress = ((step + 1) / TOTAL) * 100;
+	const progress = $derived(((step + 1) / TOTAL) * 100);
 </script>
 
 <PageHeader title="Setup Wizard" />
