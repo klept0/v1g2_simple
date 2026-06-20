@@ -3,6 +3,7 @@
 	import BrandMark from '$lib/components/BrandMark.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import StatusAlert from '$lib/components/StatusAlert.svelte';
+	import { fetchWithTimeout } from '$lib/utils/poll';
 	import {
 		retainRuntimeStatus,
 		runtimeStatus,
@@ -13,11 +14,12 @@
 	let showWizardBanner = $state(false);
 
 	onMount(() => {
-		retainRuntimeStatus({ needsStatus: true });
-		fetch('/api/setup/wizard')
+		const release = retainRuntimeStatus({ needsStatus: true });
+		fetchWithTimeout('/api/setup/wizard')
 			.then((r) => r.ok ? r.json() : null)
 			.then((data) => { if (data) showWizardBanner = !data.done; })
 			.catch(() => {});
+		return release;
 	});
 
 	function formatUptime(seconds) {
