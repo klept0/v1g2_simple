@@ -4,7 +4,7 @@ Complete API documentation for the V1-Simple web interface and REST endpoints.
 
 **Base URL**: `http://192.168.35.5` (default AP mode)  
 **Content-Type**: `application/x-www-form-urlencoded` (POST) or `application/json`
-**Updated**: `2026-03-20`
+**Updated**: `2026-06-20`
 
 ---
 
@@ -1073,4 +1073,4 @@ Check firmware version via:
 
 ---
 
-*Last updated: April 2026*
+*Last updated: June 2026*

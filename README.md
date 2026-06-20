@@ -29,7 +29,7 @@ A open-source touchscreen companion display for the **Valentine One Gen2** radar
 |---|---|
 | **MCU** | ESP32-S3 (Xtensa dual-core 240 MHz, 8 MB PSRAM, 16 MB flash) |
 | **Framework** | Arduino + FreeRTOS (PlatformIO build) |
-| **Display** | 3.49" 320×960 IPS via SPI; rendered with LVGL-adjacent direct framebuffer |
+| **Display** | 3.49" 640×172 QSPI IPS (AXS15231B); rendered with Arduino_GFX |
 | **BLE** | ESP-IDF BLE stack; full V1 packet parser (alerts, profiles, sweeps) |
 | **Storage** | LittleFS (firmware partition) + SD card (backup, bond store) |
 | **Audio** | µ-law (G.711) clips concatenated at runtime; decoded via 256-entry lookup table |

@@ -4,9 +4,9 @@
 > For observability/testing authority see `OBSERVABILITY.md`. For perf thresholds see `PERF_SLOS.md`. For the full REST API see `API.md`.
 
 
-**Version:** 4.0.1  
+**Version:** 4.2.1  
 **Hardware:** Waveshare ESP32-S3-Touch-LCD-3.49 (AXS15231B, 640×172 LCD)  
-**Last Updated:** April 2026
+**Last Updated:** June 2026
 
 ---
 
@@ -14,10 +14,10 @@
 
 Feature-by-feature release history is maintained in `CHANGELOG.md`.
 
-Current train (`v4.0.1`) highlights:
-- Web installer hotfix: corrected merged browser-flash image packaging for ESP Web Tools.
-- Secure hosted fallback installer path for browser installs when the custom domain is not in a secure context.
-- Dedicated deploy workflows for installer HTML updates and installer-asset refreshes.
+Current train (`v4.2.1`) highlights:
+- Five display fonts: Classic (7-segment), JetBrains Mono, Roboto, Serpentine, and Atkinson Hyperlegible.
+- BOOT button two-page settings UI: Page 1 (brightness/volume sliders), Page 2 (WiFi AP / BLE Proxy / Mute=0 toggles).
+- Display now shows only the radar view; multi-screen navigation and the JBV1, History, Diagnostics, and Clock screens have been removed.
 
 
 ---
@@ -54,7 +54,7 @@ No development tools needed — just a Chrome browser and USB cable:
 
 👉 **[Install via Hosted Web](https://klept0.github.io/v1g2_simple/install/)**
 
-Use the hosted installer during the 4.0.1 hotfix rollout. It bypasses the custom-domain HTTPS path and loads the published V1-Simple manifest directly.
+The hosted installer always serves the latest published firmware via the V1-Simple manifest.
 
 1. Put device in bootloader mode (hold POWER + GEAR while plugging in USB)
 2. Click "Install V1-Simple" and select your device
@@ -484,7 +484,7 @@ Use for loop-phase orchestration with narrow function interfaces. Examples: all 
 - **Software reset / upload:** Skip splash for faster iteration
 - **Crash restart:** Skip splash
 
-The firmware version (e.g., "v4.0.1") is displayed on the boot splash screen and in the web UI header.
+The firmware version (e.g., "v4.2.1") is displayed on the boot splash screen and in the web UI header.
 
 **Source:** [src/main.cpp](../src/main.cpp#L471) (showBootSplash call), [src/display_screens.cpp](../src/display_screens.cpp) showBootSplash()
 
@@ -2096,4 +2096,4 @@ Based on code analysis:
 ---
 
 
-*Document generated from source code analysis. Last verified against v4.0.1.*
+*Document generated from source code analysis. Last verified against v4.2.1.*
