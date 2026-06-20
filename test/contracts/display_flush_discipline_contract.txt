@@ -10,6 +10,7 @@ kind=DISPLAY_FLUSH file=src/display_screens.cpp line=307 function=showBootSplash
 kind=DISPLAY_FLUSH file=src/display_screens.cpp line=340 function=showShutdown
 kind=DISPLAY_FLUSH file=src/display_screens.cpp line=375 function=showLowBattery
 kind=DISPLAY_FLUSH file=src/display_sliders.cpp line=98 function=showSettingsSliders
+kind=BARE_FLUSH file=src/display_sliders.cpp line=* function=showTogglesPage
 kind=DISPLAY_FLUSH file=src/display_update.cpp line=449 function=update
 kind=DISPLAY_FLUSH file=src/display_update.cpp line=598 function=updatePersisted
 kind=DISPLAY_FLUSH file=src/display_update.cpp line=915 function=update
