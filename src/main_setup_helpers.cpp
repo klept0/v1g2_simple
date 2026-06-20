@@ -34,6 +34,7 @@
 #include "modules/perf/debug_macros.h"
 #include "modules/touch/tap_gesture_module.h"
 #include "modules/display/dashboard_module.h"
+#include "modules/history/encounter_history.h"
 #include <driver/gpio.h>
 
 namespace {
@@ -162,6 +163,12 @@ void initializeStorageAndProfiles() {
         // Validate profile references in auto-push slots.
         // Clear references to profiles that don't exist.
         settingsManager.validateProfileReferences(v1ProfileManager);
+
+        // Encounter history — always uses LittleFS (available even when SD is primary)
+        if (storageManager.isLittleFSReady()) {
+            encounterHistory.begin(nullptr);  // nullptr → uses built-in LittleFS adapter
+            SerialLog.printf("[Setup] Encounter history: %zu entries\n", encounterHistory.count());
+        }
     } else {
         SerialLog.println("[Setup] Storage unavailable - profiles will be disabled");
     }

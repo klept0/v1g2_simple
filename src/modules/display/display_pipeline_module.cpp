@@ -149,6 +149,12 @@ void DisplayPipelineModule::handleParsed(uint32_t nowMs) {
     }
     lastDisplayDraw_ = nowMs;
 
+    // Fire onset callback on the first frame where alerts appear.
+    if (hasAlerts && !prevHasAlerts_ && alertOnsetCb_ && hasRenderablePriority) {
+        alertOnsetCb_(priority, state, nowMs, alertOnsetCtx_);
+    }
+    prevHasAlerts_ = hasAlerts;
+
     if (hasAlerts) {
         // Alert takes over — deactivate dashboard so it doesn't interfere
         // with the resting/persisted render when the alert eventually clears.

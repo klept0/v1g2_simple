@@ -26,6 +26,7 @@
 #include "modules/speed/speed_source_selector.h"
 #include "modules/obd/obd_api_service.h"
 #include "modules/wifi/wifi_drive_mode_api_service.h"
+#include "modules/wifi/wifi_history_api_service.h"
 #include "modules/obd/obd_runtime_module.h"
 #include "battery_manager.h"
 #include "time_service.h"
@@ -301,6 +302,20 @@ bool WiFiManager::setupWebServer() {
             server_,
             makeDisplayColorsRuntime(),
             [](void* ctx) { return static_cast<WiFiManager*>(ctx)->checkRateLimit(); }, this);
+    });
+
+    // Encounter history routes
+    server_.on("/api/history", HTTP_GET, [this]() {
+        WifiHistoryApiService::handleApiGet(server_, makeHistoryRuntime());
+    });
+    server_.on("/api/history/clear", HTTP_POST, [this]() {
+        WifiHistoryApiService::handleApiClear(server_, makeHistoryRuntime());
+    });
+    server_.on("/api/history/export.csv", HTTP_GET, [this]() {
+        WifiHistoryApiService::handleApiCsvExport(server_, makeHistoryRuntime());
+    });
+    server_.on("/api/history/mark-false", HTTP_POST, [this]() {
+        WifiHistoryApiService::handleApiMarkFalse(server_, makeHistoryRuntime());
     });
 
     // Driving mode routes

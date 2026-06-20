@@ -25,6 +25,8 @@
 #include "modules/wifi/backup_api_service.h"
 #include "modules/debug/debug_perf_files_service.h"
 #include "modules/wifi/wifi_drive_mode_api_service.h"
+#include "modules/wifi/wifi_history_api_service.h"
+#include "modules/history/encounter_history.h"
 #include "backup_payload_builder.h"
 #include "storage_manager.h"
 #include "perf_sd_logger.h"
@@ -539,6 +541,18 @@ WifiDriveModeApiService::Runtime WiFiManager::makeDriveModeRuntime() {
     };
     r.setModeConfig = [](int mode, const DrivingModeConfig& cfg, void* /*ctx*/) {
         settingsManager.setDrivingModeConfig(mode, cfg);
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
+    return r;
+}
+
+WifiHistoryApiService::Runtime WiFiManager::makeHistoryRuntime() {
+    WifiHistoryApiService::Runtime r;
+    r.ctx = this;
+    r.getHistory = [](void* /*ctx*/) -> EncounterHistory* {
+        return &encounterHistory;
     };
     r.checkRateLimit = [](void* ctx) {
         return static_cast<WiFiManager*>(ctx)->checkRateLimit();

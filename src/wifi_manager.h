@@ -61,6 +61,10 @@ namespace WifiDriveModeApiService {
 struct Runtime;
 }
 
+namespace WifiHistoryApiService {
+struct Runtime;
+}
+
 class ObdRuntimeModule;
 class SpeedSourceSelector;
 
@@ -335,6 +339,7 @@ private:
     WifiV1DevicesApiService::Runtime makeV1DevicesRuntime();
     BackupApiService::BackupRuntime makeBackupRuntime();
     WifiDriveModeApiService::Runtime makeDriveModeRuntime();
+    WifiHistoryApiService::Runtime makeHistoryRuntime();
     DebugPerfFilesService::PerfFilesRuntime makePerfFilesRuntime();
 
     // API endpoints

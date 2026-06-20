@@ -81,6 +81,7 @@
 #include "modules/obd/obd_runtime_module.h"
 #include "modules/obd/obd_ble_client.h"
 #include "modules/display/dashboard_module.h"
+#include "modules/history/encounter_history.h"
 #include "modules/obd/obd_settings_sync_module.h"
 #include "modules/wifi/wifi_boot_policy.h"
 #include "modules/wifi/wifi_auto_start_module.h"
@@ -180,6 +181,7 @@ LoopPostDisplayModule loopPostDisplayModule;
 WifiAutoStartModule wifiAutoStartModule;
 WifiPriorityPolicyModule wifiPriorityPolicyModule;
 DashboardModule dashboardModule;
+EncounterHistory encounterHistory;
 WifiVisualSyncModule wifiVisualSyncModule;
 WifiProcessCadenceModule wifiProcessCadenceModule;
 WifiRuntimeModule wifiRuntimeModule;
@@ -741,6 +743,32 @@ static void configureAlertAudioDisplayPipeline() {
                                 &quietCoordinatorModule);
     displayPipelineModule.setSpeedMuteModule(&speedMuteModule);
     displayPipelineModule.setDashboardModule(&dashboardModule);
+
+    // Record encounters on alert onset
+    displayPipelineModule.setAlertOnsetCallback(
+        [](const AlertData& priority, const DisplayState& state,
+           uint32_t nowMs, void* /*ctx*/) {
+            if (!encounterHistory.count() && !storageManager.isLittleFSReady()) return;
+            EncounterEntry entry;
+            entry.timestampMs  = timeService.nowEpochMsOr0();
+            entry.monoMs       = nowMs;
+            entry.band         = priority.band;
+            entry.frequencyMhz = priority.frequency;
+            entry.direction    = priority.direction;
+            entry.signalBars   = (priority.direction & DIR_FRONT)
+                                   ? priority.frontStrength : priority.rearStrength;
+            entry.bogeyCount   = static_cast<uint8_t>(parser.getAlertCount());
+            entry.speedMph     = speedSourceSelector.getSpeedMph();
+            entry.muted        = state.muted;
+            entry.modeChar     = state.hasMode ? state.modeChar : 0;
+
+            const V1Settings& s = settingsManager.get();
+            const auto& slot = s.autoPushSlotView(s.activeSlot);
+            strlcpy(entry.slotName, slot.name.c_str(), sizeof(entry.slotName));
+
+            encounterHistory.record(entry);
+        },
+        nullptr);
 }
 
 static void configureSystemLoopCoreModules() {

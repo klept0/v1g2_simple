@@ -45,6 +45,7 @@ class ObdRuntimeModule;
 class ObdBleClient;
 class SpeedSourceSelector;
 class DashboardModule;
+class EncounterHistory;
 
 #ifndef UNIT_TEST
 class DisplayPipelineModule;
@@ -90,6 +91,7 @@ extern ObdRuntimeModule obdRuntimeModule;
 extern ObdBleClient obdBleClient;
 extern SpeedSourceSelector speedSourceSelector;
 extern DashboardModule dashboardModule;
+extern EncounterHistory encounterHistory;
 
 #ifndef UNIT_TEST
 extern DisplayPipelineModule displayPipelineModule;

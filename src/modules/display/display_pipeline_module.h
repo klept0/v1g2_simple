@@ -5,6 +5,7 @@
 // Forward declarations — full headers included in display_pipeline_module.cpp
 class V1Display;
 struct DisplayState;
+struct AlertData;
 class PacketParser;
 enum class DisplayMode;
 
@@ -34,6 +35,17 @@ public:
     void setDashboardModule(DashboardModule* module) { dashboard_ = module; }
 #endif
 
+    // Fires once when alerts transition from none → present (alert onset).
+    // Provides the priority alert, full display state, and timestamp.
+    using AlertOnsetCb = void (*)(const AlertData& priority,
+                                  const DisplayState& state,
+                                  uint32_t nowMs,
+                                  void* ctx);
+    void setAlertOnsetCallback(AlertOnsetCb cb, void* ctx) {
+        alertOnsetCb_  = cb;
+        alertOnsetCtx_ = ctx;
+    }
+
     // Process after a successful parser.parse(); expects parser state already updated.
     void handleParsed(uint32_t nowMs);
     void restoreCurrentOwner(uint32_t nowMs);
@@ -61,6 +73,10 @@ private:
 #ifndef UNIT_TEST
     DashboardModule* dashboard_ = nullptr;
 #endif
+
+    AlertOnsetCb alertOnsetCb_  = nullptr;
+    void*        alertOnsetCtx_ = nullptr;
+    bool         prevHasAlerts_ = false;
 
     // Mute debounce
     bool debouncedMuteState_ = false;
