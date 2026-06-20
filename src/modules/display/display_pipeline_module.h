@@ -14,6 +14,9 @@ class AlertPersistenceModule;
 class VoiceModule;
 class SpeedMuteModule;
 class QuietCoordinatorModule;
+#ifndef UNIT_TEST
+class DashboardModule;
+#endif
 
 class DisplayPipelineModule {
 public:
@@ -27,6 +30,9 @@ public:
                QuietCoordinatorModule* quietCoordinator);
 
     void setSpeedMuteModule(SpeedMuteModule* module) { speedMute_ = module; }
+#ifndef UNIT_TEST
+    void setDashboardModule(DashboardModule* module) { dashboard_ = module; }
+#endif
 
     // Process after a successful parser.parse(); expects parser state already updated.
     void handleParsed(uint32_t nowMs);
@@ -39,7 +45,8 @@ private:
         Scanning,
         Live,
         Persisted,
-        Resting
+        Resting,
+        Dashboard
     };
 
     DisplayMode* displayMode_ = nullptr;
@@ -51,6 +58,9 @@ private:
     VoiceModule* voice_ = nullptr;
     SpeedMuteModule* speedMute_ = nullptr;
     QuietCoordinatorModule* quiet_ = nullptr;
+#ifndef UNIT_TEST
+    DashboardModule* dashboard_ = nullptr;
+#endif
 
     // Mute debounce
     bool debouncedMuteState_ = false;

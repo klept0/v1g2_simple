@@ -33,6 +33,7 @@
 #include "modules/alert_persistence/alert_persistence_module.h"
 #include "modules/perf/debug_macros.h"
 #include "modules/touch/tap_gesture_module.h"
+#include "modules/display/dashboard_module.h"
 #include <driver/gpio.h>
 
 namespace {
@@ -224,7 +225,8 @@ void configureUiTouchInteractionModules(QuietCoordinatorModule& quietCoordinator
                            &autoPushModule,
                            &alertPersistenceModule,
                            &displayMode,
-                           &quietCoordinator);
+                           &quietCoordinator,
+                           &dashboardModule);
 }
 
 }  // namespace

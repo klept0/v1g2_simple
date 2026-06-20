@@ -80,6 +80,7 @@
 #include "modules/speed_mute/speed_mute_module.h"
 #include "modules/obd/obd_runtime_module.h"
 #include "modules/obd/obd_ble_client.h"
+#include "modules/display/dashboard_module.h"
 #include "modules/obd/obd_settings_sync_module.h"
 #include "modules/wifi/wifi_boot_policy.h"
 #include "modules/wifi/wifi_auto_start_module.h"
@@ -178,6 +179,7 @@ LoopConnectionEarlyModule loopConnectionEarlyModule;
 LoopPostDisplayModule loopPostDisplayModule;
 WifiAutoStartModule wifiAutoStartModule;
 WifiPriorityPolicyModule wifiPriorityPolicyModule;
+DashboardModule dashboardModule;
 WifiVisualSyncModule wifiVisualSyncModule;
 WifiProcessCadenceModule wifiProcessCadenceModule;
 WifiRuntimeModule wifiRuntimeModule;
@@ -738,6 +740,7 @@ static void configureAlertAudioDisplayPipeline() {
                                 &voiceModule,
                                 &quietCoordinatorModule);
     displayPipelineModule.setSpeedMuteModule(&speedMuteModule);
+    displayPipelineModule.setDashboardModule(&dashboardModule);
 }
 
 static void configureSystemLoopCoreModules() {
@@ -796,6 +799,8 @@ static void configureRuntimeSensorModules() {
         settingsManager.get().speedMuteThresholdMph,
         settingsManager.get().speedMuteHysteresisMph,
         settingsManager.get().speedMuteVolume);
+    dashboardModule.begin(&display, &parser, &settingsManager,
+                          &bleClient, &obdRuntimeModule);
 }
 
 static void configureRuntimeCoreModules() {

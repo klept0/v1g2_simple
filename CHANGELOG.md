@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Driving Dashboard screen** — idle view showing speed, connection statuses (V1, BLE Proxy, OBD, WiFi AP), battery, active profile slot, V1 operating mode, mute state, and last-seen alert summary. Dashboard is rendered via a new `DashboardModule` that populates a `DashboardData` snapshot each render cycle (throttled to 250 ms). Renderer lives in `src/display_dashboard.cpp`.
+- **Single-tap dashboard toggle** — a single tap on the display with no active alert (no follow-up within 600 ms) now toggles the dashboard on/off. Triple-tap profile cycling is unchanged. Any incoming alert automatically deactivates the dashboard and takes over the screen; tap to mute works as before.
+
 ---
 
 ## [4.2.1] - 2026-06-20

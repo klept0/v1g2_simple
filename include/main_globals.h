@@ -44,6 +44,7 @@ class QuietCoordinatorModule;
 class ObdRuntimeModule;
 class ObdBleClient;
 class SpeedSourceSelector;
+class DashboardModule;
 
 #ifndef UNIT_TEST
 class DisplayPipelineModule;
@@ -88,6 +89,7 @@ extern MainRuntimeState mainRuntimeState;
 extern ObdRuntimeModule obdRuntimeModule;
 extern ObdBleClient obdBleClient;
 extern SpeedSourceSelector speedSourceSelector;
+extern DashboardModule dashboardModule;
 
 #ifndef UNIT_TEST
 extern DisplayPipelineModule displayPipelineModule;

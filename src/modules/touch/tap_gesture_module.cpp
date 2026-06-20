@@ -2,6 +2,7 @@
 #include "../quiet/quiet_coordinator_module.h"
 #include "../perf/debug_macros.h"
 #ifndef UNIT_TEST
+#include "modules/display/dashboard_module.h"
 #include "modules/auto_push/auto_push_module.h"
 #include "modules/alert_persistence/alert_persistence_module.h"
 #endif
@@ -14,7 +15,11 @@ void TapGestureModule::begin(TouchHandler* touchHandler,
                              AutoPushModule* autoPushModule,
                              AlertPersistenceModule* alertPersistenceModule,
                              DisplayMode* displayModePtr,
-                             QuietCoordinatorModule* quietCoordinator) {
+                             QuietCoordinatorModule* quietCoordinator
+#ifndef UNIT_TEST
+                             , DashboardModule* dashboardModule
+#endif
+                             ) {
     touch_ = touchHandler;
     settings_ = settingsMgr;
     display_ = displayPtr;
@@ -24,12 +29,32 @@ void TapGestureModule::begin(TouchHandler* touchHandler,
     alertPersistence_ = alertPersistenceModule;
     displayMode_ = displayModePtr;
     quiet_ = quietCoordinator;
+#ifndef UNIT_TEST
+    dashboard_ = dashboardModule;
+#endif
 }
 
 void TapGestureModule::process(unsigned long nowMs) {
     if (!touch_ || !settings_ || !display_ || !ble_ || !parser_ || !autoPush_ || !alertPersistence_ || !displayMode_) {
         return;
     }
+
+    // If a single tap was pending and the window expired with no follow-up,
+    // fire the dashboard toggle now.
+#ifndef UNIT_TEST
+    if (pendingDashboardToggle_ && tapCount_ == 1 &&
+        nowMs - lastTapTime_ > TAP_WINDOW_MS) {
+        pendingDashboardToggle_ = false;
+        if (dashboard_) {
+            dashboard_->toggle();
+            if (!dashboard_->isActive()) {
+                display_->forceNextRedraw();
+            }
+            DBG_PRINTLN("Dashboard toggled via single tap");
+        }
+        tapCount_ = 0;
+    }
+#endif
 
     int16_t touchX, touchY;
     bool hasActiveAlert = parser_->hasAlerts();
@@ -84,27 +109,44 @@ void TapGestureModule::process(unsigned long nowMs) {
 
     DBG_PRINTF("Tap at x=%d y=%d hasAlert=%d\n", touchX, touchY, hasActiveAlert);
 
-    // Alert active: any tap mutes
+    // Alert active: any tap mutes (and exits dashboard if active)
     if (hasActiveAlert) {
+#ifndef UNIT_TEST
+        if (dashboard_ && dashboard_->isActive()) {
+            dashboard_->setActive(false);
+            display_->forceNextRedraw();
+        }
+#endif
         performMuteToggle("tap");
         tapCount_ = 0;
+        pendingDashboardToggle_ = false;
         return;
     }
 
-    // No alert: count taps toward triple-tap profile cycle
+    // No alert: count taps.
+    // A single isolated tap (no follow-up within TAP_WINDOW_MS) toggles the
+    // dashboard.  Triple-tap within the window cycles the profile as before.
     if (nowMs - lastTapTime_ >= TAP_DEBOUNCE_MS) {
         if (nowMs - lastTapTime_ <= TAP_WINDOW_MS) {
+            // Follow-up tap — cancel any pending dashboard toggle
+            pendingDashboardToggle_ = false;
             tapCount_++;
         } else {
+            // New tap sequence; arm dashboard toggle and start counting
             tapCount_ = 1;
+            pendingDashboardToggle_ = true;
         }
         lastTapTime_ = nowMs;
 
         DBG_PRINTF("Profile tap count: %d\n", tapCount_);
 
         if (tapCount_ >= PROFILE_CHANGE_TAP_COUNT) {
+            pendingDashboardToggle_ = false;
             performProfileCycle();
             tapCount_ = 0;
         }
     }
 }
+
+// NOTE: process() is called every main loop iteration.  Between tap events
+// we also check whether a pending single-tap dashboard toggle has timed out.
