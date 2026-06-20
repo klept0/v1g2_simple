@@ -82,6 +82,7 @@
 #include "modules/obd/obd_ble_client.h"
 #include "modules/display/dashboard_module.h"
 #include "modules/history/encounter_history.h"
+#include "modules/safety/driving_safety_lockout.h"
 #include "modules/obd/obd_settings_sync_module.h"
 #include "modules/wifi/wifi_boot_policy.h"
 #include "modules/wifi/wifi_auto_start_module.h"
@@ -182,6 +183,7 @@ WifiAutoStartModule wifiAutoStartModule;
 WifiPriorityPolicyModule wifiPriorityPolicyModule;
 DashboardModule dashboardModule;
 EncounterHistory encounterHistory;
+DrivingSafetyLockout drivingSafetyLockout;
 WifiVisualSyncModule wifiVisualSyncModule;
 WifiProcessCadenceModule wifiProcessCadenceModule;
 WifiRuntimeModule wifiRuntimeModule;
@@ -829,6 +831,7 @@ static void configureRuntimeSensorModules() {
         settingsManager.get().speedMuteVolume);
     dashboardModule.begin(&display, &parser, &settingsManager,
                           &bleClient, &obdRuntimeModule);
+    drivingSafetyLockout.begin(&speedSourceSelector, &settingsManager);
 }
 
 static void configureRuntimeCoreModules() {

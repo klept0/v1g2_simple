@@ -674,3 +674,13 @@ void SettingsManager::applyDrivingMode(DrivingMode mode) {
 
     save();
 }
+
+void SettingsManager::setLockoutEnabled(bool enabled) {
+    settings_.lockoutEnabled = enabled;
+    save();
+}
+
+void SettingsManager::setLockoutThresholdMph(uint8_t mph) {
+    settings_.lockoutThresholdMph = std::min<uint8_t>(mph, 50);
+    save();
+}

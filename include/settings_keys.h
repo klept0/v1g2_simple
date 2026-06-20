@@ -174,6 +174,10 @@ inline constexpr const char* kNvsDm3Volume    = "dm3vol";
 inline constexpr const char* kNvsDm3Persist   = "dm3persist";
 inline constexpr const char* kNvsDm3PrioArrow = "dm3prio";
 
+// ── Driving safety lockout ────────────────────────────────────────────────
+inline constexpr const char* kNvsLockoutEnabled = "lockoutEn";
+inline constexpr const char* kNvsLockoutMph     = "lockoutMph";
+
 // ── Separate namespaces ───────────────────────────────────────────────────
 // Namespace: v1wifi_secret (WIFI_CLIENT_NS)
 inline constexpr const char* kNvsWifiPassword = "password";

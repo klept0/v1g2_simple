@@ -432,6 +432,10 @@ bool SettingsManager::writeSettingsToNamespace(const char* ns) {
     written += prefs.putUChar(kNvsObdAddressType, settings_.obdSavedAddrType);
     written += prefs.putChar(kNvsObdMinRssi, settings_.obdMinRssi);
 
+    // Driving safety lockout
+    written += prefs.putBool(kNvsLockoutEnabled, settings_.lockoutEnabled);
+    written += prefs.putUChar(kNvsLockoutMph, settings_.lockoutThresholdMph);
+
     // Driving modes
     written += prefs.putUChar(kNvsDrivingMode, static_cast<uint8_t>(settings_.activeDrivingMode));
     static const char* dmBrightKeys[] = { kNvsDm0Bright, kNvsDm1Bright, kNvsDm2Bright, kNvsDm3Bright };

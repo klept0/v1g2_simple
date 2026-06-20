@@ -27,6 +27,8 @@
 #include "modules/wifi/wifi_drive_mode_api_service.h"
 #include "modules/wifi/wifi_history_api_service.h"
 #include "modules/history/encounter_history.h"
+#include "modules/wifi/wifi_lockout_api_service.h"
+#include "modules/safety/driving_safety_lockout.h"
 #include "backup_payload_builder.h"
 #include "storage_manager.h"
 #include "perf_sd_logger.h"
@@ -553,6 +555,21 @@ WifiHistoryApiService::Runtime WiFiManager::makeHistoryRuntime() {
     r.ctx = this;
     r.getHistory = [](void* /*ctx*/) -> EncounterHistory* {
         return &encounterHistory;
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
+    return r;
+}
+
+WifiLockoutApiService::Runtime WiFiManager::makeLockoutRuntime() {
+    WifiLockoutApiService::Runtime r;
+    r.ctx = this;
+    r.getLockout = [](void* /*ctx*/) -> DrivingSafetyLockout* {
+        return &drivingSafetyLockout;
+    };
+    r.getSettings = [](void* /*ctx*/) -> SettingsManager* {
+        return &settingsManager;
     };
     r.checkRateLimit = [](void* ctx) {
         return static_cast<WiFiManager*>(ctx)->checkRateLimit();

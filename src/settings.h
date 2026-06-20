@@ -273,6 +273,10 @@ struct V1Settings {
     DrivingMode activeDrivingMode;
     DrivingModeConfig drivingModeConfigs[kDrivingModeCount];
 
+    // Driving Safety Lockout
+    bool    lockoutEnabled;         // Block config changes above speed threshold
+    uint8_t lockoutThresholdMph;    // Speed threshold (mph) — default 5
+
     // Default constructor with sensible defaults
     V1Settings() :
         enableWifi(true),
@@ -382,7 +386,9 @@ struct V1Settings {
             defaultDrivingModeConfig(DrivingMode::Quiet),
             defaultDrivingModeConfig(DrivingMode::Highway),
             defaultDrivingModeConfig(DrivingMode::Night),
-        } {}
+        },
+        lockoutEnabled(true),
+        lockoutThresholdMph(5) {}
 
     static uint8_t normalizeAutoPushSlotIndex(int slotNum) {
         return slotNum == 1 ? 1 : (slotNum == 2 ? 2 : 0);
@@ -803,6 +809,12 @@ public:
     }
     void setDrivingModeConfig(int mode, const DrivingModeConfig& cfg);
     void applyDrivingMode(DrivingMode mode);
+
+    // Driving safety lockout
+    bool    isLockoutEnabled() const     { return settings_.lockoutEnabled; }
+    uint8_t getLockoutThresholdMph() const { return settings_.lockoutThresholdMph; }
+    void    setLockoutEnabled(bool enabled);
+    void    setLockoutThresholdMph(uint8_t mph);
 
     // Save all settings to flash
     void save();

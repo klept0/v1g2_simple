@@ -26,9 +26,45 @@
 	let message  = $state(null);
 	let editMode = $state(null);  // index of mode being edited, or null
 
+	// Lockout state
+	let lockout = $state({ enabled: true, thresholdMph: 5, isLocked: false, speedMph: 0, speedValid: false });
+	let savingLockout = $state(false);
+
 	onMount(async () => {
-		await fetchModes();
+		await Promise.all([fetchModes(), fetchLockout()]);
 	});
+
+	async function fetchLockout() {
+		try {
+			const res = await fetchWithTimeout('/api/drive/lockout');
+			if (res.ok) lockout = await res.json();
+		} catch (e) { /* non-fatal */ }
+	}
+
+	async function saveLockout() {
+		savingLockout = true;
+		message = null;
+		try {
+			const params = new URLSearchParams({
+				enabled: lockout.enabled ? '1' : '0',
+				thresholdMph: String(lockout.thresholdMph),
+			});
+			const res = await fetchWithTimeout('/api/drive/lockout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: params,
+			});
+			if (res.ok) {
+				message = { type: 'success', text: 'Safety lockout settings saved.' };
+			} else {
+				message = { type: 'error', text: 'Failed to save lockout settings.' };
+			}
+		} catch (e) {
+			message = { type: 'error', text: 'Connection error.' };
+		} finally {
+			savingLockout = false;
+		}
+	}
 
 	async function fetchModes() {
 		loading = true;
@@ -165,6 +201,34 @@
 		</div>
 	{/each}
 {/if}
+
+<CardSectionHead title="Safety Lockout" />
+<p class="hint">Block configuration changes (WiFi setup, profile editing, voice settings, display settings) when the vehicle is moving above the speed threshold. Mute, profile switch, and mode switch remain available at all speeds.</p>
+
+{#if lockout.isLocked}
+	<div class="lockout-banner">🔒 Configuration locked — vehicle moving at {Math.round(lockout.speedMph)} mph</div>
+{/if}
+
+<div class="lockout-form">
+	<label class="checkbox-row">
+		<input type="checkbox" bind:checked={lockout.enabled} />
+		Enable safety lockout
+	</label>
+	<label>
+		Speed threshold: <strong>{lockout.thresholdMph} mph</strong>
+		<input type="range" min="0" max="50" bind:value={lockout.thresholdMph} disabled={!lockout.enabled} />
+	</label>
+	<div class="lockout-status">
+		{#if lockout.speedValid}
+			Current speed: {Math.round(lockout.speedMph)} mph
+		{:else}
+			Speed: unavailable (OBD not connected — lockout inactive)
+		{/if}
+	</div>
+	<button class="btn-save" onclick={saveLockout} disabled={savingLockout}>
+		Save Lockout Settings
+	</button>
+</div>
 
 <style>
 	.loading-text {
@@ -305,5 +369,27 @@
 		padding: 0.45rem 0.9rem;
 		font-size: 0.85rem;
 		cursor: pointer;
+	}
+
+	.lockout-banner {
+		background: #f97316;
+		color: #fff;
+		border-radius: 6px;
+		padding: 0.6rem 1rem;
+		font-weight: 600;
+		font-size: 0.88rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.lockout-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+		padding: 0.75rem 0 1.25rem;
+	}
+
+	.lockout-status {
+		font-size: 0.8rem;
+		color: var(--color-text-muted);
 	}
 </style>

@@ -325,6 +325,10 @@ void SettingsManager::load() {
     settings_.obdMinRssi = static_cast<int8_t>(
         preferences_.getChar(kNvsObdMinRssi, -90));
 
+    // Driving safety lockout
+    settings_.lockoutEnabled      = preferences_.getBool(kNvsLockoutEnabled, true);
+    settings_.lockoutThresholdMph = clampU8(preferences_.getUChar(kNvsLockoutMph, 5), 0, 50);
+
     // Driving modes
     settings_.activeDrivingMode = static_cast<DrivingMode>(
         clampU8(preferences_.getUChar(kNvsDrivingMode, 0), 0, kDrivingModeCount - 1));
