@@ -191,17 +191,22 @@ void V1Display::showScanning() {
     drawProfileIndicator(currentProfileSlot_);
 
     // Draw "SCAN" in frequency area - match display style
-    if (s.displayStyle == DISPLAY_STYLE_SERPENTINE) {
-        fontMgr.ensureSerpentineLoaded(tft_);
+    // Lazy-load the selected OFR font if needed
+    OpenFontRender* ofr = nullptr;
+    switch (s.displayStyle) {
+        case DISPLAY_STYLE_SERPENTINE: if (fontMgr.ensureSerpentineLoaded(tft_)) ofr = &fontMgr.serpentine; break;
+        case DISPLAY_STYLE_JETBRAINS:  if (fontMgr.ensureJetBrainsLoaded(tft_))  ofr = &fontMgr.jetbrains;  break;
+        case DISPLAY_STYLE_ROBOTO:     if (fontMgr.ensureRobotoLoaded(tft_))     ofr = &fontMgr.roboto;     break;
+        case DISPLAY_STYLE_ATKINSON:   if (fontMgr.ensureAtkinsonLoaded(tft_))   ofr = &fontMgr.atkinson;   break;
+        default: break;
     }
-    if (s.displayStyle == DISPLAY_STYLE_SERPENTINE && fontMgr.serpentineReady) {
-        // Serpentine style font
+    if (ofr) {
         const int fontSize = 65;
-        fontMgr.serpentine.setFontColor(s.colorBandKa, PALETTE_BG);
-        fontMgr.serpentine.setFontSize(fontSize);
+        ofr->setFontColor(s.colorBandKa, PALETTE_BG);
+        ofr->setFontSize(fontSize);
 
         const char* text = "SCAN";
-        FT_BBox bbox = fontMgr.serpentine.calculateBoundingBox(0, 0, fontSize, Align::Left, Layout::Horizontal, text);
+        FT_BBox bbox = ofr->calculateBoundingBox(0, 0, fontSize, Align::Left, Layout::Horizontal, text);
         int textWidth = bbox.xMax - bbox.xMin;
         int textHeight = bbox.yMax - bbox.yMin;
 
@@ -212,8 +217,8 @@ void V1Display::showScanning() {
         int y = getEffectiveScreenHeight() - 72;
 
         FILL_RECT(x - 4, y - textHeight - 4, textWidth + 8, textHeight + 12, PALETTE_BG);
-        fontMgr.serpentine.setCursor(x, y);
-        fontMgr.serpentine.printf("%s", text);
+        ofr->setCursor(x, y);
+        ofr->printf("%s", text);
     } else if (fontMgr.segment7Ready) {
         // Classic style: use Segment7 TTF font
         const int fontSize = 65;

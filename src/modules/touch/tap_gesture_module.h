@@ -8,8 +8,6 @@
 #include "settings.h"
 #include "ble_client.h"
 #include "packet_parser.h"
-#include "modules/screens/screen_manager.h"
-
 class AutoPushModule;
 class AlertPersistenceModule;
 class QuietCoordinatorModule;
@@ -45,7 +43,4 @@ private:
     static constexpr unsigned long TAP_WINDOW_MS = 600;
     static constexpr unsigned long TAP_DEBOUNCE_MS = 150;
 
-    // Zone-based screen navigation: left/right 25% of 640px display
-    static constexpr int16_t NAV_LEFT_ZONE_PX  = 160;  // x < 160 → previous screen
-    static constexpr int16_t NAV_RIGHT_ZONE_PX = 480;  // x > 480 → next screen
 };

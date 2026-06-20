@@ -33,7 +33,6 @@
 #include "modules/alert_persistence/alert_persistence_module.h"
 #include "modules/perf/debug_macros.h"
 #include "modules/touch/tap_gesture_module.h"
-#include "modules/history/history_manager.h"
 #include <driver/gpio.h>
 
 namespace {
@@ -233,10 +232,6 @@ void configureUiTouchInteractionModules(QuietCoordinatorModule& quietCoordinator
 void configureUiInteractionModules(QuietCoordinatorModule& quietCoordinator) {
     configureUiAutoPushModule(quietCoordinator);
     configureUiTouchInteractionModules(quietCoordinator);
-}
-
-void initializeScreenModules() {
-    historyManager.clear();
 }
 
 void logBootSummaryAndWifiStartup(uint32_t bootId, esp_reset_reason_t resetReason) {

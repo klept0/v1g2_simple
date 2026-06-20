@@ -27,6 +27,7 @@
 
 #include <cstdint>
 #include <memory>
+#include "OpenFontRender.h"
 
 // Include display driver abstraction (Arduino_GFX only)
 #include "display_driver.h"
@@ -151,8 +152,8 @@ private:
 
 
     void drawFrequency(uint32_t freqMHz, Band band = BAND_NONE, bool muted = false, bool isPhotoRadar = false);
-    void drawFrequencyClassic(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar = false);   // 7-segment style
-    void drawFrequencySerpentine(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar = false);// Serpentine font
+    void drawFrequencyClassic(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar = false);
+    void drawFrequencyOFR(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar, OpenFontRender& ofr);
     void markFrequencyDirtyRegion(int16_t x, int16_t y, int16_t w, int16_t h);
     void drawVolumeZeroWarning();  // Flash "VOL 0" warning when volume=0 and no app connected
     void drawStatusText(const char* text, uint16_t color);

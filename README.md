@@ -106,33 +106,16 @@ Change the default password from the Settings page before putting the device on 
 
 ### Screens
 
-The 640×172 display supports 5 screens with zone-based tap navigation:
+The 640×172 display shows a single radar screen.
 
-| Touch zone | Action |
-|------------|--------|
-| Left 25% of screen (x < 160) | Previous screen |
-| Right 25% of screen (x > 480) | Next screen |
-| Center (no active alert, non-radar screen) | Return to radar |
-| Center × 3 taps within 600ms (radar screen, no alert) | Cycle profile |
+| Tap gesture | Action |
+|-------------|--------|
 | Any tap while alert is active | Mute/unmute |
-
-Any active radar alert immediately forces the display back to Screen 1.
+| Triple tap within 600ms (no active alert) | Cycle profile |
 
 | # | Screen | Description |
 |---|--------|-------------|
-| 1 | **Radar** | Standard V1 alert display (frequency, band, signal bars, direction arrow) — existing rendering unchanged |
-| 2 | **JBV1** | Driving data: speed, heading, GPS accuracy. Fed via Tasker on Android — see Integrations page in the web UI for setup |
-| 3 | **History** | Last 10 radar encounters with band, frequency, and time elapsed since the alert cleared |
-| 4 | **Diagnostics** | BLE connection status, RSSI, packet rate, last packet age, and firmware version |
-| 5 | **Clock** | Large 12-hour AM/PM clock with day and date, derived from web UI time push |
-
-**JBV1 data endpoint** (fed by a Tasker task on Android — full setup on the Integrations page):
-```bash
-curl -X POST http://192.168.4.1/api/jbv1/update \
-  -H "Content-Type: application/json" \
-  -d '{"speed":72,"heading":"287","gpsAccuracy":3,"satellites":8}'
-```
-> Speed limit is not available from JBV1 via Tasker; the delta field will remain blank.
+| 1 | **Radar** | Standard V1 alert display (frequency, band, signal bars, direction arrow) |
 
 ### Voice alerts
 

@@ -7,6 +7,9 @@
 #include "../include/display_driver.h"     // Arduino_Canvas full definition (via Arduino_GFX_Library)
 #include "../include/Segment7Font.h"       // Segment7 TTF binary data
 #include "../include/Serpentine.h"         // Serpentine TTF binary data
+#include "../include/JetBrainsMono.h"      // JetBrains Mono TTF binary data (subsetted)
+#include "../include/Roboto.h"             // Roboto TTF binary data (subsetted)
+#include "../include/Atkinson.h"           // Atkinson Hyperlegible TTF binary data (subsetted)
 #include <Arduino.h>                       // millis(), Serial, psramFound()
 #include <esp_heap_caps.h>
 
@@ -129,6 +132,32 @@ bool DisplayFontManager::ensureSerpentineLoaded(Arduino_Canvas* canvas) {
     }
     return serpentineReady;
 }
+
+// Macro to avoid repetition for the three new lazy-loaded fonts
+#define IMPL_ENSURE_FONT_LOADED(method, flag, attempted, renderer, data, label) \
+bool DisplayFontManager::method(Arduino_Canvas* canvas) {                       \
+    if (flag) return true;                                                       \
+    if (attempted) return false;                                                 \
+    if (!canvas) return false;                                                   \
+    attempted = true;                                                            \
+    const unsigned long t0 = millis();                                           \
+    renderer.setDrawer(*canvas);                                                 \
+    renderer.setCacheSize(1, 4, numericCacheBytes);                              \
+    FT_Error err = renderer.loadFont(data, sizeof(data));                        \
+    flag = (err == 0);                                                           \
+    if (flag)  Serial.printf("[FontMgr] " label " loaded in %lu ms\n", millis() - t0); \
+    else       Serial.printf("[FontMgr] ERROR: " label " load failed (0x%02X)\n", err); \
+    return flag;                                                                 \
+}
+
+IMPL_ENSURE_FONT_LOADED(ensureJetBrainsLoaded, jetbrainsReady, jetbrainsLoadAttempted,
+                        jetbrains, JetBrainsMonoFont, "JetBrainsMono")
+IMPL_ENSURE_FONT_LOADED(ensureRobotoLoaded,    robotoReady,    robotoLoadAttempted,
+                        roboto,    RobotoFont,       "Roboto")
+IMPL_ENSURE_FONT_LOADED(ensureAtkinsonLoaded,  atkinsonReady,  atkinsonLoadAttempted,
+                        atkinson,  AtkinsonFont,     "Atkinson")
+
+#undef IMPL_ENSURE_FONT_LOADED
 
 // ============================================================================
 // Top-counter glyph bounds cache

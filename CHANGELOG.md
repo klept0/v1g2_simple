@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Three new display fonts**: JetBrains Mono, Roboto, and Atkinson Hyperlegible. Select any of the five fonts (Classic, JetBrains Mono, Roboto, Serpentine, Atkinson Hyperlegible) in Colors → Font Style. Fonts are lazy-loaded on first use; only the selected font occupies RAM.
+- `tools/create_font_headers.py` — reproducible subsetting script (fontTools) for regenerating the PROGMEM font headers from source TTFs.
+
+### Removed
+- Screens 2–5 (JBV1, History, Diagnostics, Clock) and all associated modules (ScreenManager, HistoryManager, JBV1Data, wifi_jbv1_api_service, screen_clock). The display now shows the radar view only. Zone-based tap navigation removed; triple-tap profile cycle and mute tap are unaffected.
+- Tasker profile importable file and JBV1 Integrations page content.
+
 ---
 
 ## [4.1.1] - 2026-06-19

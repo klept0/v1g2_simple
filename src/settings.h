@@ -49,15 +49,21 @@ enum V1Mode {
 
 // Display style (font selection)
 enum DisplayStyle {
-    DISPLAY_STYLE_CLASSIC = 0,   // 7-segment style (original V1 look)
-    DISPLAY_STYLE_SERPENTINE = 3 // Serpentine font
+    DISPLAY_STYLE_CLASSIC    = 0,  // 7-segment style (original V1 look)
+    DISPLAY_STYLE_JETBRAINS  = 1,  // JetBrains Mono Regular
+    DISPLAY_STYLE_ROBOTO     = 2,  // Roboto Regular
+    DISPLAY_STYLE_SERPENTINE = 3,  // Serpentine Bold
+    DISPLAY_STYLE_ATKINSON   = 4   // Atkinson Hyperlegible Regular
 };
 
-// Project currently supports only Classic and Serpentine in active UI/boot paths.
 inline DisplayStyle normalizeDisplayStyle(int rawStyle) {
-    return (rawStyle == static_cast<int>(DISPLAY_STYLE_SERPENTINE))
-        ? DISPLAY_STYLE_SERPENTINE
-        : DISPLAY_STYLE_CLASSIC;
+    switch (rawStyle) {
+        case 1: return DISPLAY_STYLE_JETBRAINS;
+        case 2: return DISPLAY_STYLE_ROBOTO;
+        case 3: return DISPLAY_STYLE_SERPENTINE;
+        case 4: return DISPLAY_STYLE_ATKINSON;
+        default: return DISPLAY_STYLE_CLASSIC;
+    }
 }
 
 // Voice alert content mode

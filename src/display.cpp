@@ -256,9 +256,9 @@ bool V1Display::begin() {
         }
     }
 
-    Serial.printf("[Display] OK %dx%d, fonts(seg7/top/serp)=%d/%d/%d\n",
+    Serial.printf("[Display] OK %dx%d, fonts(seg7=%d top=%d, OFR lazy-loaded on demand)\n",
                   SCREEN_WIDTH, SCREEN_HEIGHT,
-                  fontMgr.segment7Ready, fontMgr.topCounterReady, fontMgr.serpentineReady);
+                  fontMgr.segment7Ready, fontMgr.topCounterReady);
 
     // Load color theme from settings
     updateColorTheme();
