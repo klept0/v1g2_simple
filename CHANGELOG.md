@@ -11,16 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [4.1.1] - 2026-06-19
-
-### Fixed
-- **Touch navigation**: Replaced broken swipe detection with zone-based tap navigation. The AXS15231B touch IC fires only a single rising-edge event per tap (`getTouchPoint()` returns `true` once, then `false` while held), so swipe position accumulation never worked. Navigation is now: tap left 25% of screen (x < 160) = previous screen, tap right 25% (x > 480) = next screen, center tap on non-radar = back to radar, center triple-tap on radar = profile cycle.
-- **Profile cycling**: Triple-tap on the radar screen (center zone, no active alert, within 600 ms) now reliably cycles profiles.
-- **Web UI hamburger menu**: DaisyUI v4 dropdown requires `tabindex="0"` on both the trigger `<button>` and the `<ul>`; without it the `:focus-within` rule never fires on touch devices.
+## [4.2.0] - 2026-06-19
 
 ### Added
-- **JBV1 setup instructions** on the Integrations page: Wi-Fi connection requirement, endpoint URL (`http://192.168.4.1/api/jbv1/update`), recommended push interval, full JSON API reference.
+- **Five display fonts** — Classic (7-segment), JetBrains Mono, Roboto, Serpentine, and Atkinson Hyperlegible. Select in Colors → Font Style. The three new OFR fonts (JetBrains Mono, Roboto, Atkinson) are lazy-loaded on first use; only the active font occupies RAM. PROGMEM headers are subsetted to display characters (~6–20 KB each).
+- `tools/create_font_headers.py` — reproducible fontTools subsetting script for regenerating the PROGMEM font headers from source TTFs.
+- **BOOT button two-page settings UI** — short press now cycles through two pages before exiting. Page 1 (existing): brightness and volume sliders. Page 2 (new): three large tap-toggle buttons for **WiFi AP**, **BLE Proxy**, and **Mute→0** (active slot). A third short press exits and saves. The 4-second long-press WiFi toggle is unaffected.
 
+### Fixed
+- **Touch navigation**: Removed zone-based swipe/screen-nav logic (the AXS15231B touch IC fires only a single rising-edge event per tap, making swipe accumulation impossible). Touch now handles only: tap while alert active = mute/unmute; triple-tap within 600 ms = cycle profile.
+- **Profile cycling**: Triple-tap (no active alert, within 600 ms) now reliably cycles profiles on any tap position.
+- **Web UI hamburger menu**: DaisyUI v4 dropdown requires `tabindex="0"` on both the trigger `<button>` and the `<ul>`; without it the `:focus-within` rule never fires on touch devices.
+
+### Removed
+- **Extra screens**: Screens 2–5 (JBV1, History, Diagnostics, Clock) and all associated modules — `ScreenManager`, `HistoryManager`, `JBV1Data`, `wifi_jbv1_api_service`, `history_manager`, `jbv1_client`, `screen_{clock,diag,history,jbv1}`. The display now shows only the radar view.
+- **JBV1 GPS integration**: `POST /api/jbv1/update` endpoint, Tasker importable profile, and JBV1 section of the Integrations page removed.
 
 ---
 
@@ -178,6 +183,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 4.2.0 | 2026-06-19 | Five display fonts; radar-only display; removed JBV1/History/Diag/Clock screens |
+| 4.1.1 | 2026-06-19 | Zone-based tap navigation, web UI hamburger fix |
+| 4.1.0 | 2026-06-13 | Multi-screen navigation, JBV1 screen, voice packs |
 | 4.0.1 | 2026-04-04 | Web installer hotfix: corrected merged flash mode, secure hosted fallback |
 | 4.0.0 | 2026-04-01 | Modular architecture, 141 module files, 960 tests, CI contracts |
 | 3.0.7 | 2026 | Quality baseline before 4.x refactors |

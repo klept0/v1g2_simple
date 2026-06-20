@@ -17,30 +17,6 @@ unsigned long mockMicros = 0;
 
 SettingsManager settingsManager;
 
-#include "../../src/modules/screens/screen_manager.h"
-#include "../../src/modules/history/history_manager.h"
-#include "../../src/modules/services/jbv1_client.h"
-
-// Stub globals required by main_globals.h externs used in tap_gesture_module
-ScreenManager screenManager;
-HistoryManager historyManager;
-JBV1Data g_jbv1;
-
-// ScreenManager stubs (render() not exercised in tap gesture tests)
-void ScreenManager::next() { uint8_t n = (static_cast<uint8_t>(current_) + 1) % static_cast<uint8_t>(ScreenType::COUNT); current_ = static_cast<ScreenType>(n); }
-void ScreenManager::previous() { uint8_t c = static_cast<uint8_t>(current_), cnt = static_cast<uint8_t>(ScreenType::COUNT); current_ = static_cast<ScreenType>(c == 0 ? cnt - 1 : c - 1); }
-void ScreenManager::set(ScreenType s) { if (static_cast<uint8_t>(s) < static_cast<uint8_t>(ScreenType::COUNT)) current_ = s; }
-void ScreenManager::forceRadar() { current_ = ScreenType::RADAR; }
-void ScreenManager::tick(bool hasAlert, uint32_t) { if (hasAlert && !lastHadAlert_) forceRadar(); lastHadAlert_ = hasAlert; }
-void ScreenManager::render(V1Display&, const DisplayBleContext&) {}
-
-// HistoryManager stubs
-void HistoryManager::addEncounter(const char*, const char*, uint32_t, uint32_t, uint8_t) {}
-void HistoryManager::clear() {}
-const Encounter& HistoryManager::get(int) const { static Encounter e{}; return e; }
-
-// JBV1Data stub
-bool JBV1Data::valid() const { return false; }
 
 #include "../../src/modules/quiet/quiet_coordinator_module.cpp"
 #include "../../src/modules/touch/tap_gesture_module.cpp"
@@ -89,7 +65,6 @@ void setUp() {
     autoPush.reset();
     alertPersistence.reset();
     displayMode = DisplayMode::LIVE;
-    screenManager = ScreenManager{};  // reset to RADAR between tests
 
     module = TapGestureModule{};
     quiet.begin(&bleClient, &parser);

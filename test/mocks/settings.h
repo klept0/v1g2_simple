@@ -130,7 +130,8 @@ struct V1Settings {
     String obdSavedName = "";
     uint8_t obdSavedAddrType = 0;
     int8_t obdMinRssi = -90;
-    bool bleProxyEnabled = true;
+    bool bleProxyEnabled = true;  // legacy alias kept for old tests
+    bool proxyBLE = true;         // real field name used by production code
     uint8_t activeSlot = 0;
     bool autoPushEnabled = false;
 

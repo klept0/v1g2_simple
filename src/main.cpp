@@ -90,9 +90,6 @@
 #include "modules/perf/debug_macros.h"
 #include "provider_callback_bindings.h"
 #include "time_service.h"
-#include "modules/screens/screen_manager.h"
-#include "modules/history/history_manager.h"
-#include "modules/services/jbv1_client.h"
 #include <driver/gpio.h>
 #include "../include/display_driver.h"
 #include <FS.h>
@@ -707,6 +704,20 @@ void configureTouchUiModule() {
         },
         .isObdPairGestureSafe = [](uint32_t nowMs, void* /*ctx*/) {
             return displayPipelineModule.allowsObdPairGesture(nowMs);
+        },
+        .isProxyBleEnabled = [](void* /*ctx*/) {
+            return settingsManager.get().proxyBLE;
+        },
+        .setProxyBleEnabled = [](bool enabled, void* /*ctx*/) {
+            settingsManager.setProxyBLE(enabled);
+            settingsManager.save();
+        },
+        .getMuteToZero = [](void* /*ctx*/) {
+            return settingsManager.getSlotMuteToZero(settingsManager.get().activeSlot);
+        },
+        .setMuteToZero = [](bool enabled, void* /*ctx*/) {
+            settingsManager.setSlotMuteToZero(settingsManager.get().activeSlot, enabled);
+            settingsManager.save();
         }
     };
     touchUiModule.begin(&display, &touchHandler, &settingsManager, touchCbs);
@@ -997,9 +1008,6 @@ static void initializeStorageToReadyFlow(esp_reset_reason_t resetReason,
     initializeTouchAndDisplayControls();
     logBootStage("touch");
 
-    extern void initializeScreenModules();
-    initializeScreenModules();
-
     configureAlertAudioDisplayPipeline();
     configureSystemLoopModules();
     configureRuntimeModules();
@@ -1043,8 +1051,6 @@ void loop() {
     audio_process_amp_timeout();
     unsigned long now = millis();
 
-    // Screen manager tick: auto-force radar on alert rising edge
-    screenManager.tick(parser.hasAlerts(), now);
     bleClient.setObdBleArbitrationRequest(obdRuntimeModule.getBleArbitrationRequest());
     const LoopConnectionEarlyPhaseValues loopConnectionEarlyValues = processLoopConnectionEarlyPhase(
         now,
@@ -1112,19 +1118,6 @@ void loop() {
         now,
         mainRuntimeState.bootSplashHoldActive,
         overloadLateThisLoop);
-
-    // Render non-radar screens
-    if (!screenManager.isRadar() && !mainRuntimeState.bootSplashHoldActive) {
-        DisplayBleContext bleCtxForRender;
-        bleCtxForRender.v1Connected    = bleClient.isConnected();
-        bleCtxForRender.proxyConnected = bleClient.isProxyClientConnected();
-        bleCtxForRender.v1Rssi         = bleClient.getConnectionRssi();
-        bleCtxForRender.proxyRssi      = bleClient.getProxyClientRssi();
-        // TODO: populate packetsPerSecond and lastPacketAgeMs from BLE stats
-        bleCtxForRender.packetsPerSecond = 0;
-        bleCtxForRender.lastPacketAgeMs  = 0;
-        screenManager.render(display, bleCtxForRender);
-    }
 
     const LoopWifiPhaseValues loopWifiValues = processLoopWifiPhase(
         now,

@@ -290,8 +290,11 @@
 						value={displayStyle}
 						onchange={saveDisplayStyle}
 					>
-						<option value={0}>Classic (V1 tech)</option>
+						<option value={0}>Classic (7-segment)</option>
+						<option value={1}>JetBrains Mono</option>
+						<option value={2}>Roboto</option>
 						<option value={3}>Serpentine</option>
+						<option value={4}>Atkinson Hyperlegible</option>
 					</select>
 				</div>
 			</div>

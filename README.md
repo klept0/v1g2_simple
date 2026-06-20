@@ -88,51 +88,32 @@ Change the default password from the Settings page before putting the device on 
 
 | Button | Action | Function |
 |---|---|---|
-| **BOOT** | Short press | Enter settings mode (brightness + volume sliders) |
-| **BOOT** | Long press ~4s | Toggle WiFi AP on/off |
+| **BOOT** | Short press | Cycle through settings pages (see below) |
+| **BOOT** | Long press ~4s | Toggle WiFi AP on/off immediately |
 
-**Settings mode:** top slider (green) = display brightness; bottom slider (blue) = voice volume. Release the slider to hear a test clip. Short press BOOT again to save and exit.
+**Settings pages** (short press cycles: off → Page 1 → Page 2 → exit & save):
+
+| Page | Content |
+|---|---|
+| **Page 1 — Sliders** | Top slider (green) = display brightness; bottom slider (blue) = voice volume. Release the volume slider to hear a test clip. |
+| **Page 2 — Toggles** | Three tap buttons: **WiFi AP** on/off · **BLE Proxy** on/off · **Mute→0** on/off (for the active profile slot). Tap a button to toggle instantly. |
+
+Short press BOOT on Page 2 exits and saves all changes.
 
 ### Touch gestures
 
 | Gesture | When | Function |
 |---|---|---|
 | Single tap | Alert active | Mute / unmute the alert |
-| Triple tap | No alert | Cycle profile slot (0 → 1 → 2 → 0) |
+| Triple tap within 600 ms | No active alert | Cycle profile slot (0 → 1 → 2 → 0) |
 
 ---
 
 ## Features
 
-### Screens
+### Screen
 
-The 640×172 display supports 5 screens with zone-based tap navigation:
-
-| Touch zone | Action |
-|------------|--------|
-| Left 25% of screen (x < 160) | Previous screen |
-| Right 25% of screen (x > 480) | Next screen |
-| Center (no active alert, non-radar screen) | Return to radar |
-| Center × 3 taps within 600ms (radar screen, no alert) | Cycle profile |
-| Any tap while alert is active | Mute/unmute |
-
-Any active radar alert immediately forces the display back to Screen 1.
-
-| # | Screen | Description |
-|---|--------|-------------|
-| 1 | **Radar** | Standard V1 alert display (frequency, band, signal bars, direction arrow) — existing rendering unchanged |
-| 2 | **JBV1** | Driving data: speed, heading, GPS accuracy. Fed via Tasker on Android — see Integrations page in the web UI for setup |
-| 3 | **History** | Last 10 radar encounters with band, frequency, and time elapsed since the alert cleared |
-| 4 | **Diagnostics** | BLE connection status, RSSI, packet rate, last packet age, and firmware version |
-| 5 | **Clock** | Large 12-hour AM/PM clock with day and date, derived from web UI time push |
-
-**JBV1 data endpoint** (fed by a Tasker task on Android — full setup on the Integrations page):
-```bash
-curl -X POST http://192.168.4.1/api/jbv1/update \
-  -H "Content-Type: application/json" \
-  -d '{"speed":72,"heading":"287","gpsAccuracy":3,"satellites":8}'
-```
-> Speed limit is not available from JBV1 via Tasker; the delta field will remain blank.
+The 640×172 display shows the radar screen: live frequency, band indicators, signal bars (6-level front/rear), direction arrow, and bogey counter.
 
 ### Voice alerts
 
@@ -187,7 +168,7 @@ Configure at `http://192.168.35.5/profiles` and `http://192.168.35.5/autopush`.
 
 ### Display customization
 
-Every color on the display is individually configurable — band indicators, direction arrows, signal bars (6 levels), bogey counter, frequency readout, status icons (WiFi, BLE, RSSI, battery), and muted/persisted states. Two display fonts: **Classic** (7-segment style) and **Serpentine**, plus JetBrains Mono, Roboto, and Atkinson Hyperlegible.
+Every color on the display is individually configurable — band indicators, direction arrows, signal bars (6 levels), bogey counter, frequency readout, status icons (WiFi, BLE, RSSI, battery), and muted/persisted states. Five display fonts: **Classic** (7-segment), **JetBrains Mono**, **Roboto**, **Serpentine**, and **Atkinson Hyperlegible** — switch any time from the Colors page.
 
 Configure at `http://192.168.35.5/colors`.
 
@@ -232,7 +213,7 @@ interface/              SvelteKit web UI (compiled to static files in data/)
   src/routes/           One directory per page
   src/lib/              Shared components, utilities, fetchWithTimeout
 config/                 Audio asset manifest (118 clip definitions)
-tools/                  TTS generation scripts
+tools/                  TTS generation + font subsetting scripts
 test/                   76 native unit test suites (PlatformIO native env)
 .github/workflows/      CI: build + test, release, Pages deploy
 ```

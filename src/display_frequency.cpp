@@ -253,14 +253,8 @@ void V1Display::drawFrequencyClassic(uint32_t freqMHz, Band band, bool muted, bo
 
 // --- Serpentine frequency display ---
 
-void V1Display::drawFrequencySerpentine(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar) {
+void V1Display::drawFrequencyOFR(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar, OpenFontRender& ofr) {
     const V1Settings& s = settingsManager.get();
-
-    // Fall back to Classic style if Serpentine OFR not initialized
-    if (!fontMgr.serpentineReady) {
-        drawFrequencyClassic(freqMHz, band, muted, isPhotoRadar);
-        return;
-    }
 
     // Layout constants
     const int fontSize = 65;  // Sized to match display area
@@ -327,7 +321,7 @@ void V1Display::drawFrequencySerpentine(uint32_t freqMHz, Band band, bool muted,
     // Only recalculate bbox if text actually changed (expensive FreeType call)
     int textW, x;
     if (textChanged || !g_elementCaches.freqSerpentine.valid) {
-        textW = DisplayFontManager::cachedTextWidth(fontMgr.serpentine, fontSize, textBuf, s_freqSerpentineWidthCache, s_freqSerpentineWidthCacheNextSlot);
+        textW = DisplayFontManager::cachedTextWidth(ofr, fontSize, textBuf, s_freqSerpentineWidthCache, s_freqSerpentineWidthCacheNextSlot);
         x = leftMargin + (maxWidth - textW) / 2;
     } else {
         // Reuse cached position for color-only changes
@@ -341,12 +335,12 @@ void V1Display::drawFrequencySerpentine(uint32_t freqMHz, Band band, bool muted,
     FILL_RECT(clearX, clearTop, clearW, clearHeight, PALETTE_BG);
     markFrequencyDirtyRegion(clearX, clearTop, clearW, clearHeight);
 
-    fontMgr.serpentine.setFontSize(fontSize);
-    fontMgr.serpentine.setBackgroundColor(0, 0, 0);  // Black background
-    fontMgr.serpentine.setFontColor((freqColor >> 11) << 3, ((freqColor >> 5) & 0x3F) << 2, (freqColor & 0x1F) << 3);
+    ofr.setFontSize(fontSize);
+    ofr.setBackgroundColor(0, 0, 0);
+    ofr.setFontColor((freqColor >> 11) << 3, ((freqColor >> 5) & 0x3F) << 2, (freqColor & 0x1F) << 3);
 
-    fontMgr.serpentine.setCursor(x, freqY);
-    fontMgr.serpentine.printf("%s", textBuf);
+    ofr.setCursor(x, freqY);
+    ofr.printf("%s", textBuf);
 
     // Update cache
     strncpy(g_elementCaches.freqSerpentine.lastText, textBuf, sizeof(g_elementCaches.freqSerpentine.lastText));
@@ -399,13 +393,20 @@ void V1Display::drawVolumeZeroWarning() {
     }
 }
 
-// --- Frequency router — dispatches to Classic or Serpentine based on user setting ---
+// --- Frequency router — dispatches to the active font style ---
 
 void V1Display::drawFrequency(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar) {
     const V1Settings& s = settingsManager.get();
-    if (s.displayStyle == DISPLAY_STYLE_SERPENTINE) {
-        fontMgr.ensureSerpentineLoaded(tft_);
+
+    // Lazy-load whichever OFR font the user has selected
+    switch (s.displayStyle) {
+        case DISPLAY_STYLE_SERPENTINE: fontMgr.ensureSerpentineLoaded(tft_); break;
+        case DISPLAY_STYLE_JETBRAINS:  fontMgr.ensureJetBrainsLoaded(tft_);  break;
+        case DISPLAY_STYLE_ROBOTO:     fontMgr.ensureRobotoLoaded(tft_);     break;
+        case DISPLAY_STYLE_ATKINSON:   fontMgr.ensureAtkinsonLoaded(tft_);   break;
+        default: break;
     }
+
     frequencyRenderDirty_ = false;
     frequencyDirtyValid_ = false;
     frequencyDirtyX_ = 0;
@@ -413,16 +414,24 @@ void V1Display::drawFrequency(uint32_t freqMHz, Band band, bool muted, bool isPh
     frequencyDirtyW_ = 0;
     frequencyDirtyH_ = 0;
 
-    // Debug: log which style is being used
     static int lastStyleLogged = -1;
     if (s.displayStyle != lastStyleLogged) {
-        Serial.printf("[Display] Style changed: %d (0=Classic, 3=Serpentine), serpInit=%d\n",
-                      s.displayStyle, fontMgr.serpentineReady);
+        Serial.printf("[Display] Style changed: %d\n", s.displayStyle);
         lastStyleLogged = s.displayStyle;
     }
 
-    if (s.displayStyle == DISPLAY_STYLE_SERPENTINE && fontMgr.serpentineReady) {
-        drawFrequencySerpentine(freqMHz, band, muted, isPhotoRadar);
+    // Pick the best available renderer for the selected style
+    OpenFontRender* ofr = nullptr;
+    switch (s.displayStyle) {
+        case DISPLAY_STYLE_SERPENTINE: if (fontMgr.serpentineReady) ofr = &fontMgr.serpentine; break;
+        case DISPLAY_STYLE_JETBRAINS:  if (fontMgr.jetbrainsReady)  ofr = &fontMgr.jetbrains;  break;
+        case DISPLAY_STYLE_ROBOTO:     if (fontMgr.robotoReady)     ofr = &fontMgr.roboto;     break;
+        case DISPLAY_STYLE_ATKINSON:   if (fontMgr.atkinsonReady)   ofr = &fontMgr.atkinson;   break;
+        default: break;
+    }
+
+    if (ofr) {
+        drawFrequencyOFR(freqMHz, band, muted, isPhotoRadar, *ofr);
     } else {
         drawFrequencyClassic(freqMHz, band, muted, isPhotoRadar);
     }

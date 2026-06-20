@@ -27,6 +27,7 @@
 
 #include <cstdint>
 #include <memory>
+#include "OpenFontRender.h"
 
 // Include display driver abstraction (Arduino_GFX only)
 #include "display_driver.h"
@@ -82,10 +83,11 @@ public:
     void setBrightness(uint8_t level);
 
     // Settings adjustment overlay (brightness + voice volume)
-    void showSettingsSliders(uint8_t brightnessLevel, uint8_t volumeLevel); // Show both sliders
-    void updateSettingsSliders(uint8_t brightnessLevel, uint8_t volumeLevel, int activeSlider);  // Update both sliders
-    void hideBrightnessSlider();                                           // Hide slider and restore display
-    int getActiveSliderFromTouch(int16_t touchY);                          // Returns 0=brightness, 1=volume, -1=none
+    void showSettingsSliders(uint8_t brightnessLevel, uint8_t volumeLevel);
+    void updateSettingsSliders(uint8_t brightnessLevel, uint8_t volumeLevel, int activeSlider);
+    void hideBrightnessSlider();
+    int  getActiveSliderFromTouch(int16_t touchY);
+    void showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn);
 
     // Clear screen
     void clear();
@@ -151,8 +153,8 @@ private:
 
 
     void drawFrequency(uint32_t freqMHz, Band band = BAND_NONE, bool muted = false, bool isPhotoRadar = false);
-    void drawFrequencyClassic(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar = false);   // 7-segment style
-    void drawFrequencySerpentine(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar = false);// Serpentine font
+    void drawFrequencyClassic(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar = false);
+    void drawFrequencyOFR(uint32_t freqMHz, Band band, bool muted, bool isPhotoRadar, OpenFontRender& ofr);
     void markFrequencyDirtyRegion(int16_t x, int16_t y, int16_t w, int16_t h);
     void drawVolumeZeroWarning();  // Flash "VOL 0" warning when volume=0 and no app connected
     void drawStatusText(const char* text, uint16_t color);

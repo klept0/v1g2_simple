@@ -2,10 +2,6 @@
 #include "../quiet/quiet_coordinator_module.h"
 #include "../perf/debug_macros.h"
 #ifndef UNIT_TEST
-#include "main_globals.h"
-#endif
-
-#ifndef UNIT_TEST
 #include "modules/auto_push/auto_push_module.h"
 #include "modules/alert_persistence/alert_persistence_module.h"
 #endif
@@ -88,34 +84,14 @@ void TapGestureModule::process(unsigned long nowMs) {
 
     DBG_PRINTF("Tap at x=%d y=%d hasAlert=%d\n", touchX, touchY, hasActiveAlert);
 
-    // Alert active: any tap mutes regardless of position
+    // Alert active: any tap mutes
     if (hasActiveAlert) {
         performMuteToggle("tap");
         tapCount_ = 0;
         return;
     }
 
-    // No alert: left/right zones navigate screens; center zone does context action
-    if (touchX < NAV_LEFT_ZONE_PX) {
-        screenManager.previous();
-        tapCount_ = 0;
-        return;
-    }
-    if (touchX > NAV_RIGHT_ZONE_PX) {
-        screenManager.next();
-        tapCount_ = 0;
-        return;
-    }
-
-    // Center zone tap
-    if (!screenManager.isRadar()) {
-        // Return to radar from any secondary screen
-        screenManager.set(ScreenType::RADAR);
-        tapCount_ = 0;
-        return;
-    }
-
-    // Center tap on radar screen: count toward profile cycle
+    // No alert: count taps toward triple-tap profile cycle
     if (nowMs - lastTapTime_ >= TAP_DEBOUNCE_MS) {
         if (nowMs - lastTapTime_ <= TAP_WINDOW_MS) {
             tapCount_++;

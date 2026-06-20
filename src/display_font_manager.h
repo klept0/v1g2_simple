@@ -22,19 +22,28 @@ struct DisplayFontManager {
     // --- Layout constant shared with display drawing code ---
     static constexpr int TOP_COUNTER_FONT_SIZE = 60;
 
-    // --- Renderers (3 instances) ---
-    OpenFontRender segment7;    // Classic style (Segment7)
-    OpenFontRender topCounter;  // Dedicated Segment7 renderer for top counter
-    OpenFontRender serpentine;  // Serpentine style (lazy-loaded on first demand)
+    // --- Renderers ---
+    OpenFontRender segment7;    // Classic style (Segment7) — eager-loaded
+    OpenFontRender topCounter;  // Dedicated Segment7 for bogey counter — eager-loaded
+    OpenFontRender serpentine;  // Serpentine — lazy-loaded on first use
+    OpenFontRender jetbrains;   // JetBrains Mono — lazy-loaded on first use
+    OpenFontRender roboto;      // Roboto — lazy-loaded on first use
+    OpenFontRender atkinson;    // Atkinson Hyperlegible — lazy-loaded on first use
 
     // --- Init flags ---
     bool segment7Ready    = false;
     bool topCounterReady  = false;
     bool serpentineReady  = false;
+    bool jetbrainsReady   = false;
+    bool robotoReady      = false;
+    bool atkinsonReady    = false;
 
     // --- Font cache budget (set once during init) ---
-    uint32_t numericCacheBytes      = 8192u;
+    uint32_t numericCacheBytes       = 8192u;
     bool     serpentineLoadAttempted = false;
+    bool     jetbrainsLoadAttempted  = false;
+    bool     robotoLoadAttempted     = false;
+    bool     atkinsonLoadAttempted   = false;
 
     // --- Top-counter glyph bounds cache ---
     static constexpr int16_t BOUNDS_INVALID =
@@ -54,13 +63,17 @@ struct DisplayFontManager {
     /// don't stall while OpenFontRender builds glyph caches.
     void prewarmSegment7FrequencyGlyphs();
 
-    /// Lazy-load Serpentine font the first time it is requested.
-    /// @param canvas  current display canvas (needed for setDrawer).
-    /// @return true when the serpentine renderer is ready to use.
+    /// Lazy-load a non-Segment7 font the first time it is requested.
+    /// Each returns true when the renderer is ready to use.
     bool ensureSerpentineLoaded(Arduino_Canvas* canvas);
-    bool ensureSerpentineLoaded(const std::unique_ptr<Arduino_Canvas>& canvas) {
-        return ensureSerpentineLoaded(canvas.get());
-    }
+    bool ensureJetBrainsLoaded(Arduino_Canvas* canvas);
+    bool ensureRobotoLoaded(Arduino_Canvas* canvas);
+    bool ensureAtkinsonLoaded(Arduino_Canvas* canvas);
+
+    bool ensureSerpentineLoaded(const std::unique_ptr<Arduino_Canvas>& c) { return ensureSerpentineLoaded(c.get()); }
+    bool ensureJetBrainsLoaded(const std::unique_ptr<Arduino_Canvas>& c)  { return ensureJetBrainsLoaded(c.get()); }
+    bool ensureRobotoLoaded(const std::unique_ptr<Arduino_Canvas>& c)     { return ensureRobotoLoaded(c.get()); }
+    bool ensureAtkinsonLoaded(const std::unique_ptr<Arduino_Canvas>& c)   { return ensureAtkinsonLoaded(c.get()); }
 
     // --- Top-counter bounds helpers ---
 
