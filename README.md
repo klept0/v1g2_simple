@@ -88,10 +88,17 @@ Change the default password from the Settings page before putting the device on 
 
 | Button | Action | Function |
 |---|---|---|
-| **BOOT** | Short press | Enter settings mode (brightness + volume sliders) |
-| **BOOT** | Long press ~4s | Toggle WiFi AP on/off |
+| **BOOT** | Short press | Cycle through settings pages (see below) |
+| **BOOT** | Long press ~4s | Toggle WiFi AP on/off immediately |
 
-**Settings mode:** top slider (green) = display brightness; bottom slider (blue) = voice volume. Release the slider to hear a test clip. Short press BOOT again to save and exit.
+**Settings pages** (short press cycles: off → Page 1 → Page 2 → exit & save):
+
+| Page | Content |
+|---|---|
+| **Page 1 — Sliders** | Top slider (green) = display brightness; bottom slider (blue) = voice volume. Release the volume slider to hear a test clip. |
+| **Page 2 — Toggles** | Three tap buttons: **WiFi AP** on/off · **BLE Proxy** on/off · **Mute→0** on/off (for the active profile slot). Tap a button to toggle instantly. |
+
+Short press BOOT on Page 2 exits and saves all changes.
 
 ### Touch gestures
 

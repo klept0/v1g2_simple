@@ -15,13 +15,13 @@ public:
     struct Callbacks {
         bool (*isWifiSetupActive)(void* ctx) = nullptr;
         void* isWifiSetupActiveCtx = nullptr;
-        void (*stopWifiSetup)(void* ctx) = nullptr;       // stop AP/setup mode
+        void (*stopWifiSetup)(void* ctx) = nullptr;
         void* stopWifiSetupCtx = nullptr;
-        void (*startWifi)(void* ctx) = nullptr;           // start WiFi/AP
+        void (*startWifi)(void* ctx) = nullptr;
         void* startWifiCtx = nullptr;
         void (*drawWifiIndicator)(void* ctx) = nullptr;
         void* drawWifiIndicatorCtx = nullptr;
-        void (*restoreDisplay)(void* ctx) = nullptr;      // refresh display with current state
+        void (*restoreDisplay)(void* ctx) = nullptr;
         void* restoreDisplayCtx = nullptr;
         ObdRuntimeStatus (*readObdStatus)(uint32_t nowMs, void* ctx) = nullptr;
         void* readObdStatusCtx = nullptr;
@@ -29,6 +29,16 @@ public:
         void* requestObdManualPairScanCtx = nullptr;
         bool (*isObdPairGestureSafe)(uint32_t nowMs, void* ctx) = nullptr;
         void* isObdPairGestureSafeCtx = nullptr;
+
+        // Toggle page callbacks
+        bool (*isProxyBleEnabled)(void* ctx) = nullptr;
+        void* isProxyBleEnabledCtx = nullptr;
+        void (*setProxyBleEnabled)(bool enabled, void* ctx) = nullptr;
+        void* setProxyBleEnabledCtx = nullptr;
+        bool (*getMuteToZero)(void* ctx) = nullptr;
+        void* getMuteToZeroCtx = nullptr;
+        void (*setMuteToZero)(bool enabled, void* ctx) = nullptr;
+        void* setMuteToZeroCtx = nullptr;
     };
 
     void begin(V1Display* disp,
@@ -36,13 +46,19 @@ public:
                SettingsManager* settingsMgr,
                const Callbacks& cbs);
 
-    // Returns true if UI consumed the loop (brightness/volume adjustment active)
+    // Returns true if UI consumed the loop (adjustment active)
     bool process(unsigned long nowMs, bool bootPressed);
 
 private:
-    void enterAdjustMode();
-    void exitAdjustModeAndSave();
+    // Page 1: sliders
+    void enterSlidersPage();
+    void exitAndSave();
     bool handleSliderTouch(unsigned long nowMs);
+
+    // Page 2: toggles
+    void enterTogglesPage();
+    bool handleToggleTouch();
+
     bool canArmObdPairGesture(unsigned long nowMs) const;
     void updateObdIndicatorAttention(bool attention, unsigned long nowMs);
 
@@ -52,7 +68,9 @@ private:
     SettingsManager* settings_ = nullptr;
     Callbacks callbacks_{};
 
-    bool brightnessAdjustMode_ = false;
+    // 0 = off, 1 = sliders page, 2 = toggles page
+    int settingsPage_ = 0;
+
     uint8_t brightnessAdjustValue_ = 200;
     uint8_t volumeAdjustValue_ = 75;
     int activeSlider_ = 0;
@@ -64,10 +82,9 @@ private:
     bool obdPairGestureArmed_ = false;
     bool wifiToggleFired_ = false;
 
-    // Timing constants (mirrors previous inline logic)
-    static constexpr unsigned long BOOT_DEBOUNCE_MS = 300;
+    static constexpr unsigned long BOOT_DEBOUNCE_MS       = 300;
     static constexpr unsigned long AP_TOGGLE_LONG_PRESS_MS = 4000;
-    static constexpr unsigned long OBD_PAIR_LONG_PRESS_MS = 10000;
+    static constexpr unsigned long OBD_PAIR_LONG_PRESS_MS  = 10000;
     static constexpr unsigned long VOLUME_TEST_DEBOUNCE_MS = 1000;
-    static constexpr unsigned long SLIDER_REDRAW_MIN_MS = 50;  // Cap slider redraw rate (~20 Hz)
+    static constexpr unsigned long SLIDER_REDRAW_MIN_MS    = 50;
 };

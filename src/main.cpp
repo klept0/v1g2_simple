@@ -704,6 +704,20 @@ void configureTouchUiModule() {
         },
         .isObdPairGestureSafe = [](uint32_t nowMs, void* /*ctx*/) {
             return displayPipelineModule.allowsObdPairGesture(nowMs);
+        },
+        .isProxyBleEnabled = [](void* /*ctx*/) {
+            return settingsManager.get().proxyBLE;
+        },
+        .setProxyBleEnabled = [](bool enabled, void* /*ctx*/) {
+            settingsManager.setProxyBLE(enabled);
+            settingsManager.save();
+        },
+        .getMuteToZero = [](void* /*ctx*/) {
+            return settingsManager.getSlotMuteToZero(settingsManager.get().activeSlot);
+        },
+        .setMuteToZero = [](bool enabled, void* /*ctx*/) {
+            settingsManager.setSlotMuteToZero(settingsManager.get().activeSlot, enabled);
+            settingsManager.save();
         }
     };
     touchUiModule.begin(&display, &touchHandler, &settingsManager, touchCbs);

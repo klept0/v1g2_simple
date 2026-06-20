@@ -23,9 +23,6 @@ void TouchUiModule::begin(V1Display* disp,
 bool TouchUiModule::process(unsigned long nowMs, bool bootPressed) {
     if (!display_ || !touchHandler_ || !settings_) return false;
 
-    // BOOT button handling:
-    // - Short press: enter/exit adjust mode
-    // - 4s hold: toggle WiFi (fires while still held)
     if (bootPressed && !bootWasPressed_) {
         bootPressStart_ = nowMs;
         wifiToggleFired_ = false;
@@ -34,7 +31,7 @@ bool TouchUiModule::process(unsigned long nowMs, bool bootPressed) {
     if (bootPressed) {
         const unsigned long held = nowMs - bootPressStart_;
 
-        const bool shouldArmObdPair = !brightnessAdjustMode_ &&
+        const bool shouldArmObdPair = (settingsPage_ == 0) &&
                                       held >= OBD_PAIR_LONG_PRESS_MS &&
                                       canArmObdPairGesture(nowMs);
         if (shouldArmObdPair != obdPairGestureArmed_) {
@@ -42,7 +39,6 @@ bool TouchUiModule::process(unsigned long nowMs, bool bootPressed) {
             updateObdIndicatorAttention(obdPairGestureArmed_, nowMs);
         }
 
-        // Toggle WiFi the moment the 4s threshold is crossed, not on release
         if (!wifiToggleFired_ && !obdPairGestureArmed_ && held >= AP_TOGGLE_LONG_PRESS_MS) {
             wifiToggleFired_ = true;
             if (callbacks_.isWifiSetupActive && callbacks_.isWifiSetupActive(callbacks_.isWifiSetupActiveCtx)) {
@@ -55,7 +51,6 @@ bool TouchUiModule::process(unsigned long nowMs, bool bootPressed) {
         }
     }
 
-    // On release: determine action based on hold duration
     if (!bootPressed && bootWasPressed_) {
         unsigned long pressDuration = nowMs - bootPressStart_;
         const bool triggerObdPair = obdPairGestureArmed_ && pressDuration >= OBD_PAIR_LONG_PRESS_MS;
@@ -74,88 +69,68 @@ bool TouchUiModule::process(unsigned long nowMs, bool bootPressed) {
             display_->refreshObdIndicator(nowMs);
             display_->flushRegion(kObdBadgeFlushX, kObdBadgeFlushY, kObdBadgeFlushW, kObdBadgeFlushH);
         } else if (!wifiAlreadyToggled && pressDuration >= BOOT_DEBOUNCE_MS) {
-            // Short press: adjust mode toggle
-            if (brightnessAdjustMode_) {
-                exitAdjustModeAndSave();
+            // Cycle through pages: 0 → 1 (sliders) → 2 (toggles) → 0 (exit)
+            if (settingsPage_ == 0) {
+                enterSlidersPage();
+            } else if (settingsPage_ == 1) {
+                enterTogglesPage();
             } else {
-                enterAdjustMode();
+                exitAndSave();
             }
         }
     }
 
     bootWasPressed_ = bootPressed;
 
-    // If in settings adjustment mode, handle touch sliders and debounce test voice
-    if (brightnessAdjustMode_) {
+    if (settingsPage_ == 1) {
         bool touched = handleSliderTouch(nowMs);
-
         if (!touched && lastVolumeChangeMs_ > 0 &&
             (nowMs - lastVolumeChangeMs_) >= VOLUME_TEST_DEBOUNCE_MS) {
             play_test_voice();
             lastVolumeChangeMs_ = 0;
         }
-        return true;  // consume loop while adjusting
+        return true;
+    }
+
+    if (settingsPage_ == 2) {
+        handleToggleTouch();
+        return true;
     }
 
     return false;
 }
 
-bool TouchUiModule::canArmObdPairGesture(unsigned long nowMs) const {
-    if (!callbacks_.readObdStatus || !callbacks_.isObdPairGestureSafe) {
-        return false;
-    }
+// ─── Page 1: sliders ────────────────────────────────────────────────────────
 
-    const ObdRuntimeStatus status = callbacks_.readObdStatus(nowMs, callbacks_.readObdStatusCtx);
-    return status.enabled &&
-           !status.connected &&
-           !status.scanInProgress &&
-           !status.manualScanPending &&
-           callbacks_.isObdPairGestureSafe(nowMs, callbacks_.isObdPairGestureSafeCtx);
-}
-
-void TouchUiModule::updateObdIndicatorAttention(bool attention, unsigned long nowMs) {
-    display_->setObdAttention(attention);
-    display_->refreshObdIndicator(nowMs);
-    display_->flushRegion(kObdBadgeFlushX, kObdBadgeFlushY, kObdBadgeFlushW, kObdBadgeFlushH);
-}
-
-void TouchUiModule::enterAdjustMode() {
+void TouchUiModule::enterSlidersPage() {
     const V1Settings& s = settings_->get();
-    brightnessAdjustMode_ = true;
+    settingsPage_ = 1;
     brightnessAdjustValue_ = s.brightness;
     volumeAdjustValue_ = s.voiceVolume;
     activeSlider_ = 0;
     lastVolumeChangeMs_ = 0;
     display_->showSettingsSliders(brightnessAdjustValue_, volumeAdjustValue_);
-    DBG_PRINTF("[Settings] Entering adjustment mode (brightness: %d, volume: %d)\n",
-                  brightnessAdjustValue_, volumeAdjustValue_);
 }
 
-void TouchUiModule::exitAdjustModeAndSave() {
-    brightnessAdjustMode_ = false;
+void TouchUiModule::exitAndSave() {
+    settingsPage_ = 0;
     settings_->updateBrightness(brightnessAdjustValue_);
     settings_->updateVoiceVolume(volumeAdjustValue_);
     settings_->save();
     audio_set_volume(volumeAdjustValue_);
     display_->hideBrightnessSlider();
     if (callbacks_.restoreDisplay) callbacks_.restoreDisplay(callbacks_.restoreDisplayCtx);
-    DBG_PRINTF("[Settings] Saved brightness: %d, volume: %d\n", brightnessAdjustValue_, volumeAdjustValue_);
 }
 
 bool TouchUiModule::handleSliderTouch(unsigned long nowMs) {
     int16_t touchX, touchY;
-    if (!touchHandler_->getTouchPoint(touchX, touchY)) {
-        return false;
-    }
+    if (!touchHandler_->getTouchPoint(touchX, touchY)) return false;
 
-    // Map touch to slider region
     const int sliderX = 40;
-    const int sliderWidth = SCREEN_WIDTH - 80;  // 560 pixels
+    const int sliderWidth = SCREEN_WIDTH - 80;
 
     int touchedSlider = display_->getActiveSliderFromTouch(touchY);
-    if (touchedSlider < 0 || touchX < sliderX || touchX > sliderX + sliderWidth) {
-        return true;  // touch occurred but not on slider region
-    }
+    if (touchedSlider < 0 || touchX < sliderX || touchX > sliderX + sliderWidth) return true;
 
     activeSlider_ = touchedSlider;
 
@@ -186,4 +161,84 @@ bool TouchUiModule::handleSliderTouch(unsigned long nowMs) {
     }
 
     return true;
+}
+
+// ─── Page 2: toggles ────────────────────────────────────────────────────────
+
+void TouchUiModule::enterTogglesPage() {
+    settingsPage_ = 2;
+
+    const V1Settings& s = settings_->get();
+    bool wifiOn   = callbacks_.isWifiSetupActive
+                    ? callbacks_.isWifiSetupActive(callbacks_.isWifiSetupActiveCtx)
+                    : false;
+    bool proxyOn  = s.proxyBLE;
+    bool muteZero = callbacks_.getMuteToZero
+                    ? callbacks_.getMuteToZero(callbacks_.getMuteToZeroCtx)
+                    : false;
+
+    display_->showTogglesPage(wifiOn, proxyOn, muteZero);
+}
+
+bool TouchUiModule::handleToggleTouch() {
+    int16_t touchX, touchY;
+    if (!touchHandler_->getTouchPoint(touchX, touchY)) return false;
+
+    // Three equal-width buttons across 640px
+    // Button 0: 0–213   WiFi AP
+    // Button 1: 213–427 BLE Proxy
+    // Button 2: 427–640 Mute→0
+    int btn = -1;
+    if (touchX < 213)       btn = 0;
+    else if (touchX < 427)  btn = 1;
+    else                    btn = 2;
+
+    if (btn == 0) {
+        // Toggle WiFi AP
+        if (callbacks_.isWifiSetupActive && callbacks_.isWifiSetupActive(callbacks_.isWifiSetupActiveCtx)) {
+            if (callbacks_.stopWifiSetup) callbacks_.stopWifiSetup(callbacks_.stopWifiSetupCtx);
+        } else {
+            if (callbacks_.startWifi) callbacks_.startWifi(callbacks_.startWifiCtx);
+        }
+    } else if (btn == 1) {
+        // Toggle BLE proxy
+        if (callbacks_.isProxyBleEnabled && callbacks_.setProxyBleEnabled) {
+            bool current = callbacks_.isProxyBleEnabled(callbacks_.isProxyBleEnabledCtx);
+            callbacks_.setProxyBleEnabled(!current, callbacks_.setProxyBleEnabledCtx);
+        }
+    } else if (btn == 2) {
+        // Toggle Mute→0 for active slot
+        if (callbacks_.getMuteToZero && callbacks_.setMuteToZero) {
+            bool current = callbacks_.getMuteToZero(callbacks_.getMuteToZeroCtx);
+            callbacks_.setMuteToZero(!current, callbacks_.setMuteToZeroCtx);
+        }
+    }
+
+    // Redraw with updated state
+    const V1Settings& s = settings_->get();
+    bool wifiOn   = callbacks_.isWifiSetupActive
+                    ? callbacks_.isWifiSetupActive(callbacks_.isWifiSetupActiveCtx)
+                    : false;
+    bool proxyOn  = s.proxyBLE;
+    bool muteZero = callbacks_.getMuteToZero
+                    ? callbacks_.getMuteToZero(callbacks_.getMuteToZeroCtx)
+                    : false;
+    display_->showTogglesPage(wifiOn, proxyOn, muteZero);
+    return true;
+}
+
+// ─── OBD pair gesture helpers ────────────────────────────────────────────────
+
+bool TouchUiModule::canArmObdPairGesture(unsigned long nowMs) const {
+    if (!callbacks_.readObdStatus || !callbacks_.isObdPairGestureSafe) return false;
+    const ObdRuntimeStatus status = callbacks_.readObdStatus(nowMs, callbacks_.readObdStatusCtx);
+    return status.enabled && !status.connected && !status.scanInProgress &&
+           !status.manualScanPending &&
+           callbacks_.isObdPairGestureSafe(nowMs, callbacks_.isObdPairGestureSafeCtx);
+}
+
+void TouchUiModule::updateObdIndicatorAttention(bool attention, unsigned long nowMs) {
+    display_->setObdAttention(attention);
+    display_->refreshObdIndicator(nowMs);
+    display_->flushRegion(kObdBadgeFlushX, kObdBadgeFlushY, kObdBadgeFlushW, kObdBadgeFlushH);
 }

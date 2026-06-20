@@ -123,6 +123,61 @@ int V1Display::getActiveSliderFromTouch(int16_t touchY) {
 }
 
 void V1Display::hideBrightnessSlider() {
-    // Just clear - caller will refresh normal display
     clear();
+}
+
+// ─── Page 2: toggle buttons ──────────────────────────────────────────────────
+// Three equal-width buttons across 640px, vertically centred in 172px.
+// Button layout:  [  WiFi AP  ] [ BLE Proxy ] [  Mute→0  ]
+//                  0..212        213..426       427..640
+
+void V1Display::showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn) {
+    clear();
+
+    const int btnW   = SCREEN_WIDTH / 3;   // 213px each
+    const int btnH   = 100;
+    const int btnY   = (SCREEN_HEIGHT - btnH) / 2;  // vertically centred
+    const int radius = 8;
+
+    // Colours
+    const uint16_t ON_BG     = 0x07E0;  // green
+    const uint16_t OFF_BG    = 0x2104;  // dark grey
+    const uint16_t LABEL_COL = 0xFFFF;  // white
+    const uint16_t BORDER    = 0x4208;  // mid-grey border
+
+    struct Btn { int x; const char* label; bool state; };
+    Btn buttons[3] = {
+        { 0,         "WiFi AP",   wifiOn      },
+        { btnW,      "BLE Proxy", proxyOn     },
+        { btnW * 2,  "Mute\xE2\x86\x920",  muteZeroOn  },  // "Mute→0"
+    };
+
+    tft_->setTextSize(1);
+    for (auto& b : buttons) {
+        uint16_t bg = b.state ? ON_BG : OFF_BG;
+        // Fill + border
+        tft_->fillRoundRect(b.x + 6, btnY, btnW - 12, btnH, radius, bg);
+        tft_->drawRoundRect(b.x + 6, btnY, btnW - 12, btnH, radius, BORDER);
+
+        // Label (centred, white)
+        tft_->setTextColor(LABEL_COL, bg);
+        int16_t tx = b.x + (btnW / 2) - (strlen(b.label) * 6 / 2);
+        tft_->setCursor(tx, btnY + 28);
+        tft_->print(b.label);
+
+        // State chip
+        const char* stateStr = b.state ? " ON " : " OFF";
+        uint16_t stateCol = b.state ? 0xFFFF : 0xAD75;
+        tft_->setTextColor(stateCol, bg);
+        int16_t sx = b.x + (btnW / 2) - (4 * 6 / 2);
+        tft_->setCursor(sx, btnY + 52);
+        tft_->print(stateStr);
+    }
+
+    // Footer hint
+    tft_->setTextColor(0x8410, PALETTE_BG);  // dim grey
+    tft_->setCursor(4, SCREEN_HEIGHT - 14);
+    tft_->print("BOOT = exit & save");
+
+    flush();
 }

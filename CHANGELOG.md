@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Five display fonts** — Classic (7-segment), JetBrains Mono, Roboto, Serpentine, and Atkinson Hyperlegible. Select in Colors → Font Style. The three new OFR fonts (JetBrains Mono, Roboto, Atkinson) are lazy-loaded on first use; only the active font occupies RAM. PROGMEM headers are subsetted to display characters (~6–20 KB each).
 - `tools/create_font_headers.py` — reproducible fontTools subsetting script for regenerating the PROGMEM font headers from source TTFs.
+- **BOOT button two-page settings UI** — short press now cycles through two pages before exiting. Page 1 (existing): brightness and volume sliders. Page 2 (new): three large tap-toggle buttons for **WiFi AP**, **BLE Proxy**, and **Mute→0** (active slot). A third short press exits and saves. The 4-second long-press WiFi toggle is unaffected.
 
 ### Fixed
 - **Touch navigation**: Removed zone-based swipe/screen-nav logic (the AXS15231B touch IC fires only a single rising-edge event per tap, making swipe accumulation impossible). Touch now handles only: tap while alert active = mute/unmute; triple-tap within 600 ms = cycle profile.

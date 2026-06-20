@@ -83,10 +83,11 @@ public:
     void setBrightness(uint8_t level);
 
     // Settings adjustment overlay (brightness + voice volume)
-    void showSettingsSliders(uint8_t brightnessLevel, uint8_t volumeLevel); // Show both sliders
-    void updateSettingsSliders(uint8_t brightnessLevel, uint8_t volumeLevel, int activeSlider);  // Update both sliders
-    void hideBrightnessSlider();                                           // Hide slider and restore display
-    int getActiveSliderFromTouch(int16_t touchY);                          // Returns 0=brightness, 1=volume, -1=none
+    void showSettingsSliders(uint8_t brightnessLevel, uint8_t volumeLevel);
+    void updateSettingsSliders(uint8_t brightnessLevel, uint8_t volumeLevel, int activeSlider);
+    void hideBrightnessSlider();
+    int  getActiveSliderFromTouch(int16_t touchY);
+    void showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn);
 
     // Clear screen
     void clear();
