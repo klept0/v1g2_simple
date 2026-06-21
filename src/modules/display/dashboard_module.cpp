@@ -138,7 +138,7 @@ TuningData DashboardModule::tuningSnapshot(uint32_t nowMs) const {
             d.hasAlert   = true;
             d.band       = pri.band;
             d.freqMHz    = pri.frequency;
-            d.signalBars = pri.signalBars;
+            d.signalBars = pri.frontStrength;  // 0-6; scale to 0-8 display range
             d.direction  = pri.direction;
             d.durationMs = alertOnsetMs_ > 0 ? (nowMs - alertOnsetMs_) : 0;
         }

@@ -15,7 +15,7 @@ struct TuningData {
     bool      hasAlert    = false;
     Band      band        = BAND_NONE;
     uint32_t  freqMHz     = 0;      // frequency × 1000 (matches AlertData::frequency)
-    uint8_t   signalBars  = 0;      // 0-8
+    uint8_t   signalBars  = 0;      // 0-6 (from AlertData::frontStrength)
     Direction direction   = DIR_NONE;
     uint32_t  durationMs  = 0;      // how long the current alert has been active
     int       activeSlot  = 0;

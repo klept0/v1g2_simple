@@ -79,24 +79,26 @@ static const char* tunDirName(Direction d) {
     }
 }
 
-// Draw 8 vertical signal bars.  Active bars transition green→yellow→red.
+// Draw 6 vertical signal bars (V1 Gen2 uses 6-bar scale via frontStrength).
+// Active bars transition green→yellow→red.
 static void drawSignalBars(Arduino_Canvas* tft,
                             int16_t x0, int16_t y0,
                             int16_t totalW, int16_t totalH,
                             uint8_t bars) {
-    const int16_t gap    = 3;
-    const int16_t barW   = (totalW - gap * 7) / 8;
-    const int16_t maxH   = totalH;
+    static constexpr int kBars = 6;
+    const int16_t gap  = 3;
+    const int16_t barW = (totalW - gap * (kBars - 1)) / kBars;
+    const int16_t maxH = totalH;
 
-    for (int i = 0; i < 8; i++) {
-        const int16_t barH = maxH * (i + 1) / 8;
+    for (int i = 0; i < kBars; i++) {
+        const int16_t barH = maxH * (i + 1) / kBars;
         const int16_t bx   = x0 + i * (barW + gap);
         const int16_t by   = y0 + (maxH - barH);
 
         uint16_t col;
         if (i < static_cast<int>(bars)) {
-            if (i < 3)      col = TUN_GREEN;
-            else if (i < 6) col = TUN_YELLOW;
+            if (i < 2)      col = TUN_GREEN;
+            else if (i < 4) col = TUN_YELLOW;
             else             col = TUN_RED;
         } else {
             col = TUN_DIM;
@@ -238,7 +240,7 @@ void V1Display::showTuning(const TuningData& data) {
 
         // Numeric bars / 8 below
         char barBuf[8];
-        snprintf(barBuf, sizeof(barBuf), "%d/8", data.signalBars);
+        snprintf(barBuf, sizeof(barBuf), "%d/6", data.signalBars);
         tft_->setTextSize(1);
         tft_->setTextColor(TUN_GREY, TUN_BG);
         GFX_setTextDatum(BC_DATUM);
