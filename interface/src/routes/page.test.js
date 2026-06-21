@@ -99,6 +99,11 @@ describe('dashboard route page', () => {
 			[
 				{
 					method: 'GET',
+					match: '/api/setup/wizard',
+					respond: jsonResponse({ done: true, step: 0 }),
+				},
+				{
+					method: 'GET',
 					match: '/api/status',
 					respond: () => {
 						throw new Error('network down');
