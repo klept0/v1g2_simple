@@ -25,7 +25,7 @@ A open-source touchscreen companion display for the **Valentine One Gen2** radar
 | **Driving dashboard** | Idle screen with speed, connection status, profile slot, mute state, last alert |
 | **Encounter history** | Logs every alert to LittleFS; browse, export CSV, mark false alerts in web UI |
 | **Phone companion API** | Receive speed, heading, road name, and GPS accuracy from Tasker/Automate over WiFi |
-| **Setup wizard** | 8-step first-run wizard (optional, skippable, repeatable) |
+| **Setup wizard** | Auto-redirects on first boot; 8 steps, optional ones individually skippable, always re-runnable |
 | **Full web UI** | SvelteKit interface served from the device — no app, no account, no internet |
 | **WiFi client mode** | Optionally joins your home network while keeping the AP active |
 | **OTA-style install** | One-click browser flasher via ESP Web Tools; no IDE needed |
@@ -231,7 +231,7 @@ Requires an OBD-II adapter connected via BLE. Set a speed threshold; alerts are 
 
 | Page | URL | Purpose |
 |---|---|---|
-| Dashboard | `/` | Live system status, quick health checks, first-run wizard banner |
+| Dashboard | `/` | Live system status; auto-redirects to Setup Wizard on first boot |
 | Audio | `/audio` | Voice alerts, volume fade, speed mute, voice packs, chimes, band filters |
 | Profiles | `/profiles` | Create and manage V1 sensitivity profiles |
 | Auto-Push | `/autopush` | Assign profiles to slots; configure per-slot V1 settings |
