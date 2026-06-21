@@ -23,7 +23,7 @@ Current train (`v4.3.0`) highlights:
 - **Phone Companion API** — push GPS speed, heading, road name, and phone battery from Tasker/Automate via `POST /api/drive/update`. Phone speed integrates as OBD fallback.
 - **Voice Alert Filters** — per-band suppression (X/K/Ka/Laser), first-alert-only mode, and direction-change-only mode.
 - **Startup/shutdown chimes** — synthesized two-note tones on power on and off (individually toggle-able from `/audio`).
-- **Setup Wizard** — 8-step first-run wizard at `/setup` (optional, skippable, repeatable).
+- **Setup Wizard** — 8-step first-run wizard at `/setup`; auto-redirects on first boot until complete. Optional steps are individually skippable. Repeatable from the nav.
 - Five display fonts: Classic (7-segment), JetBrains Mono, Roboto, Serpentine, and Atkinson Hyperlegible.
 - BOOT button two-page settings UI: Page 1 (brightness/volume sliders), Page 2 (WiFi AP / BLE Proxy / Mute=0 toggles).
 
@@ -1182,7 +1182,7 @@ The web interface is built with SvelteKit and daisyUI (TailwindCSS). Source is i
 
 | Route | File | Purpose |
 |-------|------|---------|
-| `/` | `+page.svelte` | Dashboard — connection status, first-run wizard banner |
+| `/` | `+page.svelte` | Dashboard — connection status; auto-redirects to `/setup` on first boot |
 | `/setup` | `setup/+page.svelte` | Setup Wizard — 8-step first-run guide (optional, repeatable) |
 | `/settings` | `settings/+page.svelte` | WiFi AP, BLE proxy, backup/restore |
 | `/audio` | `audio/+page.svelte` | Voice alert settings, volume fade, chimes, band filters |
@@ -1317,7 +1317,7 @@ Ring buffer: 50 entries by default (max 250); oldest entries are pruned when the
 7. Speaker Test (`/audio`)
 8. Backup Configuration (`/autopush`)
 
-The wizard is **optional**, **skippable** (Skip All button), and **repeatable** (accessible from the nav at any time). Wizard state (`done`, `step`) is NVS-persisted and restored on reconnect. A first-run banner appears on the home dashboard until the wizard is completed or dismissed.
+On first boot the web UI redirects automatically to `/setup` until the wizard is marked done. Optional steps (Configure WiFi, Configure OBD, Speaker Test, Backup) each show a per-step **Skip** button; **Skip All** skips the entire wizard immediately. The wizard is **repeatable** — accessible from the nav at any time. Wizard state (`done`, `step`) is NVS-persisted and restored on reconnect.
 
 **API:** `GET/POST /api/setup/wizard`
 
