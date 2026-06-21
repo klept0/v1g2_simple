@@ -10,6 +10,11 @@ function installDefaultFetch(overrides = []) {
 			...overrides,
 			{
 				method: 'GET',
+				match: '/api/setup/wizard',
+				respond: jsonResponse({ done: true, step: 0 }),
+			},
+			{
+				method: 'GET',
 				match: '/api/status',
 				respond: jsonResponse({
 					wifi: {
