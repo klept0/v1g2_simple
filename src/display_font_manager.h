@@ -29,6 +29,8 @@ struct DisplayFontManager {
     OpenFontRender jetbrains;   // JetBrains Mono — lazy-loaded on first use
     OpenFontRender roboto;      // Roboto — lazy-loaded on first use
     OpenFontRender atkinson;    // Atkinson Hyperlegible — lazy-loaded on first use
+    OpenFontRender din1451;     // Barlow Condensed Bold / DIN 1451 style — lazy-loaded
+    OpenFontRender inter;       // Inter Medium — secondary UI font — lazy-loaded
 
     // --- Init flags ---
     bool segment7Ready    = false;
@@ -37,6 +39,8 @@ struct DisplayFontManager {
     bool jetbrainsReady   = false;
     bool robotoReady      = false;
     bool atkinsonReady    = false;
+    bool din1451Ready     = false;
+    bool interReady       = false;
 
     // --- Font cache budget (set once during init) ---
     uint32_t numericCacheBytes       = 8192u;
@@ -44,6 +48,8 @@ struct DisplayFontManager {
     bool     jetbrainsLoadAttempted  = false;
     bool     robotoLoadAttempted     = false;
     bool     atkinsonLoadAttempted   = false;
+    bool     din1451LoadAttempted    = false;
+    bool     interLoadAttempted      = false;
 
     // --- Top-counter glyph bounds cache ---
     static constexpr int16_t BOUNDS_INVALID =
@@ -69,11 +75,15 @@ struct DisplayFontManager {
     bool ensureJetBrainsLoaded(Arduino_Canvas* canvas);
     bool ensureRobotoLoaded(Arduino_Canvas* canvas);
     bool ensureAtkinsonLoaded(Arduino_Canvas* canvas);
+    bool ensureDIN1451Loaded(Arduino_Canvas* canvas);
+    bool ensureInterLoaded(Arduino_Canvas* canvas);
 
     bool ensureSerpentineLoaded(const std::unique_ptr<Arduino_Canvas>& c) { return ensureSerpentineLoaded(c.get()); }
     bool ensureJetBrainsLoaded(const std::unique_ptr<Arduino_Canvas>& c)  { return ensureJetBrainsLoaded(c.get()); }
     bool ensureRobotoLoaded(const std::unique_ptr<Arduino_Canvas>& c)     { return ensureRobotoLoaded(c.get()); }
     bool ensureAtkinsonLoaded(const std::unique_ptr<Arduino_Canvas>& c)   { return ensureAtkinsonLoaded(c.get()); }
+    bool ensureDIN1451Loaded(const std::unique_ptr<Arduino_Canvas>& c)    { return ensureDIN1451Loaded(c.get()); }
+    bool ensureInterLoaded(const std::unique_ptr<Arduino_Canvas>& c)      { return ensureInterLoaded(c.get()); }
 
     // --- Top-counter bounds helpers ---
 

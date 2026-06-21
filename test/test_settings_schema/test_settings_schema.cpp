@@ -13,7 +13,7 @@ void test_v1_settings_defaults_cover_current_runtime_shape() {
 	TEST_ASSERT_EQUAL_STRING("V1-Simple", settings.apSSID.c_str());
 	TEST_ASSERT_TRUE(settings.proxyBLE);
 	TEST_ASSERT_EQUAL_UINT8(200, settings.brightness);
-	TEST_ASSERT_EQUAL_INT(DISPLAY_STYLE_CLASSIC, settings.displayStyle);
+	TEST_ASSERT_EQUAL_INT(DISPLAY_STYLE_DIN, settings.displayStyle);
 	TEST_ASSERT_EQUAL_HEX16(0x001F, settings.colorObd);
 	TEST_ASSERT_EQUAL_INT(VOICE_MODE_BAND_FREQ, settings.voiceAlertMode);
 	TEST_ASSERT_TRUE(settings.voiceDirectionEnabled);

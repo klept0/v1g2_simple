@@ -46,11 +46,11 @@ void TapGestureModule::process(unsigned long nowMs) {
         nowMs - lastTapTime_ > TAP_WINDOW_MS) {
         pendingDashboardToggle_ = false;
         if (dashboard_) {
-            dashboard_->toggle();
+            dashboard_->cycleNext();
             if (!dashboard_->isActive()) {
                 display_->forceNextRedraw();
             }
-            DBG_PRINTLN("Dashboard toggled via single tap");
+            DBG_PRINTLN("Idle screen cycled via single tap");
         }
         tapCount_ = 0;
     }

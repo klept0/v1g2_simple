@@ -10,6 +10,8 @@
 #include "../include/JetBrainsMono.h"      // JetBrains Mono TTF binary data (subsetted)
 #include "../include/Roboto.h"             // Roboto TTF binary data (subsetted)
 #include "../include/Atkinson.h"           // Atkinson Hyperlegible TTF binary data (subsetted)
+#include "../include/DIN1451Font.h"        // Barlow Condensed Bold — DIN 1451 style (subsetted, OFL)
+#include "../include/InterFont.h"          // Inter Medium — secondary UI font (subsetted, OFL)
 #include <Arduino.h>                       // millis(), Serial, psramFound()
 #include <esp_heap_caps.h>
 
@@ -156,6 +158,10 @@ IMPL_ENSURE_FONT_LOADED(ensureRobotoLoaded,    robotoReady,    robotoLoadAttempt
                         roboto,    RobotoFont,       "Roboto")
 IMPL_ENSURE_FONT_LOADED(ensureAtkinsonLoaded,  atkinsonReady,  atkinsonLoadAttempted,
                         atkinson,  AtkinsonFont,     "Atkinson")
+IMPL_ENSURE_FONT_LOADED(ensureDIN1451Loaded,   din1451Ready,   din1451LoadAttempted,
+                        din1451,   DIN1451Font,      "DIN1451")
+IMPL_ENSURE_FONT_LOADED(ensureInterLoaded,     interReady,     interLoadAttempted,
+                        inter,     InterFont,        "Inter")
 
 #undef IMPL_ENSURE_FONT_LOADED
 

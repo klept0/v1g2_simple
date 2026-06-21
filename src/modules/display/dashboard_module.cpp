@@ -109,12 +109,100 @@ DashboardData DashboardModule::snapshot(uint32_t nowMs) const {
     return d;
 }
 
+void DashboardModule::cycleNext() {
+    const auto next = static_cast<uint8_t>(activeScreen_) + 1;
+    activeScreen_ = static_cast<IdleScreen>(
+        next > static_cast<uint8_t>(IdleScreen::Stealth) ? 0 : next);
+}
+
+TuningData DashboardModule::tuningSnapshot(uint32_t nowMs) const {
+    TuningData d;
+    if (!settings_ || !ble_ || !parser_) return d;
+
+    const V1Settings& s = settings_->get();
+    d.activeSlot  = s.activeSlot;
+    d.v1Connected = ble_->isConnected();
+
+    const String& name = (s.activeSlot == 0) ? s.slot0Name
+                       : (s.activeSlot == 1) ? s.slot1Name
+                                             : s.slot2Name;
+    strncpy(d.slotName, name.c_str(), sizeof(d.slotName) - 1);
+    d.slotName[sizeof(d.slotName) - 1] = '\0';
+
+    const DisplayState ds = parser_->getDisplayState();
+    d.muted = ds.muted;
+
+    if (parser_->hasAlerts()) {
+        AlertData pri;
+        if (parser_->getRenderablePriorityAlert(pri)) {
+            d.hasAlert   = true;
+            d.band       = pri.band;
+            d.freqMHz    = pri.frequency;
+            d.signalBars = pri.frontStrength;  // 0-6; scale to 0-8 display range
+            d.direction  = pri.direction;
+            d.durationMs = alertOnsetMs_ > 0 ? (nowMs - alertOnsetMs_) : 0;
+        }
+    }
+    return d;
+}
+
+StealthData DashboardModule::stealthSnapshot(uint32_t nowMs) const {
+    StealthData d;
+    if (!ble_ || !parser_) return d;
+
+    if (obd_) {
+        const ObdRuntimeStatus obdStatus = obd_->snapshot(nowMs);
+        if (obdStatus.speedValid && obdStatus.speedAgeMs < 3000) {
+            d.speedValid = true;
+            d.speedMph   = obdStatus.speedMph;
+        }
+    }
+
+    const DisplayState ds = parser_->getDisplayState();
+    d.muted = ds.muted;
+
+    if (parser_->hasAlerts()) {
+        AlertData pri;
+        if (parser_->getRenderablePriorityAlert(pri)) {
+            d.hasAlert  = true;
+            d.band      = pri.band;
+            d.direction = pri.direction;
+            d.freqMHz   = pri.frequency;
+        }
+    }
+    return d;
+}
+
 bool DashboardModule::renderIfActive(uint32_t nowMs) {
-    if (!active_ || !display_) return false;
+    if (activeScreen_ == IdleScreen::Off || !display_) return false;
     if (nowMs - lastRedrawMs_ < REDRAW_INTERVAL_MS) return false;
 
+    // Track alert onset time for the tuning screen duration counter.
+    const bool hasAlert = parser_ && parser_->hasAlerts();
+    if (hasAlert && !prevHasAlert_) alertOnsetMs_ = nowMs;
+    if (!hasAlert) alertOnsetMs_ = 0;
+    prevHasAlert_ = hasAlert;
+
     lastRedrawMs_ = nowMs;
-    const DashboardData data = snapshot(nowMs);
-    display_->showDashboard(data);
+
+    switch (activeScreen_) {
+        case IdleScreen::Dashboard: {
+            const DashboardData data = snapshot(nowMs);
+            display_->showDashboard(data);
+            break;
+        }
+        case IdleScreen::Tuning: {
+            const TuningData data = tuningSnapshot(nowMs);
+            display_->showTuning(data);
+            break;
+        }
+        case IdleScreen::Stealth: {
+            const StealthData data = stealthSnapshot(nowMs);
+            display_->showStealth(data);
+            break;
+        }
+        default:
+            break;
+    }
     return true;
 }

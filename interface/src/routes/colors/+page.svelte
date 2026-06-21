@@ -290,6 +290,7 @@
 						value={displayStyle}
 						onchange={saveDisplayStyle}
 					>
+						<option value={5}>V1G2 Simple (DIN 1451 + Inter)</option>
 						<option value={0}>Classic (7-segment)</option>
 						<option value={1}>JetBrains Mono</option>
 						<option value={2}>Roboto</option>

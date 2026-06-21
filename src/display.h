@@ -71,6 +71,12 @@ public:
     // Driving dashboard screen
     void showDashboard(const struct DashboardData& data);
 
+    // V1 tuning / sweep-validation screen
+    void showTuning(const struct TuningData& data);
+
+    // Stealth night mode — minimal red/orange HUD
+    void showStealth(const struct StealthData& data);
+
     // Force next update() call to fully redraw (use after settings change)
     void forceNextRedraw();
 

@@ -53,7 +53,8 @@ enum DisplayStyle {
     DISPLAY_STYLE_JETBRAINS  = 1,  // JetBrains Mono Regular
     DISPLAY_STYLE_ROBOTO     = 2,  // Roboto Regular
     DISPLAY_STYLE_SERPENTINE = 3,  // Serpentine Bold
-    DISPLAY_STYLE_ATKINSON   = 4   // Atkinson Hyperlegible Regular
+    DISPLAY_STYLE_ATKINSON   = 4,  // Atkinson Hyperlegible Regular
+    DISPLAY_STYLE_DIN        = 5   // V1G2 Simple — Barlow Condensed Bold (DIN 1451 style) + Inter Medium
 };
 
 inline DisplayStyle normalizeDisplayStyle(int rawStyle) {
@@ -62,6 +63,7 @@ inline DisplayStyle normalizeDisplayStyle(int rawStyle) {
         case 2: return DISPLAY_STYLE_ROBOTO;
         case 3: return DISPLAY_STYLE_SERPENTINE;
         case 4: return DISPLAY_STYLE_ATKINSON;
+        case 5: return DISPLAY_STYLE_DIN;
         default: return DISPLAY_STYLE_CLASSIC;
     }
 }
@@ -309,7 +311,7 @@ struct V1Settings {
         proxyName("V1-Proxy"),  // Must match NVS load() default
         turnOffDisplay(false),
         brightness(200),
-        displayStyle(DISPLAY_STYLE_CLASSIC),  // Default to classic 7-segment
+        displayStyle(DISPLAY_STYLE_DIN),  // Default: V1G2 Simple (DIN 1451 style + Inter)
         colorBogey(0xF800),      // Red (same as KA)
         colorFrequency(0xF800),  // Red (same as KA)
         colorArrowFront(0xF800), // Red (front)
