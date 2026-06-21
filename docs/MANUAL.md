@@ -18,13 +18,17 @@ Current train (`v4.3.0`) highlights:
 - **Smart Brightness Engine** — auto-adjusts display brightness on alert, mute, and idle timeout. All five levels configurable (`/brightness`).
 - **Driving Safety Lockout** — blocks destructive configuration changes when OBD/phone speed exceeds threshold (default 5 mph).
 - **Quick Driving Modes** — Normal / Quiet / Highway / Night presets, each a one-tap config bundle. Active mode NVS-persisted.
-- **Driving Dashboard** — idle screen showing speed, connections, profile, mute state, and last-seen alert summary. Single-tap to toggle.
+- **Idle screen cycle** — single tap cycles three overlay screens: Driving Dashboard, V1 Tuning, and Stealth Night Mode. Any active alert immediately collapses back to the radar view.
+- **Driving Dashboard** — idle screen: speed, connection dots (V1 / PROXY / OBD / WiFi / PHONE), profile slot, mute state, last-seen alert, phone road name.
+- **V1 Tuning Screen** — live band (colour-coded), frequency (GHz), 6-bar signal meter, direction, alert duration counter, active profile slot and mute state. For validating sweep sensitivity and profiles in the field.
+- **Stealth Night Mode** — pure red/orange-on-black HUD: speed left, band + frequency centre, direction right. Nothing else on screen. Optimised for dark-adapted late-night highway driving.
+- **V1G2 Simple font style** — new default: Barlow Condensed Bold (DIN 1451 engineering-condensed, OFL) for primary alert elements; Inter Medium (OFL) for secondary labels. Both subsetted and embedded in firmware flash. Selectable from Colors → Font Style.
 - **Encounter History** — every alert onset logged to LittleFS; browse, export CSV, and mark false alerts from `/history`.
 - **Phone Companion API** — push GPS speed, heading, road name, and phone battery from Tasker/Automate via `POST /api/drive/update`. Phone speed integrates as OBD fallback.
 - **Voice Alert Filters** — per-band suppression (X/K/Ka/Laser), first-alert-only mode, and direction-change-only mode.
 - **Startup/shutdown chimes** — synthesized two-note tones on power on and off (individually toggle-able from `/audio`).
 - **Setup Wizard** — 8-step first-run wizard at `/setup`; auto-redirects on first boot until complete. Optional steps are individually skippable. Repeatable from the nav.
-- Five display fonts: Classic (7-segment), JetBrains Mono, Roboto, Serpentine, and Atkinson Hyperlegible.
+- Six display font styles: V1G2 Simple (default), Classic (7-segment), JetBrains Mono, Roboto, Serpentine, and Atkinson Hyperlegible.
 - BOOT button two-page settings UI: Page 1 (brightness/volume sliders), Page 2 (WiFi AP / BLE Proxy / Mute=0 toggles).
 
 
@@ -1487,6 +1491,39 @@ Auto-push Serial spam is gated by a compile-time switch. To see every state tran
 2. Toggle `n_LOGS` in that file to enable/disable.
 
 Default is `true`.
+
+### Touch Gesture Summary
+
+| Gesture | Condition | Action |
+|---|---|---|
+| Single tap | Alert active | Mute / unmute |
+| Single tap | No active alert | Cycle idle screen: Off → Dashboard → Tuning → Stealth → Off |
+| Triple tap (within 600 ms) | No active alert | Cycle profile slot: 0 → 1 → 2 → 0 |
+
+Any active alert immediately collapses the idle screen back to the radar view. A tap during an alert mutes regardless of which idle screen was showing.
+
+### Idle Screens
+
+Three overlay screens are available when no alert is active. Single tap cycles through them in order; another tap advances to the next. Tapping past Stealth returns to Off (radar-only view).
+
+**Driving Dashboard** (`DashboardModule`):
+- Speed (OBD/phone), V1/PROXY/OBD/WiFi/PHONE connection dots, battery, active profile slot, V1 mode character, mute state
+- Last-seen alert summary (band, frequency, direction)
+- Phone companion road name, heading, phone battery (when phone data is fresh)
+- Refreshes every 250 ms
+
+**V1 Tuning Screen** (`display_tuning.cpp`):
+- Live band name (colour-coded), frequency in GHz, 6-bar signal meter (green/yellow/red)
+- Direction, alert duration timer (resets when alert clears)
+- Active profile slot name and mute state in the header
+- Useful for validating sweep sensitivity and profile behaviour in the field
+
+**Stealth Night Mode** (`display_stealth.cpp`):
+- Left column: speed in large red 7-segment digits (OBD/phone; dashes if unavailable)
+- Centre column: band name and frequency in orange (or dim "CLEAR" when no alert)
+- Right column: direction in amber, or "MUTED" in dim red when muted
+- Pure red/orange on black — nothing else on screen
+- Designed for dark-adapted late-night driving where screen brightness must stay minimal
 
 ### Profile Cycling (Touch Gesture)
 
