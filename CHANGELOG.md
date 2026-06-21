@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [4.4.0] - 2026-06-21
 
 ### Added
 - **V1 Tuning Screen** — new idle screen for validating sweep sensitivity and profiles in the field. Shows live alert band (colour-coded), frequency (GHz), 8-bar signal meter (green→yellow→red), direction, alert duration, active profile slot, and mute state.
@@ -221,6 +221,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 4.4.0 | 2026-06-21 | V1 Tuning Screen, Stealth Night Mode, idle screen cycle, V1G2 Simple font |
+| 4.3.0 | 2026-06-21 | Smart Brightness, Driving Safety Lockout, Quick Modes, Dashboard, History, Phone API, Voice Filters, Setup Wizard |
 | 4.2.1 | 2026-06-20 | Fix LASER truncation on OFR fonts; fix toggle touch zones; fix Mute label |
 | 4.2.0 | 2026-06-19 | Five display fonts; radar-only display; removed JBV1/History/Diag/Clock screens |
 | 4.1.1 | 2026-06-19 | Zone-based tap navigation, web UI hamburger fix |
