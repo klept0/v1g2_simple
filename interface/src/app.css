@@ -1,3 +1,8 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/barlow-condensed/700.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,6 +20,18 @@
 	--app-radius-lg: 1rem;
 	--app-border-alpha: 0.42;
 	--app-shadow: 0 8px 22px oklch(0% 0 0 / 0.2);
+}
+
+/* V1G2 Simple typography */
+html, body {
+	font-family: 'Inter', system-ui, sans-serif;
+	font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+.font-alert {
+	font-family: 'Barlow Condensed', 'Inter', system-ui, sans-serif;
+	font-weight: 700;
+	letter-spacing: 0.03em;
 }
 
 /* Smooth scrolling */

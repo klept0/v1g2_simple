@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **V1 Tuning Screen** — new idle screen for validating sweep sensitivity and profiles in the field. Shows live alert band (colour-coded), frequency (GHz), 8-bar signal meter (green→yellow→red), direction, alert duration, active profile slot, and mute state.
 - **Stealth Night Mode** — minimal fighter-jet HUD: speed (left), alert band + frequency (centre), direction (right). Pure red/orange on black — nothing else on screen. Optimised for dark-adapted night driving.
 - **Idle screen cycle** — single tap now cycles through all idle screens: Off → Dashboard → Tuning → Stealth → Off. Triple-tap continues to cycle profile slots; any active alert collapses back to the radar view immediately.
+- **V1G2 Simple display style** — new default font profile combining Barlow Condensed Bold (DIN 1451 engineering-condensed style, OFL) for band names, frequencies, speed, and threat count, with Inter Medium (OFL) for secondary labels. Both fonts subsetted to required glyphs and embedded in firmware flash. Selectable from Colors page; set as default for new installs.
+- **Web UI typography** — Inter (400/500/600) and Barlow Condensed Bold loaded via `@fontsource` packages. Web UI body text now renders in Inter; `.font-alert` utility class available for Barlow Condensed headings. Font credits in `docs/FONTS.md`.
 
 ---
 

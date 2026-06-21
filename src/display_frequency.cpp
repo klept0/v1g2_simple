@@ -404,6 +404,7 @@ void V1Display::drawFrequency(uint32_t freqMHz, Band band, bool muted, bool isPh
         case DISPLAY_STYLE_JETBRAINS:  fontMgr.ensureJetBrainsLoaded(tft_);  break;
         case DISPLAY_STYLE_ROBOTO:     fontMgr.ensureRobotoLoaded(tft_);     break;
         case DISPLAY_STYLE_ATKINSON:   fontMgr.ensureAtkinsonLoaded(tft_);   break;
+        case DISPLAY_STYLE_DIN:        fontMgr.ensureDIN1451Loaded(tft_);    break;
         default: break;
     }
 
@@ -427,6 +428,7 @@ void V1Display::drawFrequency(uint32_t freqMHz, Band band, bool muted, bool isPh
         case DISPLAY_STYLE_JETBRAINS:  if (fontMgr.jetbrainsReady)  ofr = &fontMgr.jetbrains;  break;
         case DISPLAY_STYLE_ROBOTO:     if (fontMgr.robotoReady)     ofr = &fontMgr.roboto;     break;
         case DISPLAY_STYLE_ATKINSON:   if (fontMgr.atkinsonReady)   ofr = &fontMgr.atkinson;   break;
+        case DISPLAY_STYLE_DIN:        if (fontMgr.din1451Ready)    ofr = &fontMgr.din1451;    break;
         default: break;
     }
 
