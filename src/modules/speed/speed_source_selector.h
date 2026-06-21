@@ -7,8 +7,9 @@
 class ObdRuntimeModule;
 
 enum class SpeedSource : uint8_t {
-    NONE = 0,
-    OBD = 3
+    NONE  = 0,
+    PHONE = 2,
+    OBD   = 3
 };
 
 struct SpeedSelection {
@@ -29,8 +30,12 @@ struct SpeedSelectorStatus {
     float obdSpeedMph = 0.0f;
     uint32_t obdAgeMs = UINT32_MAX;
 
+    bool phoneFresh = false;
+    float phoneSpeedMph = 0.0f;
+
     uint32_t sourceSwitches = 0;
     uint32_t obdSelections = 0;
+    uint32_t phoneSelections = 0;
     uint32_t noSourceSelections = 0;
 };
 
@@ -40,6 +45,7 @@ public:
 
     void begin(bool obdEnabled = false);
     void wireSpeedSources(ObdRuntimeModule* obd);
+    void wirePhoneSource(class PhoneCompanionModule* phone);
     void syncEnabledInputs(bool obdEnabled);
     void update(uint32_t nowMs);
 
@@ -57,11 +63,13 @@ private:
 
     bool obdEnabled_ = false;
 
-    ObdRuntimeModule* obd_ = nullptr;
+    ObdRuntimeModule*     obd_   = nullptr;
+    class PhoneCompanionModule* phone_ = nullptr;
 
     SpeedSource lastSource_ = SpeedSource::NONE;
-    uint32_t sourceSwitches_ = 0;
-    uint32_t obdSelections_ = 0;
+    uint32_t sourceSwitches_  = 0;
+    uint32_t obdSelections_   = 0;
+    uint32_t phoneSelections_ = 0;
     uint32_t noSourceSelections_ = 0;
     SpeedSelectorStatus cachedStatus_ = {};
     SpeedSelection selectedSpeed_ = {};

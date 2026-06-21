@@ -10,6 +10,9 @@
 #include "settings.h"
 #include "ble_client.h"
 #include "modules/alert_persistence/alert_persistence_module.h"
+#ifndef UNIT_TEST
+#include "modules/display/dashboard_module.h"
+#endif
 
 void DisplayPipelineModule::begin(DisplayMode* displayModePtr,
                                   V1Display* displayPtr,
@@ -36,6 +39,15 @@ void DisplayPipelineModule::renderIdleOwner(uint32_t nowMs,
                                             const DisplayState& state,
                                             bool forceRedraw,
                                             bool restoreContext) {
+    // Dashboard takes priority over the resting screen when active.
+#ifndef UNIT_TEST
+    if (dashboard_ && dashboard_->isActive()) {
+        dashboard_->renderIfActive(nowMs);
+        lastRenderedOwner_ = RenderOwner::Dashboard;
+        return;
+    }
+#endif
+
     const V1Settings& s = settings_->get();
     const uint8_t persistSec = settings_->getSlotAlertPersistSec(s.activeSlot);
 
@@ -137,7 +149,21 @@ void DisplayPipelineModule::handleParsed(uint32_t nowMs) {
     }
     lastDisplayDraw_ = nowMs;
 
+    // Fire onset callback on the first frame where alerts appear.
+    if (hasAlerts && !prevHasAlerts_ && alertOnsetCb_ && hasRenderablePriority) {
+        alertOnsetCb_(priority, state, nowMs, alertOnsetCtx_);
+    }
+    prevHasAlerts_ = hasAlerts;
+
     if (hasAlerts) {
+        // Alert takes over — deactivate dashboard so it doesn't interfere
+        // with the resting/persisted render when the alert eventually clears.
+#ifndef UNIT_TEST
+        if (dashboard_ && dashboard_->isActive()) {
+            dashboard_->setActive(false);
+            display_->forceNextRedraw();
+        }
+#endif
         const int alertCount = parser_->getAlertCount();
         const auto& currentAlerts = parser_->getAllAlerts();
         const bool deferSecondaryCards = ble_->isConnectBurstSettling();

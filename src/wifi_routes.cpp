@@ -25,6 +25,13 @@
 #include "modules/wifi/wifi_v1_devices_api_service.h"
 #include "modules/speed/speed_source_selector.h"
 #include "modules/obd/obd_api_service.h"
+#include "modules/wifi/wifi_drive_mode_api_service.h"
+#include "modules/wifi/wifi_history_api_service.h"
+#include "modules/wifi/wifi_lockout_api_service.h"
+#include "modules/wifi/wifi_brightness_api_service.h"
+#include "modules/wifi/wifi_phone_companion_api_service.h"
+#include "modules/wifi/wifi_wizard_api_service.h"
+#include "modules/safety/driving_safety_lockout.h"
 #include "modules/obd/obd_runtime_module.h"
 #include "battery_manager.h"
 #include "time_service.h"
@@ -130,6 +137,7 @@ bool WiFiManager::setupWebServer() {
         WifiSettingsApiService::handleApiDeviceSettingsGet(server_, makeSettingsRuntime());
     });
     server_.on("/api/device/settings", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiSettingsApiService::handleApiDeviceSettingsSave(server_, makeSettingsRuntime());
     });
 
@@ -199,12 +207,14 @@ bool WiFiManager::setupWebServer() {
         WifiV1ProfileApiService::handleApiProfileGet(server_, makeV1ProfileRuntime());
     });
     server_.on("/api/v1/profile", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiV1ProfileApiService::handleApiProfileSave(
             server_,
             makeV1ProfileRuntime(),
             [](void* ctx) { return static_cast<WiFiManager*>(ctx)->checkRateLimit(); }, this);
     });
     server_.on("/api/v1/profile/delete", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiV1ProfileApiService::handleApiProfileDelete(
             server_,
             makeV1ProfileRuntime(),
@@ -278,12 +288,14 @@ bool WiFiManager::setupWebServer() {
         WifiDisplayColorsApiService::handleApiGet(server_, makeDisplayColorsRuntime());
     });
     server_.on("/api/display/settings", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiDisplayColorsApiService::handleApiSave(
             server_,
             makeDisplayColorsRuntime(),
             [](void* ctx) { return static_cast<WiFiManager*>(ctx)->checkRateLimit(); }, this);
     });
     server_.on("/api/display/settings/reset", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiDisplayColorsApiService::handleApiReset(
             server_,
             makeDisplayColorsRuntime(),
@@ -302,11 +314,67 @@ bool WiFiManager::setupWebServer() {
             [](void* ctx) { return static_cast<WiFiManager*>(ctx)->checkRateLimit(); }, this);
     });
 
+    // Driving safety lockout routes
+    server_.on("/api/drive/lockout", HTTP_GET, [this]() {
+        WifiLockoutApiService::handleApiGet(server_, makeLockoutRuntime());
+    });
+    server_.on("/api/drive/lockout", HTTP_POST, [this]() {
+        WifiLockoutApiService::handleApiSave(server_, makeLockoutRuntime());
+    });
+
+    // Smart brightness engine routes
+    server_.on("/api/display/brightness", HTTP_GET, [this]() {
+        WifiBrightnessApiService::handleApiGet(server_, makeBrightnessRuntime());
+    });
+    server_.on("/api/display/brightness", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
+        WifiBrightnessApiService::handleApiSave(server_, makeBrightnessRuntime());
+    });
+
+    // Setup wizard routes
+    server_.on("/api/setup/wizard", HTTP_GET, [this]() {
+        WifiWizardApiService::handleApiGet(server_, makeWizardRuntime());
+    });
+    server_.on("/api/setup/wizard", HTTP_POST, [this]() {
+        WifiWizardApiService::handleApiSave(server_, makeWizardRuntime());
+    });
+
+    // Phone companion routes
+    server_.on("/api/drive/update", HTTP_POST, [this]() {
+        WifiPhoneCompanionApiService::handleApiUpdate(server_, makePhoneCompanionRuntime());
+    });
+    server_.on("/api/drive/status", HTTP_GET, [this]() {
+        WifiPhoneCompanionApiService::handleApiStatus(server_, makePhoneCompanionRuntime());
+    });
+
+    // Encounter history routes
+    server_.on("/api/history", HTTP_GET, [this]() {
+        WifiHistoryApiService::handleApiGet(server_, makeHistoryRuntime());
+    });
+    server_.on("/api/history/clear", HTTP_POST, [this]() {
+        WifiHistoryApiService::handleApiClear(server_, makeHistoryRuntime());
+    });
+    server_.on("/api/history/export.csv", HTTP_GET, [this]() {
+        WifiHistoryApiService::handleApiCsvExport(server_, makeHistoryRuntime());
+    });
+    server_.on("/api/history/mark-false", HTTP_POST, [this]() {
+        WifiHistoryApiService::handleApiMarkFalse(server_, makeHistoryRuntime());
+    });
+
+    // Driving mode routes
+    server_.on("/api/drive/mode", HTTP_GET, [this]() {
+        WifiDriveModeApiService::handleApiGet(server_, makeDriveModeRuntime());
+    });
+    server_.on("/api/drive/mode", HTTP_POST, [this]() {
+        WifiDriveModeApiService::handleApiSave(server_, makeDriveModeRuntime());
+    });
+
     // Audio settings routes
     server_.on("/api/audio/settings", HTTP_GET, [this]() {
         WifiAudioApiService::handleApiGet(server_, makeAudioRuntime());
     });
     server_.on("/api/audio/settings", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiAudioApiService::handleApiSave(server_, makeAudioRuntime());
     });
 
@@ -346,6 +414,7 @@ bool WiFiManager::setupWebServer() {
             [](void* ctx) { static_cast<WiFiManager*>(ctx)->markUiActivity(); }, this);
     });
     server_.on("/api/settings/restore", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         BackupApiService::handleApiRestore(
             server_,
             makeBackupRuntime(),
@@ -426,6 +495,7 @@ bool WiFiManager::setupWebServer() {
             [](void* ctx) { static_cast<WiFiManager*>(ctx)->markUiActivity(); }, this);
     });
     server_.on("/api/wifi/scan", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiClientApiService::handleApiScan(
             server_,
             makeWifiClientRuntime(),
@@ -433,6 +503,7 @@ bool WiFiManager::setupWebServer() {
             [](void* ctx) { static_cast<WiFiManager*>(ctx)->markUiActivity(); }, this);
     });
     server_.on("/api/wifi/connect", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiClientApiService::handleApiConnect(
             server_,
             makeWifiClientRuntime(),
@@ -440,6 +511,7 @@ bool WiFiManager::setupWebServer() {
             [](void* ctx) { static_cast<WiFiManager*>(ctx)->markUiActivity(); }, this);
     });
     server_.on("/api/wifi/disconnect", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiClientApiService::handleApiDisconnect(
             server_,
             makeWifiClientRuntime(),
@@ -447,6 +519,7 @@ bool WiFiManager::setupWebServer() {
             [](void* ctx) { static_cast<WiFiManager*>(ctx)->markUiActivity(); }, this);
     });
     server_.on("/api/wifi/forget", HTTP_POST, [this]() {
+        if (WifiLockoutApiService::sendLockoutIfLocked(server_, makeLockoutRuntime())) return;
         WifiClientApiService::handleApiForget(
             server_,
             makeWifiClientRuntime(),

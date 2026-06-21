@@ -15,4 +15,4 @@ route=HTTP_POST /api/debug/v1-scenario/load rate_limit=1 ui_activity=0 delegates
 route=HTTP_POST /api/debug/v1-scenario/start rate_limit=1 ui_activity=0 delegates=DebugApiService::handleApiV1ScenarioStart
 route=HTTP_POST /api/debug/v1-scenario/stop rate_limit=1 ui_activity=0 delegates=DebugApiService::handleApiV1ScenarioStop
 route=HTTP_POST /api/settings/backup-now rate_limit=1 ui_activity=1 delegates=BackupApiService::handleApiBackupNow
-route=HTTP_POST /api/settings/restore rate_limit=1 ui_activity=1 delegates=BackupApiService::handleApiRestore
+route=HTTP_POST /api/settings/restore rate_limit=1 ui_activity=1 delegates=BackupApiService::handleApiRestore,WifiLockoutApiService::sendLockoutIfLocked

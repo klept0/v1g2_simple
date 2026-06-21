@@ -57,6 +57,10 @@ void play_threat_escalation(AlertBand band, uint16_t freqMHz, AlertDirection dir
 // Play band-only announcement (e.g., "Ka", "K", "X", "Laser")
 void play_band_only(AlertBand band);
 
+// Power-on / power-off chimes (short synthesized tones)
+void play_startup_chime();
+void play_shutdown_chime();
+
 // Voice pack selection — set active pack name (empty = built-in default).
 // Must be called from the main task before any play_* call.
 void audio_set_voice_pack(const char* packName);

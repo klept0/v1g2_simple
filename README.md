@@ -12,11 +12,20 @@ A open-source touchscreen companion display for the **Valentine One Gen2** radar
 |---|---|
 | **Live alert display** | Band, frequency, signal strength (6 bars), direction arrow, bogey count |
 | **Voice alerts** | Spoken announcements — "Ka 34.7 ahead", "2 bogeys" — from a built-in speaker |
+| **Voice alert filters** | Per-band suppression (X/K/Ka/Laser), first-alert-only mode, direction-change-only mode |
 | **Custom voice packs** | Upload your own `.mul` audio clips to replace the built-in TTS voice |
+| **Startup/shutdown chimes** | Synthesized two-note tones on power on/off (individually toggle-able) |
 | **V1 profile management** | Store up to 3 sensitivity profiles; triple-tap display to switch slots instantly |
 | **Auto-push** | Automatically pushes the active profile to V1 on BLE connect |
 | **BLE proxy** | Re-advertises V1 data so a phone app (Escort Live, YaV1) can connect simultaneously |
 | **Speed-based mute** | Silences alerts below a configurable speed threshold via OBD-II |
+| **Smart brightness** | Auto-adjusts brightness on alert, mute, and idle-timeout; all levels configurable |
+| **Driving safety lockout** | Blocks configuration changes when speed exceeds threshold (default 5 mph) |
+| **Quick driving modes** | Normal / Quiet / Highway / Night presets — one tap, NVS-persisted |
+| **Driving dashboard** | Idle screen with speed, connection status, profile slot, mute state, last alert |
+| **Encounter history** | Logs every alert to LittleFS; browse, export CSV, mark false alerts in web UI |
+| **Phone companion API** | Receive speed, heading, road name, and GPS accuracy from Tasker/Automate over WiFi |
+| **Setup wizard** | 8-step first-run wizard (optional, skippable, repeatable) |
 | **Full web UI** | SvelteKit interface served from the device — no app, no account, no internet |
 | **WiFi client mode** | Optionally joins your home network while keeping the AP active |
 | **OTA-style install** | One-click browser flasher via ESP Web Tools; no IDE needed |
@@ -29,13 +38,13 @@ A open-source touchscreen companion display for the **Valentine One Gen2** radar
 |---|---|
 | **MCU** | ESP32-S3 (Xtensa dual-core 240 MHz, 8 MB PSRAM, 16 MB flash) |
 | **Framework** | Arduino + FreeRTOS (PlatformIO build) |
-| **Display** | 3.49" 320×960 IPS via SPI; rendered with LVGL-adjacent direct framebuffer |
+| **Display** | 3.49" 640×172 QSPI IPS (AXS15231B); rendered with Arduino_GFX |
 | **BLE** | ESP-IDF BLE stack; full V1 packet parser (alerts, profiles, sweeps) |
 | **Storage** | LittleFS (firmware partition) + SD card (backup, bond store) |
 | **Audio** | µ-law (G.711) clips concatenated at runtime; decoded via 256-entry lookup table |
 | **Web UI** | SvelteKit + Vite; built to static files embedded in LittleFS |
 | **API** | ESP32 WebServer; REST JSON endpoints; multipart upload for voice packs |
-| **CI** | GitHub Actions: 76 native unit test suites (960 cases), firmware size budget, interface lint, architectural contract checks |
+| **CI** | GitHub Actions: 127 native unit test suites (1164 cases), firmware size budget, interface lint, architectural contract checks |
 
 ---
 
@@ -222,11 +231,17 @@ Requires an OBD-II adapter connected via BLE. Set a speed threshold; alerts are 
 
 | Page | URL | Purpose |
 |---|---|---|
-| Audio | `/audio` | Voice alerts, volume fade, speed mute, voice packs |
+| Dashboard | `/` | Live system status, quick health checks, first-run wizard banner |
+| Audio | `/audio` | Voice alerts, volume fade, speed mute, voice packs, chimes, band filters |
 | Profiles | `/profiles` | Create and manage V1 sensitivity profiles |
 | Auto-Push | `/autopush` | Assign profiles to slots; configure per-slot V1 settings |
 | Colors | `/colors` | Display colors, fonts, icon visibility |
+| Driving Modes | `/modes` | Normal/Quiet/Highway/Night presets; safety lockout settings |
+| Brightness | `/brightness` | Smart brightness levels and idle-dim timeout |
+| History | `/history` | Encounter log, CSV export, false-alert marking |
+| Integrations | `/integrations` | Phone companion API (Tasker/Automate) docs |
 | Settings | `/settings` | AP credentials, BLE proxy, backup/restore |
+| Setup Wizard | `/setup` | 8-step first-run configuration wizard |
 
 Full REST API documented in [docs/API.md](docs/API.md).
 
@@ -246,7 +261,7 @@ interface/              SvelteKit web UI (compiled to static files in data/)
   src/lib/              Shared components, utilities, fetchWithTimeout
 config/                 Audio asset manifest (118 clip definitions)
 tools/                  TTS generation + font subsetting scripts
-test/                   76 native unit test suites (PlatformIO native env)
+test/                   127 native unit test suites (PlatformIO native env)
 .github/workflows/      CI: build + test, release, Pages deploy
 ```
 
@@ -264,7 +279,7 @@ test/                   76 native unit test suites (PlatformIO native env)
 # Build firmware + filesystem and flash
 ./build.sh --all
 
-# Run all 960 unit tests (native, no hardware needed)
+# Run all 1164 unit tests (native, no hardware needed)
 pio test -e native
 
 # Run a specific test suite

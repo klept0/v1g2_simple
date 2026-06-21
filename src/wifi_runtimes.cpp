@@ -24,6 +24,16 @@
 #include "modules/wifi/wifi_v1_devices_api_service.h"
 #include "modules/wifi/backup_api_service.h"
 #include "modules/debug/debug_perf_files_service.h"
+#include "modules/wifi/wifi_drive_mode_api_service.h"
+#include "modules/wifi/wifi_history_api_service.h"
+#include "modules/history/encounter_history.h"
+#include "modules/wifi/wifi_lockout_api_service.h"
+#include "modules/wifi/wifi_brightness_api_service.h"
+#include "modules/wifi/wifi_phone_companion_api_service.h"
+#include "modules/phone/phone_companion_module.h"
+#include "modules/wifi/wifi_wizard_api_service.h"
+#include "modules/brightness/smart_brightness_engine.h"
+#include "modules/safety/driving_safety_lockout.h"
 #include "backup_payload_builder.h"
 #include "storage_manager.h"
 #include "perf_sd_logger.h"
@@ -32,6 +42,11 @@
 #include "modules/obd/obd_runtime_module.h"
 #include "time_service.h"
 #include "../include/config.h"
+
+extern EncounterHistory      encounterHistory;
+extern SmartBrightnessEngine smartBrightnessEngine;
+extern PhoneCompanionModule  phoneCompanionModule;
+extern DrivingSafetyLockout  drivingSafetyLockout;
 
 WifiAutoPushApiService::Runtime WiFiManager::makeAutoPushRuntime() {
     return WifiAutoPushApiService::Runtime{
@@ -520,5 +535,93 @@ WifiVoicePackApiService::Runtime WiFiManager::makeVoicePackRuntime() {
         settingsManager.setActiveVoicePack(String(packName));
     };
     r.ctx = this;
+    return r;
+}
+
+WifiDriveModeApiService::Runtime WiFiManager::makeDriveModeRuntime() {
+    WifiDriveModeApiService::Runtime r;
+    r.ctx = this;
+    r.getActiveMode = [](void* /*ctx*/) -> DrivingMode {
+        return settingsManager.getActiveDrivingMode();
+    };
+    r.getModeConfig = [](int mode, void* /*ctx*/) -> const DrivingModeConfig& {
+        return settingsManager.getDrivingModeConfig(mode);
+    };
+    r.applyMode = [](DrivingMode mode, void* /*ctx*/) {
+        settingsManager.applyDrivingMode(mode);
+        display.setBrightness(settingsManager.get().brightness);
+    };
+    r.setModeConfig = [](int mode, const DrivingModeConfig& cfg, void* /*ctx*/) {
+        settingsManager.setDrivingModeConfig(mode, cfg);
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
+    return r;
+}
+
+WifiHistoryApiService::Runtime WiFiManager::makeHistoryRuntime() {
+    WifiHistoryApiService::Runtime r;
+    r.ctx = this;
+    r.getHistory = [](void* /*ctx*/) -> EncounterHistory* {
+        return &encounterHistory;
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
+    return r;
+}
+
+WifiBrightnessApiService::Runtime WiFiManager::makeBrightnessRuntime() {
+    WifiBrightnessApiService::Runtime r;
+    r.ctx = this;
+    r.getSettings = [](void* /*ctx*/) -> SettingsManager* {
+        return &settingsManager;
+    };
+    r.getEngine = [](void* /*ctx*/) -> SmartBrightnessEngine* {
+        return &smartBrightnessEngine;
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
+    return r;
+}
+
+WifiPhoneCompanionApiService::Runtime WiFiManager::makePhoneCompanionRuntime() {
+    WifiPhoneCompanionApiService::Runtime r;
+    r.ctx = this;
+    r.getCompanion = [](void* /*ctx*/) -> PhoneCompanionModule* {
+        return &phoneCompanionModule;
+    };
+    r.nowMs = [](void* /*ctx*/) -> uint32_t {
+        return (uint32_t)millis();
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
+    return r;
+}
+
+WifiWizardApiService::Runtime WiFiManager::makeWizardRuntime() {
+    WifiWizardApiService::Runtime r;
+    r.ctx = this;
+    r.getSettings = [](void* /*ctx*/) -> SettingsManager* {
+        return &settingsManager;
+    };
+    return r;
+}
+
+WifiLockoutApiService::Runtime WiFiManager::makeLockoutRuntime() {
+    WifiLockoutApiService::Runtime r;
+    r.ctx = this;
+    r.getLockout = [](void* /*ctx*/) -> DrivingSafetyLockout* {
+        return &drivingSafetyLockout;
+    };
+    r.getSettings = [](void* /*ctx*/) -> SettingsManager* {
+        return &settingsManager;
+    };
+    r.checkRateLimit = [](void* ctx) {
+        return static_cast<WiFiManager*>(ctx)->checkRateLimit();
+    };
     return r;
 }

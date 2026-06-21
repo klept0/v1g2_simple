@@ -5,6 +5,7 @@
 // Forward declarations — full headers included in display_pipeline_module.cpp
 class V1Display;
 struct DisplayState;
+struct AlertData;
 class PacketParser;
 enum class DisplayMode;
 
@@ -14,6 +15,9 @@ class AlertPersistenceModule;
 class VoiceModule;
 class SpeedMuteModule;
 class QuietCoordinatorModule;
+#ifndef UNIT_TEST
+class DashboardModule;
+#endif
 
 class DisplayPipelineModule {
 public:
@@ -27,6 +31,20 @@ public:
                QuietCoordinatorModule* quietCoordinator);
 
     void setSpeedMuteModule(SpeedMuteModule* module) { speedMute_ = module; }
+#ifndef UNIT_TEST
+    void setDashboardModule(DashboardModule* module) { dashboard_ = module; }
+#endif
+
+    // Fires once when alerts transition from none → present (alert onset).
+    // Provides the priority alert, full display state, and timestamp.
+    using AlertOnsetCb = void (*)(const AlertData& priority,
+                                  const DisplayState& state,
+                                  uint32_t nowMs,
+                                  void* ctx);
+    void setAlertOnsetCallback(AlertOnsetCb cb, void* ctx) {
+        alertOnsetCb_  = cb;
+        alertOnsetCtx_ = ctx;
+    }
 
     // Process after a successful parser.parse(); expects parser state already updated.
     void handleParsed(uint32_t nowMs);
@@ -39,7 +57,8 @@ private:
         Scanning,
         Live,
         Persisted,
-        Resting
+        Resting,
+        Dashboard
     };
 
     DisplayMode* displayMode_ = nullptr;
@@ -51,6 +70,13 @@ private:
     VoiceModule* voice_ = nullptr;
     SpeedMuteModule* speedMute_ = nullptr;
     QuietCoordinatorModule* quiet_ = nullptr;
+#ifndef UNIT_TEST
+    DashboardModule* dashboard_ = nullptr;
+#endif
+
+    AlertOnsetCb alertOnsetCb_  = nullptr;
+    void*        alertOnsetCtx_ = nullptr;
+    bool         prevHasAlerts_ = false;
 
     // Mute debounce
     bool debouncedMuteState_ = false;

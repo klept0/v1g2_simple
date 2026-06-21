@@ -68,6 +68,9 @@ public:
     void showResting(bool forceRedraw = false); // idle/rest screen
     void showScanning(); // scanning screen (like resting but with SCAN text)
 
+    // Driving dashboard screen
+    void showDashboard(const struct DashboardData& data);
+
     // Force next update() call to fully redraw (use after settings change)
     void forceNextRedraw();
 

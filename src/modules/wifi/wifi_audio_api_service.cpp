@@ -34,6 +34,11 @@ void handleApiGet(WebServer& server, const Runtime& runtime) {
     doc["speedMuteThresholdMph"] = settings.speedMuteThresholdMph;
     doc["speedMuteHysteresisMph"] = settings.speedMuteHysteresisMph;
     doc["speedMuteVolume"] = settings.speedMuteVolume;
+    doc["voiceBandFilter"] = settings.voiceBandFilter;
+    doc["voiceFirstAlertOnly"] = settings.voiceFirstAlertOnly;
+    doc["voiceDirectionChangeOnly"] = settings.voiceDirectionChangeOnly;
+    doc["startupSoundEnabled"] = settings.startupSoundEnabled;
+    doc["shutdownSoundEnabled"] = settings.shutdownSoundEnabled;
 
     WifiApiResponse::sendJsonDocument(server, 200, doc);
 }
@@ -147,6 +152,26 @@ void handleApiSave(WebServer& server, const Runtime& runtime) {
         update.hasSpeedMuteVolume = true;
         update.speedMuteVolume =
             (vol >= 0 && vol <= 9) ? static_cast<uint8_t>(vol) : 0xFF;
+    }
+    if (server.hasArg("voiceBandFilter")) {
+        update.hasVoiceBandFilter = true;
+        update.voiceBandFilter = static_cast<uint8_t>(server.arg("voiceBandFilter").toInt() & 0x0F);
+    }
+    if (server.hasArg("voiceFirstAlertOnly")) {
+        update.hasVoiceFirstAlertOnly = true;
+        update.voiceFirstAlertOnly = argBool("voiceFirstAlertOnly", settings.voiceFirstAlertOnly);
+    }
+    if (server.hasArg("voiceDirectionChangeOnly")) {
+        update.hasVoiceDirectionChangeOnly = true;
+        update.voiceDirectionChangeOnly = argBool("voiceDirectionChangeOnly", settings.voiceDirectionChangeOnly);
+    }
+    if (server.hasArg("startupSoundEnabled")) {
+        update.hasStartupSoundEnabled = true;
+        update.startupSoundEnabled = argBool("startupSoundEnabled", settings.startupSoundEnabled);
+    }
+    if (server.hasArg("shutdownSoundEnabled")) {
+        update.hasShutdownSoundEnabled = true;
+        update.shutdownSoundEnabled = argBool("shutdownSoundEnabled", settings.shutdownSoundEnabled);
     }
 
     runtime.applySettingsUpdate(update, runtime.ctx);

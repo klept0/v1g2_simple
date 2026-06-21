@@ -74,6 +74,32 @@ enum VoiceAlertMode {
     VOICE_MODE_BAND_FREQ = 3     // Band + frequency ("Ka 34.7")
 };
 
+// Driving mode identifiers
+enum class DrivingMode : uint8_t {
+    Normal  = 0,
+    Quiet   = 1,
+    Highway = 2,
+    Night   = 3,
+};
+constexpr int kDrivingModeCount = 4;
+
+// Per-mode default values (user-configurable)
+struct DrivingModeConfig {
+    uint8_t brightness;
+    uint8_t voiceVolume;
+    uint8_t alertPersistSec;
+    bool    priorityArrowOnly;
+};
+
+inline DrivingModeConfig defaultDrivingModeConfig(DrivingMode mode) {
+    switch (mode) {
+        case DrivingMode::Quiet:   return { 100, 40, 0, true  };
+        case DrivingMode::Highway: return { 220, 75, 3, false };
+        case DrivingMode::Night:   return {  50, 50, 0, false };
+        default:                   return { 200, 75, 0, false };  // Normal
+    }
+}
+
 // Auto-push profile slot
 struct AutoPushSlot {
     String profileName;
@@ -172,6 +198,13 @@ struct V1Settings {
     uint8_t speedMuteHysteresisMph;  // Unmute at threshold + hysteresis (1-10 mph)
     uint8_t speedMuteVolume;         // V1 volume when speed-muted (0-9, 0xFF = voice-only)
 
+    // Voice alert enhancements (Phase 7)
+    uint8_t voiceBandFilter;           // Bitmask of bands to suppress (0 = all enabled; bit: 1=X,2=K,4=Ka,8=Laser)
+    bool voiceFirstAlertOnly;          // Announce each alert id once per encounter only
+    bool voiceDirectionChangeOnly;     // Re-announce only on direction change (not cooldown)
+    bool startupSoundEnabled;          // Play chime on boot
+    bool shutdownSoundEnabled;         // Play chime on power-off
+
     // Voice pack (custom uploadable clip sets, "" = built-in default)
     String activeVoicePack;
 
@@ -243,6 +276,27 @@ struct V1Settings {
     uint8_t obdSavedAddrType;    // Saved BLE address type (0=public, 1=random)
     int8_t obdMinRssi;           // Minimum RSSI for scan acceptance (dBm)
 
+    // Quick Driving Modes
+    DrivingMode activeDrivingMode;
+    DrivingModeConfig drivingModeConfigs[kDrivingModeCount];
+
+    // Driving Safety Lockout
+    bool    lockoutEnabled;         // Block config changes above speed threshold
+    uint8_t lockoutThresholdMph;    // Speed threshold (mph) — default 5
+
+    // Smart Brightness Engine
+    bool    brightEngEnabled;       // Master enable for smart brightness logic
+    uint8_t brtDay;                 // Base brightness for day/normal use
+    uint8_t brtNight;               // Base brightness for night use
+    uint8_t brtIdle;                // Brightness after idle dim timeout
+    uint8_t brtAlert;               // Brightness boost during active alert
+    uint8_t brtMute;                // Brightness during muted alert
+    uint16_t brtIdleSec;            // Idle dim timeout (seconds); 0 = disabled
+
+    // Setup wizard state
+    bool    wzdDone;  // true once the user has completed or skipped the wizard
+    uint8_t wzdStep;  // last active step (0-7)
+
     // Default constructor with sensible defaults
     V1Settings() :
         enableWifi(true),
@@ -309,6 +363,11 @@ struct V1Settings {
         speedMuteThresholdMph(25),       // 25 mph default (city driving)
         speedMuteHysteresisMph(3),       // 3 mph hysteresis band
         speedMuteVolume(0xFF),           // Voice-only by default (no V1 volume change)
+        voiceBandFilter(0),              // No bands suppressed by default
+        voiceFirstAlertOnly(false),      // Repeat announcements allowed by default
+        voiceDirectionChangeOnly(false), // Re-announce on cooldown by default
+        startupSoundEnabled(true),       // Play startup chime by default
+        shutdownSoundEnabled(true),      // Play shutdown chime by default
         autoPushEnabled(false),
         activeSlot(0),
         slot0Name("DEFAULT"),
@@ -345,7 +404,25 @@ struct V1Settings {
         obdSavedAddress(""),     // No saved device
         obdSavedName(""),        // No friendly name
         obdSavedAddrType(0),     // Default PUBLIC address type
-        obdMinRssi(-90) {}       // Default -90 dBm minimum RSSI
+        obdMinRssi(-90),         // Default -90 dBm minimum RSSI
+        activeDrivingMode(DrivingMode::Normal),
+        drivingModeConfigs{
+            defaultDrivingModeConfig(DrivingMode::Normal),
+            defaultDrivingModeConfig(DrivingMode::Quiet),
+            defaultDrivingModeConfig(DrivingMode::Highway),
+            defaultDrivingModeConfig(DrivingMode::Night),
+        },
+        lockoutEnabled(true),
+        lockoutThresholdMph(5),
+        brightEngEnabled(true),
+        brtDay(200),
+        brtNight(80),
+        brtIdle(50),
+        brtAlert(255),
+        brtMute(120),
+        brtIdleSec(30),
+        wzdDone(false),
+        wzdStep(0) {}
 
     static uint8_t normalizeAutoPushSlotIndex(int slotNum) {
         return slotNum == 1 ? 1 : (slotNum == 2 ? 2 : 0);
@@ -516,6 +593,22 @@ struct AudioSettingsUpdate {
 
     bool hasSpeedMuteVolume = false;
     uint8_t speedMuteVolume = 0xFF;      // 0xFF = voice-only (no V1 volume change)
+
+    // Phase 7 voice enhancements
+    bool hasVoiceBandFilter = false;
+    uint8_t voiceBandFilter = 0;
+
+    bool hasVoiceFirstAlertOnly = false;
+    bool voiceFirstAlertOnly = false;
+
+    bool hasVoiceDirectionChangeOnly = false;
+    bool voiceDirectionChangeOnly = false;
+
+    bool hasStartupSoundEnabled = false;
+    bool startupSoundEnabled = false;
+
+    bool hasShutdownSoundEnabled = false;
+    bool shutdownSoundEnabled = false;
 };
 
 struct DisplaySettingsUpdate {
@@ -757,6 +850,55 @@ public:
     // Batch update methods (don't auto-save, call save() after)
     void updateBrightness(uint8_t brightness) { settings_.brightness = brightness; }
     void updateVoiceVolume(uint8_t volume) { settings_.voiceVolume = volume; }
+
+    // Driving modes
+    DrivingMode getActiveDrivingMode() const { return settings_.activeDrivingMode; }
+    const DrivingModeConfig& getDrivingModeConfig(int mode) const {
+        if (mode < 0 || mode >= kDrivingModeCount) mode = 0;
+        return settings_.drivingModeConfigs[mode];
+    }
+    void setDrivingModeConfig(int mode, const DrivingModeConfig& cfg);
+    void applyDrivingMode(DrivingMode mode);
+
+    // Driving safety lockout
+    bool    isLockoutEnabled() const     { return settings_.lockoutEnabled; }
+    uint8_t getLockoutThresholdMph() const { return settings_.lockoutThresholdMph; }
+    void    setLockoutEnabled(bool enabled);
+    void    setLockoutThresholdMph(uint8_t mph);
+
+    // Smart brightness engine
+    bool     isBrightEngEnabled() const  { return settings_.brightEngEnabled; }
+    uint8_t  getBrtDay() const           { return settings_.brtDay; }
+    uint8_t  getBrtNight() const         { return settings_.brtNight; }
+    uint8_t  getBrtIdle() const          { return settings_.brtIdle; }
+    uint8_t  getBrtAlert() const         { return settings_.brtAlert; }
+    uint8_t  getBrtMute() const          { return settings_.brtMute; }
+    uint16_t getBrtIdleSec() const       { return settings_.brtIdleSec; }
+    void setBrightEngEnabled(bool en);
+    void setBrtDay(uint8_t v);
+    void setBrtNight(uint8_t v);
+    void setBrtIdle(uint8_t v);
+    void setBrtAlert(uint8_t v);
+    void setBrtMute(uint8_t v);
+    void setBrtIdleSec(uint16_t sec);
+
+    // Voice alert enhancements
+    uint8_t getVoiceBandFilter() const        { return settings_.voiceBandFilter; }
+    bool    isVoiceFirstAlertOnly() const      { return settings_.voiceFirstAlertOnly; }
+    bool    isVoiceDirectionChangeOnly() const  { return settings_.voiceDirectionChangeOnly; }
+    bool    isStartupSoundEnabled() const      { return settings_.startupSoundEnabled; }
+    bool    isShutdownSoundEnabled() const     { return settings_.shutdownSoundEnabled; }
+    void setVoiceBandFilter(uint8_t mask);
+    void setVoiceFirstAlertOnly(bool v);
+    void setVoiceDirectionChangeOnly(bool v);
+    void setStartupSoundEnabled(bool v);
+    void setShutdownSoundEnabled(bool v);
+
+    // Setup wizard
+    bool    isWzdDone() const    { return settings_.wzdDone; }
+    uint8_t getWzdStep() const   { return settings_.wzdStep; }
+    void setWzdDone(bool v);
+    void setWzdStep(uint8_t step);
 
     // Save all settings to flash
     void save();

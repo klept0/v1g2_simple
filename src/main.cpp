@@ -80,6 +80,11 @@
 #include "modules/speed_mute/speed_mute_module.h"
 #include "modules/obd/obd_runtime_module.h"
 #include "modules/obd/obd_ble_client.h"
+#include "modules/display/dashboard_module.h"
+#include "modules/history/encounter_history.h"
+#include "modules/safety/driving_safety_lockout.h"
+#include "modules/brightness/smart_brightness_engine.h"
+#include "modules/phone/phone_companion_module.h"
 #include "modules/obd/obd_settings_sync_module.h"
 #include "modules/wifi/wifi_boot_policy.h"
 #include "modules/wifi/wifi_auto_start_module.h"
@@ -178,6 +183,11 @@ LoopConnectionEarlyModule loopConnectionEarlyModule;
 LoopPostDisplayModule loopPostDisplayModule;
 WifiAutoStartModule wifiAutoStartModule;
 WifiPriorityPolicyModule wifiPriorityPolicyModule;
+DashboardModule dashboardModule;
+EncounterHistory encounterHistory;
+DrivingSafetyLockout drivingSafetyLockout;
+SmartBrightnessEngine smartBrightnessEngine;
+PhoneCompanionModule phoneCompanionModule;
 WifiVisualSyncModule wifiVisualSyncModule;
 WifiProcessCadenceModule wifiProcessCadenceModule;
 WifiRuntimeModule wifiRuntimeModule;
@@ -738,6 +748,33 @@ static void configureAlertAudioDisplayPipeline() {
                                 &voiceModule,
                                 &quietCoordinatorModule);
     displayPipelineModule.setSpeedMuteModule(&speedMuteModule);
+    displayPipelineModule.setDashboardModule(&dashboardModule);
+
+    // Record encounters on alert onset
+    displayPipelineModule.setAlertOnsetCallback(
+        [](const AlertData& priority, const DisplayState& state,
+           uint32_t nowMs, void* /*ctx*/) {
+            if (!encounterHistory.count() && !storageManager.isLittleFSReady()) return;
+            EncounterEntry entry;
+            entry.timestampMs  = timeService.nowEpochMsOr0();
+            entry.monoMs       = nowMs;
+            entry.band         = priority.band;
+            entry.frequencyMhz = priority.frequency;
+            entry.direction    = priority.direction;
+            entry.signalBars   = (priority.direction & DIR_FRONT)
+                                   ? priority.frontStrength : priority.rearStrength;
+            entry.bogeyCount   = static_cast<uint8_t>(parser.getAlertCount());
+            entry.speedMph     = speedSourceSelector.selectedSpeed().speedMph;
+            entry.muted        = state.muted;
+            entry.modeChar     = state.hasMode ? state.modeChar : 0;
+
+            const V1Settings& s = settingsManager.get();
+            const auto& slot = s.autoPushSlotView(s.activeSlot);
+            strlcpy(entry.slotName, slot.name.c_str(), sizeof(entry.slotName));
+
+            encounterHistory.record(entry);
+        },
+        nullptr);
 }
 
 static void configureSystemLoopCoreModules() {
@@ -796,6 +833,12 @@ static void configureRuntimeSensorModules() {
         settingsManager.get().speedMuteThresholdMph,
         settingsManager.get().speedMuteHysteresisMph,
         settingsManager.get().speedMuteVolume);
+    dashboardModule.begin(&display, &parser, &settingsManager,
+                          &bleClient, &obdRuntimeModule,
+                          &phoneCompanionModule);
+    drivingSafetyLockout.begin(&speedSourceSelector, &settingsManager);
+    smartBrightnessEngine.begin(&display, &settingsManager, millis());
+    speedSourceSelector.wirePhoneSource(&phoneCompanionModule);
 }
 
 static void configureRuntimeCoreModules() {
@@ -1073,6 +1116,11 @@ void loop() {
         return;  // Skip normal loop processing while in settings mode.
     }
 
+    // Notify brightness engine of touch activity to reset idle dim timer.
+    if (touchHandler.isTouched()) {
+        smartBrightnessEngine.notifyActivity(now);
+    }
+
     const LoopIngestPhaseValues loopIngestValues = processLoopIngestPhase(
         now,
         mainRuntimeState.bootReady,
@@ -1118,6 +1166,12 @@ void loop() {
         now,
         mainRuntimeState.bootSplashHoldActive,
         overloadLateThisLoop);
+
+    {
+        const bool hasAlerts = parser.hasAlerts();
+        const bool isMuted   = parser.getDisplayState().muted;
+        smartBrightnessEngine.process(now, hasAlerts, isMuted);
+    }
 
     const LoopWifiPhaseValues loopWifiValues = processLoopWifiPhase(
         now,

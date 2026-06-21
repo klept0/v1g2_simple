@@ -271,6 +271,13 @@ void SettingsManager::load() {
         settings_.speedMuteVolume = (raw <= 9 || raw == 0xFF) ? raw : 0xFF;
     }
 
+    // Voice alert enhancements
+    settings_.voiceBandFilter        = preferences_.getUChar(kNvsVoiceBandFilter, 0);
+    settings_.voiceFirstAlertOnly     = preferences_.getBool(kNvsVoiceFirstOnly, false);
+    settings_.voiceDirectionChangeOnly = preferences_.getBool(kNvsVoiceDirOnly, false);
+    settings_.startupSoundEnabled     = preferences_.getBool(kNvsStartupSound, true);
+    settings_.shutdownSoundEnabled    = preferences_.getBool(kNvsShutdownSound, true);
+
     settings_.activeVoicePack = preferences_.getString(kNvsVoicePack, "");
 
     settings_.autoPushEnabled = preferences_.getBool(kNvsAutoPush, true);  // Default to enabled for profiles to work
@@ -324,6 +331,41 @@ void SettingsManager::load() {
     settings_.obdSavedAddrType = preferences_.getUChar(kNvsObdAddressType, 0);
     settings_.obdMinRssi = static_cast<int8_t>(
         preferences_.getChar(kNvsObdMinRssi, -90));
+
+    // Driving safety lockout
+    settings_.lockoutEnabled      = preferences_.getBool(kNvsLockoutEnabled, true);
+    settings_.lockoutThresholdMph = clampU8(preferences_.getUChar(kNvsLockoutMph, 5), 0, 50);
+
+    // Smart brightness engine
+    settings_.brightEngEnabled = preferences_.getBool(kNvsBrightEngEn, true);
+    settings_.brtDay           = clampU8(preferences_.getUChar(kNvsBrtDay,   200), 10, 255);
+    settings_.brtNight         = clampU8(preferences_.getUChar(kNvsBrtNight,  80), 10, 255);
+    settings_.brtIdle          = clampU8(preferences_.getUChar(kNvsBrtIdle,   50), 10, 255);
+    settings_.brtAlert         = clampU8(preferences_.getUChar(kNvsBrtAlert, 255), 10, 255);
+    settings_.brtMute          = clampU8(preferences_.getUChar(kNvsBrtMute,  120), 10, 255);
+    {
+        uint16_t s = preferences_.getUShort(kNvsBrtIdleSec, 30);
+        settings_.brtIdleSec = s > 3600 ? 3600 : s;
+    }
+
+    // Driving modes
+    settings_.activeDrivingMode = static_cast<DrivingMode>(
+        clampU8(preferences_.getUChar(kNvsDrivingMode, 0), 0, kDrivingModeCount - 1));
+    static const char* dmBrightKeys[] = { kNvsDm0Bright, kNvsDm1Bright, kNvsDm2Bright, kNvsDm3Bright };
+    static const char* dmVolKeys[]    = { kNvsDm0Volume, kNvsDm1Volume, kNvsDm2Volume, kNvsDm3Volume };
+    static const char* dmPersistKeys[]= { kNvsDm0Persist,kNvsDm1Persist,kNvsDm2Persist,kNvsDm3Persist };
+    static const char* dmPrioKeys[]   = { kNvsDm0PrioArrow,kNvsDm1PrioArrow,kNvsDm2PrioArrow,kNvsDm3PrioArrow };
+    for (int i = 0; i < kDrivingModeCount; i++) {
+        DrivingModeConfig def = defaultDrivingModeConfig(static_cast<DrivingMode>(i));
+        settings_.drivingModeConfigs[i].brightness      = preferences_.getUChar(dmBrightKeys[i],  def.brightness);
+        settings_.drivingModeConfigs[i].voiceVolume     = clampU8(preferences_.getUChar(dmVolKeys[i], def.voiceVolume), 0, 100);
+        settings_.drivingModeConfigs[i].alertPersistSec = clampU8(preferences_.getUChar(dmPersistKeys[i], def.alertPersistSec), 0, 5);
+        settings_.drivingModeConfigs[i].priorityArrowOnly = preferences_.getBool(dmPrioKeys[i], def.priorityArrowOnly);
+    }
+
+    // Setup wizard
+    settings_.wzdDone = preferences_.getBool(kNvsWzdDone, false);
+    settings_.wzdStep = clampU8(preferences_.getUChar(kNvsWzdStep, 0), 0, 7);
 
     preferences_.end();
 

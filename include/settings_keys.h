@@ -155,6 +155,49 @@ inline constexpr const char* kNvsObdName        = "obdName";
 inline constexpr const char* kNvsObdAddressType = "obdAddrT";
 inline constexpr const char* kNvsObdMinRssi     = "obdMinRssi";
 
+// ── Driving modes ─────────────────────────────────────────────────────────
+inline constexpr const char* kNvsDrivingMode  = "drivingMode";
+inline constexpr const char* kNvsDm0Bright    = "dm0bright";
+inline constexpr const char* kNvsDm0Volume    = "dm0vol";
+inline constexpr const char* kNvsDm0Persist   = "dm0persist";
+inline constexpr const char* kNvsDm0PrioArrow = "dm0prio";
+inline constexpr const char* kNvsDm1Bright    = "dm1bright";
+inline constexpr const char* kNvsDm1Volume    = "dm1vol";
+inline constexpr const char* kNvsDm1Persist   = "dm1persist";
+inline constexpr const char* kNvsDm1PrioArrow = "dm1prio";
+inline constexpr const char* kNvsDm2Bright    = "dm2bright";
+inline constexpr const char* kNvsDm2Volume    = "dm2vol";
+inline constexpr const char* kNvsDm2Persist   = "dm2persist";
+inline constexpr const char* kNvsDm2PrioArrow = "dm2prio";
+inline constexpr const char* kNvsDm3Bright    = "dm3bright";
+inline constexpr const char* kNvsDm3Volume    = "dm3vol";
+inline constexpr const char* kNvsDm3Persist   = "dm3persist";
+inline constexpr const char* kNvsDm3PrioArrow = "dm3prio";
+
+// ── Driving safety lockout ────────────────────────────────────────────────
+inline constexpr const char* kNvsLockoutEnabled = "lockoutEn";
+inline constexpr const char* kNvsLockoutMph     = "lockoutMph";
+
+// ── Voice alert enhancements (Phase 7) ───────────────────────────────────
+inline constexpr const char* kNvsVoiceBandFilter     = "voiceBandFilt";
+inline constexpr const char* kNvsVoiceFirstOnly      = "voiceFirst";
+inline constexpr const char* kNvsVoiceDirOnly        = "voiceDirOnly";
+inline constexpr const char* kNvsStartupSound        = "startupSnd";
+inline constexpr const char* kNvsShutdownSound       = "shutdownSnd";
+
+// ── Smart brightness engine ───────────────────────────────────────────────
+inline constexpr const char* kNvsBrightEngEn    = "brightEng";
+inline constexpr const char* kNvsBrtDay         = "brtDay";
+inline constexpr const char* kNvsBrtNight       = "brtNight";
+inline constexpr const char* kNvsBrtIdle        = "brtIdle";
+inline constexpr const char* kNvsBrtAlert       = "brtAlert";
+inline constexpr const char* kNvsBrtMute        = "brtMute";
+inline constexpr const char* kNvsBrtIdleSec     = "brtIdleSec";
+
+// ── Setup Wizard ──────────────────────────────────────────────────────────
+inline constexpr const char* kNvsWzdDone = "wzdDone";
+inline constexpr const char* kNvsWzdStep = "wzdStep";
+
 // ── Separate namespaces ───────────────────────────────────────────────────
 // Namespace: v1wifi_secret (WIFI_CLIENT_NS)
 inline constexpr const char* kNvsWifiPassword = "password";

@@ -11,6 +11,9 @@
 class AutoPushModule;
 class AlertPersistenceModule;
 class QuietCoordinatorModule;
+#ifndef UNIT_TEST
+class DashboardModule;
+#endif
 
 class TapGestureModule {
 public:
@@ -22,7 +25,11 @@ public:
                AutoPushModule* autoPushModule,
                AlertPersistenceModule* alertPersistenceModule,
                DisplayMode* displayModePtr,
-               QuietCoordinatorModule* quietCoordinator);
+               QuietCoordinatorModule* quietCoordinator
+#ifndef UNIT_TEST
+               , DashboardModule* dashboardModule = nullptr
+#endif
+               );
 
     void process(unsigned long nowMs);
 
@@ -36,11 +43,16 @@ private:
     AlertPersistenceModule* alertPersistence_ = nullptr;
     DisplayMode* displayMode_ = nullptr;
     QuietCoordinatorModule* quiet_ = nullptr;
+#ifndef UNIT_TEST
+    DashboardModule* dashboard_ = nullptr;
+#endif
 
     unsigned long lastTapTime_ = 0;
     int tapCount_ = 0;
+    // Whether a single pending tap has been registered but the window hasn't expired.
+    bool pendingDashboardToggle_ = false;
+
     static constexpr int PROFILE_CHANGE_TAP_COUNT = 3;
     static constexpr unsigned long TAP_WINDOW_MS = 600;
     static constexpr unsigned long TAP_DEBOUNCE_MS = 150;
-
 };

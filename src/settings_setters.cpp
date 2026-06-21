@@ -516,6 +516,21 @@ void SettingsManager::applyAudioSettingsUpdate(const AudioSettingsUpdate& update
         const uint8_t val = (update.speedMuteVolume <= 9) ? update.speedMuteVolume : 0xFF;
         changed |= assignIfChanged(settings_.speedMuteVolume, val);
     }
+    if (update.hasVoiceBandFilter) {
+        changed |= assignIfChanged(settings_.voiceBandFilter, update.voiceBandFilter);
+    }
+    if (update.hasVoiceFirstAlertOnly) {
+        changed |= assignIfChanged(settings_.voiceFirstAlertOnly, update.voiceFirstAlertOnly);
+    }
+    if (update.hasVoiceDirectionChangeOnly) {
+        changed |= assignIfChanged(settings_.voiceDirectionChangeOnly, update.voiceDirectionChangeOnly);
+    }
+    if (update.hasStartupSoundEnabled) {
+        changed |= assignIfChanged(settings_.startupSoundEnabled, update.startupSoundEnabled);
+    }
+    if (update.hasShutdownSoundEnabled) {
+        changed |= assignIfChanged(settings_.shutdownSoundEnabled, update.shutdownSoundEnabled);
+    }
 
     if (changed) {
         persistSettingsByMode(*this, persistMode);
@@ -652,3 +667,49 @@ bool SettingsManager::applyObdSettingsUpdate(const ObdSettingsUpdate& update,
 
     return changed;
 }
+
+void SettingsManager::setDrivingModeConfig(int mode, const DrivingModeConfig& cfg) {
+    if (mode < 0 || mode >= kDrivingModeCount) return;
+    settings_.drivingModeConfigs[mode] = cfg;
+    save();
+}
+
+void SettingsManager::applyDrivingMode(DrivingMode mode) {
+    const int idx = static_cast<int>(mode);
+    if (idx < 0 || idx >= kDrivingModeCount) return;
+    const DrivingModeConfig& cfg = settings_.drivingModeConfigs[idx];
+
+    settings_.activeDrivingMode = mode;
+    settings_.brightness        = cfg.brightness;
+    settings_.voiceVolume       = cfg.voiceVolume;
+
+    const int slot = settings_.activeSlot;
+    settings_.autoPushSlotView(slot).alertPersist   = cfg.alertPersistSec;
+    settings_.autoPushSlotView(slot).priorityArrow  = cfg.priorityArrowOnly;
+
+    save();
+}
+
+void SettingsManager::setLockoutEnabled(bool enabled) {
+    settings_.lockoutEnabled = enabled;
+    save();
+}
+
+void SettingsManager::setLockoutThresholdMph(uint8_t mph) {
+    settings_.lockoutThresholdMph = std::min<uint8_t>(mph, 50);
+    save();
+}
+void SettingsManager::setBrightEngEnabled(bool en)  { settings_.brightEngEnabled = en;                            save(); }
+void SettingsManager::setBrtDay(uint8_t v)          { settings_.brtDay   = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtNight(uint8_t v)        { settings_.brtNight = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtIdle(uint8_t v)         { settings_.brtIdle  = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtAlert(uint8_t v)        { settings_.brtAlert = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtMute(uint8_t v)         { settings_.brtMute  = std::max<uint8_t>(10, v);             save(); }
+void SettingsManager::setBrtIdleSec(uint16_t sec)   { settings_.brtIdleSec = sec > 3600 ? 3600 : sec;            save(); }
+void SettingsManager::setVoiceBandFilter(uint8_t mask)  { settings_.voiceBandFilter = mask;      save(); }
+void SettingsManager::setVoiceFirstAlertOnly(bool v)    { settings_.voiceFirstAlertOnly = v;     save(); }
+void SettingsManager::setVoiceDirectionChangeOnly(bool v){ settings_.voiceDirectionChangeOnly = v; save(); }
+void SettingsManager::setStartupSoundEnabled(bool v)    { settings_.startupSoundEnabled = v;     save(); }
+void SettingsManager::setShutdownSoundEnabled(bool v)   { settings_.shutdownSoundEnabled = v;    save(); }
+void SettingsManager::setWzdDone(bool v)                { settings_.wzdDone = v;                 save(); }
+void SettingsManager::setWzdStep(uint8_t step)          { settings_.wzdStep = step > 7 ? 7 : step; save(); }

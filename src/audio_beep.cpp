@@ -716,3 +716,51 @@ void play_test_voice() {
     // Use "Ka ahead" as test phrase - short and recognizable (~822ms)
     play_pcm_audio(alert_ka_ahead, ALERT_KA_AHEAD_SAMPLES, ALERT_KA_AHEAD_DURATION_MS);
 }
+
+// Startup and shutdown chimes (synthesized sine tones).
+// Buffers are small (~1200 samples = ~55ms per tone) and stored in .bss.
+// Two-note ascending = startup, descending = shutdown.
+#define CHIME_SAMPLE_RATE SAMPLE_RATE
+#define CHIME_TONE_SAMPLES 1102  // ~50ms at 22050 Hz per note
+#define CHIME_NOTE_COUNT 2
+#define CHIME_TOTAL_SAMPLES (CHIME_TONE_SAMPLES * CHIME_NOTE_COUNT)
+
+static int16_t s_startupChimeBuf[CHIME_TOTAL_SAMPLES];
+static int16_t s_shutdownChimeBuf[CHIME_TOTAL_SAMPLES];
+static bool s_chimeBufsReady = false;
+
+static void buildChimeBufs() {
+    if (s_chimeBufsReady) return;
+    // Startup: 880 Hz then 1760 Hz (ascending)
+    const float startupFreqs[2] = { 880.0f, 1760.0f };
+    // Shutdown: 1760 Hz then 880 Hz (descending)
+    const float shutdownFreqs[2] = { 1760.0f, 880.0f };
+    const float amp = 10000.0f;
+    for (int n = 0; n < CHIME_NOTE_COUNT; n++) {
+        float sf = startupFreqs[n];
+        float df = shutdownFreqs[n];
+        for (int i = 0; i < CHIME_TONE_SAMPLES; i++) {
+            float t = (float)i / CHIME_SAMPLE_RATE;
+            // Apply simple linear fade-in/out to avoid clicks
+            float env = 1.0f;
+            float fade = 50.0f / CHIME_SAMPLE_RATE;  // 50-sample fade
+            if (i < 50) env = (float)i / 50.0f;
+            else if (i > CHIME_TONE_SAMPLES - 50) env = (float)(CHIME_TONE_SAMPLES - i) / 50.0f;
+            s_startupChimeBuf[n * CHIME_TONE_SAMPLES + i]  = (int16_t)(sinf(2.0f * M_PI * sf * t) * amp * env);
+            s_shutdownChimeBuf[n * CHIME_TONE_SAMPLES + i] = (int16_t)(sinf(2.0f * M_PI * df * t) * amp * env);
+        }
+    }
+    s_chimeBufsReady = true;
+}
+
+void play_startup_chime() {
+    buildChimeBufs();
+    if (audio_playing) return;
+    play_pcm_audio(s_startupChimeBuf, CHIME_TOTAL_SAMPLES, 110);
+}
+
+void play_shutdown_chime() {
+    buildChimeBufs();
+    if (audio_playing) return;
+    play_pcm_audio(s_shutdownChimeBuf, CHIME_TOTAL_SAMPLES, 110);
+}

@@ -116,6 +116,17 @@ struct V1Settings {
     bool alertVolumeFadeEnabled = false;
     uint8_t alertVolumeFadeDelaySec = 5;
     uint8_t alertVolumeFadeVolume = 3;
+
+    // Voice alert enhancements (Phase 7)
+    uint8_t voiceBandFilter = 0;
+    bool voiceFirstAlertOnly = false;
+    bool voiceDirectionChangeOnly = false;
+    bool startupSoundEnabled = true;
+    bool shutdownSoundEnabled = true;
+
+    // Setup wizard
+    bool    wzdDone = false;
+    uint8_t wzdStep = 0;
     
     // Speed mute
     bool speedMuteEnabled = false;

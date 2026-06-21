@@ -44,6 +44,11 @@ class QuietCoordinatorModule;
 class ObdRuntimeModule;
 class ObdBleClient;
 class SpeedSourceSelector;
+class DashboardModule;
+class EncounterHistory;
+class DrivingSafetyLockout;
+class SmartBrightnessEngine;
+class PhoneCompanionModule;
 
 #ifndef UNIT_TEST
 class DisplayPipelineModule;
@@ -88,6 +93,11 @@ extern MainRuntimeState mainRuntimeState;
 extern ObdRuntimeModule obdRuntimeModule;
 extern ObdBleClient obdBleClient;
 extern SpeedSourceSelector speedSourceSelector;
+extern DashboardModule dashboardModule;
+extern EncounterHistory encounterHistory;
+extern DrivingSafetyLockout drivingSafetyLockout;
+extern SmartBrightnessEngine smartBrightnessEngine;
+extern PhoneCompanionModule phoneCompanionModule;
 
 #ifndef UNIT_TEST
 extern DisplayPipelineModule displayPipelineModule;

@@ -50,6 +50,12 @@ Owns post-display connection-state dispatch cadence, periodic maintenance, and l
 - Connection-state dispatch cadence: `LoopPostDisplayModule`
 - Domain-specific settings writes: `WifiSettingsApiService::handleApiDeviceSettingsSave()` owns AP/proxy/power/dev writes on `POST /api/device/settings`.
 - Runtime reapply after persisted settings changes: `SettingsRuntimeSync` helper bundles own the shared OBD/selector reapply groupings so restore and config writes do not hand-roll divergent apply paths.
+- Phone companion telemetry: `PhoneCompanionModule` (written by `WifiPhoneCompanionApiService` on `POST /api/drive/update`); read by `SpeedSourceSelector` as priority-2 fallback and by `DashboardModule` for display.
+- Speed fallback arbitration: `SpeedSourceSelector` — OBD=3 beats Phone=2 beats NONE=0. `phoneCompanionModule.getFreshSpeed()` is only called inside `SpeedSourceSelector::buildStatus()`, never directly by consumers.
+- Brightness control: `SmartBrightnessEngine` — sole caller of `display.setBrightness()` when enabled. `loop()` calls `smartBrightnessEngine.process(now, hasAlerts, isMuted)` once per cycle; touch events call `notifyActivity()`. No other code path may call `setBrightness()` while the engine is enabled.
+- Configuration lockout: `DrivingSafetyLockout` — evaluated once per POST route via `WifiLockoutApiService::sendLockoutIfLocked()` before any mutating handler runs. The lockout module does not write settings; it only reads speed state.
+- Encounter logging: `EncounterHistory` — written at alert onset in `loop()` (main.cpp); read by `WifiHistoryApiService` for `GET /api/history` and `GET /api/history/export.csv`. No other write path exists.
+- Driving mode activation: `SettingsManager::setActiveDrivingMode()` — called by `WifiDriveModeApiService`; applies mode config bundle atomically. Driving modes do not directly call `SmartBrightnessEngine`; the engine reads the day-base brightness from settings on each `process()` cycle.
 
 Speed consumers must not derive fallback speed from raw OBD runtime state. If the selector did not publish a committed speed for the current loop, speed is treated as unavailable.
 
