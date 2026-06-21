@@ -22,7 +22,10 @@ A open-source touchscreen companion display for the **Valentine One Gen2** radar
 | **Smart brightness** | Auto-adjusts brightness on alert, mute, and idle-timeout; all levels configurable |
 | **Driving safety lockout** | Blocks configuration changes when speed exceeds threshold (default 5 mph) |
 | **Quick driving modes** | Normal / Quiet / Highway / Night presets — one tap, NVS-persisted |
-| **Driving dashboard** | Idle screen with speed, connection status, profile slot, mute state, last alert |
+| **Idle screen cycle** | Single tap cycles three overlay screens: Dashboard, V1 Tuning, and Stealth Night Mode |
+| **Driving dashboard** | Idle screen: speed, connection dots, profile slot, mute state, last alert |
+| **V1 Tuning Screen** | Live band, frequency, 8-bar signal meter, direction, alert duration, profile — for sweep validation |
+| **Stealth Night Mode** | Minimal red/orange HUD: speed left, alert centre, direction right — fighter-jet style for night driving |
 | **Encounter history** | Logs every alert to LittleFS; browse, export CSV, mark false alerts in web UI |
 | **Phone companion API** | Receive speed, heading, road name, and GPS accuracy from Tasker/Automate over WiFi |
 | **Setup wizard** | Auto-redirects on first boot; 8 steps, optional ones individually skippable, always re-runnable |
@@ -114,6 +117,7 @@ Short press BOOT on Page 2 exits and saves all changes.
 | Gesture | When | Function |
 |---|---|---|
 | Single tap | Alert active | Mute / unmute the alert |
+| Single tap | No active alert | Cycle idle screen (Off → Dashboard → Tuning → Stealth → Off) |
 | Triple tap within 600 ms | No active alert | Cycle profile slot (0 → 1 → 2 → 0) |
 
 ---
@@ -122,7 +126,7 @@ Short press BOOT on Page 2 exits and saves all changes.
 
 ### Screen
 
-The 640×172 display shows the radar screen: live frequency, band indicators, signal bars (6-level front/rear), direction arrow, and bogey counter.
+The 640×172 display shows the radar screen when an alert is active: live frequency, band indicators, signal bars (6-level front/rear), direction arrow, and bogey counter. When no alert is present, single tap cycles between three idle overlay screens — Dashboard, V1 Tuning, and Stealth Night Mode.
 
 ### Voice alerts
 

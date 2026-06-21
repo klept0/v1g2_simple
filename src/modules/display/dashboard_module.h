@@ -10,6 +10,31 @@ class V1BLEClient;
 class ObdRuntimeModule;
 class PhoneCompanionModule;
 
+// Data needed to render the V1 tuning / sweep-validation screen.
+struct TuningData {
+    bool      hasAlert    = false;
+    Band      band        = BAND_NONE;
+    uint32_t  freqMHz     = 0;      // frequency × 1000 (matches AlertData::frequency)
+    uint8_t   signalBars  = 0;      // 0-8
+    Direction direction   = DIR_NONE;
+    uint32_t  durationMs  = 0;      // how long the current alert has been active
+    int       activeSlot  = 0;
+    char      slotName[12] = "DEFAULT";
+    bool      muted       = false;
+    bool      v1Connected = false;
+};
+
+// Data needed to render the stealth night-mode HUD.
+struct StealthData {
+    bool      speedValid = false;
+    float     speedMph   = 0.0f;
+    bool      hasAlert   = false;
+    Band      band       = BAND_NONE;
+    Direction direction  = DIR_NONE;
+    uint32_t  freqMHz    = 0;
+    bool      muted      = false;
+};
+
 // All data needed to render the driving dashboard in one snapshot.
 struct DashboardData {
     // Speed
@@ -52,8 +77,12 @@ struct DashboardData {
     uint32_t phoneAgeMs      = UINT32_MAX;
 };
 
+// Idle screen modes cycled by single tap (Off → Dashboard → Tuning → Stealth → Off).
+enum class IdleScreen : uint8_t { Off, Dashboard, Tuning, Stealth };
+
 class DashboardModule {
 public:
+
     void begin(V1Display* display,
                PacketParser* parser,
                SettingsManager* settings,
@@ -61,30 +90,36 @@ public:
                ObdRuntimeModule* obd,
                PhoneCompanionModule* phone = nullptr);
 
-    bool isActive() const { return active_; }
-    void toggle() { active_ = !active_; }
-    void setActive(bool v) { active_ = v; }
+    bool isActive() const { return activeScreen_ != IdleScreen::Off; }
+    void setActive(bool v) { if (!v) activeScreen_ = IdleScreen::Off; }
+    // Advance to the next idle screen (Off→Dashboard→Tuning→Stealth→Off).
+    void cycleNext();
+    IdleScreen activeScreen() const { return activeScreen_; }
 
-    // Build a DashboardData snapshot from the injected dependencies.
+    // Build snapshots from the injected dependencies.
     DashboardData snapshot(uint32_t nowMs) const;
+    TuningData    tuningSnapshot(uint32_t nowMs) const;
+    StealthData   stealthSnapshot(uint32_t nowMs) const;
 
-    // If active and sufficient time has passed, redraw the dashboard.
+    // If active and sufficient time has passed, redraw the current screen.
     // Returns true if a redraw was performed.
     bool renderIfActive(uint32_t nowMs);
 
     static constexpr uint32_t REDRAW_INTERVAL_MS = 250;
 
 private:
-    bool active_ = false;
+    IdleScreen activeScreen_ = IdleScreen::Off;
 
-    V1Display*       display_  = nullptr;
-    PacketParser*    parser_   = nullptr;
-    SettingsManager* settings_ = nullptr;
-    V1BLEClient*     ble_      = nullptr;
-    ObdRuntimeModule* obd_     = nullptr;
-    PhoneCompanionModule* phone_ = nullptr;
+    V1Display*            display_  = nullptr;
+    PacketParser*         parser_   = nullptr;
+    SettingsManager*      settings_ = nullptr;
+    V1BLEClient*          ble_      = nullptr;
+    ObdRuntimeModule*     obd_      = nullptr;
+    PhoneCompanionModule* phone_    = nullptr;
 
-    uint32_t lastRedrawMs_ = 0;
+    uint32_t lastRedrawMs_  = 0;
+    uint32_t alertOnsetMs_  = 0;  // when the current alert sequence started
+    bool     prevHasAlert_  = false;
 
     // Track last alert across cycles so it persists on the dashboard.
     mutable DashboardData lastAlertCache_{};

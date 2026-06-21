@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **V1 Tuning Screen** — new idle screen for validating sweep sensitivity and profiles in the field. Shows live alert band (colour-coded), frequency (GHz), 8-bar signal meter (green→yellow→red), direction, alert duration, active profile slot, and mute state.
+- **Stealth Night Mode** — minimal fighter-jet HUD: speed (left), alert band + frequency (centre), direction (right). Pure red/orange on black — nothing else on screen. Optimised for dark-adapted night driving.
+- **Idle screen cycle** — single tap now cycles through all idle screens: Off → Dashboard → Tuning → Stealth → Off. Triple-tap continues to cycle profile slots; any active alert collapses back to the radar view immediately.
+
 ---
 
 ## [4.3.0] - 2026-06-21

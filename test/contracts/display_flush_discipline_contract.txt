@@ -2,6 +2,9 @@
 
 kind=BARE_FLUSH file=src/display_dashboard.cpp line=378 function=showDashboard
 kind=BARE_FLUSH file=src/display_sliders.cpp line=182 function=showTogglesPage
+kind=BARE_FLUSH file=src/display_stealth.cpp line=173 function=showStealth
+kind=BARE_FLUSH file=src/display_tuning.cpp line=166 function=showTuning
+kind=BARE_FLUSH file=src/display_tuning.cpp line=291 function=showTuning
 kind=DISPLAY_FLUSH file=src/display.cpp line=225 function=begin
 kind=DISPLAY_FLUSH file=src/display.cpp line=280 function=clear
 kind=DISPLAY_FLUSH file=src/display.cpp line=331 function=flush
