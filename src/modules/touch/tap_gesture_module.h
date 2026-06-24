@@ -33,6 +33,10 @@ public:
 
     void process(unsigned long nowMs);
 
+    // Physical button helpers — same actions as double/triple tap, callable externally.
+    void cycleScreens();
+    void cycleProfileSlot();
+
 private:
     TouchHandler* touch_ = nullptr;
     SettingsManager* settings_ = nullptr;

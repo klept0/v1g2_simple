@@ -122,6 +122,14 @@ Short press BOOT on Page 2 exits and saves all changes.
 | Double tap within 600 ms | No active alert | Cycle idle screen (Off → Dashboard → Tuning → Stealth → Off) |
 | Triple tap within 600 ms | No active alert | Cycle profile slot (0 → 1 → 2 → 0) |
 
+### Power button (mounted use)
+
+| Press | Function |
+|---|---|
+| Short press (< 1.5 s) | Cycle idle screen — same as double-tap |
+| Double press (two presses within 600 ms) | Cycle profile slot — same as triple-tap |
+| Hold ≥ 2 s | Power off |
+
 ---
 
 ## Features
