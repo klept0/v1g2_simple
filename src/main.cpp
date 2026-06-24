@@ -728,6 +728,12 @@ void configureTouchUiModule() {
         .setMuteToZero = [](bool enabled, void* /*ctx*/) {
             settingsManager.setSlotMuteToZero(settingsManager.get().activeSlot, enabled);
             settingsManager.save();
+        },
+        .dismissIdleScreen = [](void* /*ctx*/) {
+            if (dashboardModule.isActive()) {
+                dashboardModule.setActive(false);
+                display.forceNextRedraw();
+            }
         }
     };
     touchUiModule.begin(&display, &touchHandler, &settingsManager, touchCbs);

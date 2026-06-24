@@ -1515,6 +1515,15 @@ When the device is mounted and the touchscreen is hard to reach, the physical po
 | Double press (two short presses within 600 ms) | Cycle profile slot — same as triple-tap |
 | Hold ≥ 2 s | Power off |
 
+### BOOT Button
+
+| Press | Action |
+|---|---|
+| Quick tap (< 300 ms) | **Return to main radar view** — immediately dismisses any active idle screen |
+| Short press (≥ 300 ms, < 4 s) | Open settings UI (brightness / volume sliders → toggles page) |
+| Long press (≥ 4 s) | Toggle WiFi AP on/off |
+| Very long press (≥ 10 s) | Arm OBD manual pair scan |
+
 ### Idle Screens
 
 Three overlay screens are available when no alert is active. Single tap cycles through them in order; another tap advances to the next. Tapping past Stealth returns to Off (radar-only view).

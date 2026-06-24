@@ -77,6 +77,11 @@ bool TouchUiModule::process(unsigned long nowMs, bool bootPressed) {
             } else {
                 exitAndSave();
             }
+        } else if (!wifiAlreadyToggled && pressDuration < BOOT_DEBOUNCE_MS && settingsPage_ == 0) {
+            // Quick tap (< 300 ms) with no other action: dismiss idle screen → main radar view.
+            if (callbacks_.dismissIdleScreen) {
+                callbacks_.dismissIdleScreen(callbacks_.dismissIdleScreenCtx);
+            }
         }
     }
 
