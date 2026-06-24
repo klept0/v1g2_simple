@@ -404,7 +404,7 @@ void V1Display::showProxyBanner(const char* msg, uint16_t color) {
 
 void V1Display::tickBanner(uint32_t nowMs) {
     if (!bannerActive_) return;
-    if (nowMs >= bannerExpiryMs_) {
+    if (static_cast<int32_t>(nowMs - bannerExpiryMs_) >= 0) {
         bannerActive_ = false;
         // Clear the banner region and force next display update
         const int bx = 60;
