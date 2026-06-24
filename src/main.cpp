@@ -781,7 +781,7 @@ static void configureSystemLoopCoreModules() {
     systemEventBus.reset();
     bleQueueModule.begin(&bleClient, &parser, &v1ProfileManager, &displayPreviewModule, &powerModule, &systemEventBus);
     configureConnectionRuntimeModule();
-    connectionStateModule.begin(&bleClient, &parser, &display, &powerModule, &bleQueueModule, &systemEventBus);
+    connectionStateModule.begin(&bleClient, &parser, &display, &powerModule, &bleQueueModule, &systemEventBus, &dashboardModule);
     configureConnectionStateDispatchModule();
     configurePeriodicMaintenanceModule();
     configureLoopTailModule();

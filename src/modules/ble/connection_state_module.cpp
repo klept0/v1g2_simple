@@ -6,6 +6,7 @@
 #include "modules/power/power_module.h"
 #include "modules/ble/ble_queue_module.h"
 #include "modules/system/system_event_bus.h"
+#include "modules/display/dashboard_module.h"
 
 #define CONN_LOG(...) do { } while(0)
 
@@ -14,13 +15,15 @@ void ConnectionStateModule::begin(V1BLEClient* bleClient,
                                   V1Display* displayPtr,
                                   PowerModule* powerModule,
                                   BleQueueModule* bleQueueModule,
-                                  SystemEventBus* eventBus) {
+                                  SystemEventBus* eventBus,
+                                  DashboardModule* dashboard) {
     ble_ = bleClient;
     parser_ = parserPtr;
     display_ = displayPtr;
     power_ = powerModule;
     bleQueue_ = bleQueueModule;
     bus_ = eventBus;
+    dashboard_ = dashboard;
     wasConnected_ = false;
     lastDataRequestMs_ = 0;
 }
@@ -53,7 +56,11 @@ bool ConnectionStateModule::process(unsigned long nowMs) {
             PacketParser::resetAlertCountTracker();
             parser_->resetAlertAssembly();
             V1Display::resetChangeTracking();
-            display_->showScanning();
+            // If an idle screen is active, let it keep rendering rather than
+            // overwriting it with the scanning screen immediately.
+            if (!dashboard_ || !dashboard_->isActive()) {
+                display_->showScanning();
+            }
             CONN_LOG("[BLE] V1 disconnected - scanning");
             if (bus_) {
                 SystemEvent event;
@@ -77,13 +84,16 @@ bool ConnectionStateModule::process(unsigned long nowMs) {
         }
     }
 
-    // When disconnected, refresh indicators in the canvas.
-    // No flush here — the display pipeline owns all strip flushing.
-    // Left strip is always flushed; battery (right strip) will flush
-    // when the pipeline next updates the right strip.
+    // When disconnected, either render the active idle screen or refresh
+    // the scanning indicators.  The display pipeline only runs when BLE
+    // packets arrive (parsedReady), so idle screens must be driven here.
     if (!isConnected) {
-        display_->drawWiFiIndicator();
-        display_->drawBatteryIndicator();
+        if (dashboard_ && dashboard_->isActive()) {
+            dashboard_->renderIfActive(static_cast<uint32_t>(nowMs));
+        } else {
+            display_->drawWiFiIndicator();
+            display_->drawBatteryIndicator();
+        }
     }
 
     return isConnected;
