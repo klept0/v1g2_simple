@@ -154,12 +154,23 @@ void initializeStorageAndProfiles() {
         audio_init_buffers();  // Allocate audio decode buffers in PSRAM (before audio_init_sd).
         audio_init_sd();  // Initialize SD-based frequency voice audio.
 
+        // One-shot import from /v1simple_import.json — applied before the normal
+        // backup restore so user edits take priority.  File is renamed to
+        // /v1simple_import.done after a successful apply.
+        if (settingsManager.importFromSD()) {
+            display.setBrightness(settingsManager.get().brightness);
+            Serial.println("[Setup] Settings imported from SD card");
+        }
+
         // Retry settings restore now that SD is mounted
         // (settings.begin() runs before storage, so restore may have failed)
         if (settingsManager.checkAndRestoreFromSD()) {
             // Settings were restored from SD - update display with restored brightness.
             display.setBrightness(settingsManager.get().brightness);
         }
+
+        // Write a documented template to the SD if one doesn't exist yet.
+        settingsManager.generateSDTemplateIfAbsent();
 
         const String restoredLastKnownV1 = normalizeV1DeviceAddress(settingsManager.get().lastV1Address);
         if (restoredLastKnownV1.length() > 0 && v1DeviceStore.isReady()) {
