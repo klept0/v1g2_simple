@@ -945,6 +945,14 @@ static void initializeBlePreInitAndScan(const CheckpointLogger& logBootCheckpoin
         bleClient.onDataReceived(onV1Data);
         bleClient.onV1ConnectImmediate(onV1ConnectImmediate);
         bleClient.onV1Connected(onV1Connected);
+        bleClient.onProxyClientConnected([]() {
+            play_proxy_connect_chime();
+            display.showProxyBanner("PROXY CONNECTED", 0x07E0);   // bright green
+        });
+        bleClient.onProxyClientDisconnected([]() {
+            play_proxy_disconnect_chime();
+            display.showProxyBanner("PROXY DISCONNECTED", 0xFD20); // amber
+        });
         logBootCheckpoint("ble_callbacks_registered");
         const V1Settings& bleScanSettings = settingsManager.get();
         SerialLog.printf("Starting BLE scan for V1 (proxy: %s, name: %s)\n",
@@ -1093,6 +1101,7 @@ void loop() {
     // Process audio amp timeout (disables amp after 3s of inactivity)
     audio_process_amp_timeout();
     unsigned long now = millis();
+    display.tickBanner(static_cast<uint32_t>(now));
 
     bleClient.setObdBleArbitrationRequest(obdRuntimeModule.getBleArbitrationRequest());
     const LoopConnectionEarlyPhaseValues loopConnectionEarlyValues = processLoopConnectionEarlyPhase(

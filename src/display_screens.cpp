@@ -7,6 +7,7 @@
  */
 
 #include "display.h"
+#include <Arduino.h>
 #include "../include/config.h"
 #include "../include/display_layout.h"
 #include "../include/display_draw.h"
@@ -378,4 +379,40 @@ void V1Display::showLowBattery() {
 
     // Flush to display
     DISPLAY_FLUSH();
+}
+
+void V1Display::showProxyBanner(const char* msg, uint16_t color) {
+    if (!tft_) return;
+    strncpy(bannerText_, msg, sizeof(bannerText_) - 1);
+    bannerText_[sizeof(bannerText_) - 1] = '\0';
+    bannerColor_    = color;
+    bannerExpiryMs_ = millis() + 2500;
+    bannerActive_   = true;
+
+    // Draw immediately: centred box in the lower third of the main area.
+    const int bx = 60;
+    const int by = SCREEN_HEIGHT / 2 - 14;
+    const int bw = SCREEN_WIDTH - 120;
+    const int bh = 28;
+    FILL_RECT(bx, by, bw, bh, 0x18C3);   // very dark blue-grey background
+    GFX_setTextDatum(MC_DATUM);
+    TFT_CALL(setTextSize)(2);
+    TFT_CALL(setTextColor)(color, 0x18C3);
+    GFX_drawString(tft_, bannerText_, SCREEN_WIDTH / 2, by + bh / 2);
+    DISPLAY_FLUSH();
+}
+
+void V1Display::tickBanner(uint32_t nowMs) {
+    if (!bannerActive_) return;
+    if (nowMs >= bannerExpiryMs_) {
+        bannerActive_ = false;
+        // Clear the banner region and force next display update
+        const int bx = 60;
+        const int by = SCREEN_HEIGHT / 2 - 14;
+        const int bw = SCREEN_WIDTH - 120;
+        const int bh = 28;
+        FILL_RECT(bx, by, bw, bh, PALETTE_BG);
+        DISPLAY_FLUSH();
+        forceNextRedraw();
+    }
 }

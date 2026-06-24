@@ -764,3 +764,57 @@ void play_shutdown_chime() {
     if (audio_playing) return;
     play_pcm_audio(s_shutdownChimeBuf, CHIME_TOTAL_SAMPLES, 110);
 }
+
+// Proxy client connect/disconnect chimes.
+// Connect: 3-note ascending triple-ping (660→880→1320 Hz).
+// Disconnect: 2-note descending (880→440 Hz), softer.
+#define PROXY_CHIME_SAMPLES 882   // ~40ms per note at 22050 Hz
+#define PROXY_CONNECT_NOTES   3
+#define PROXY_DISCONNECT_NOTES 2
+#define PROXY_CONNECT_TOTAL    (PROXY_CHIME_SAMPLES * PROXY_CONNECT_NOTES)
+#define PROXY_DISCONNECT_TOTAL (PROXY_CHIME_SAMPLES * PROXY_DISCONNECT_NOTES)
+
+static int16_t s_proxyConnectBuf[PROXY_CONNECT_TOTAL];
+static int16_t s_proxyDisconnectBuf[PROXY_DISCONNECT_TOTAL];
+static bool s_proxyChimeBufsReady = false;
+
+static void buildProxyChimeBufs() {
+    if (s_proxyChimeBufsReady) return;
+    const float connectFreqs[PROXY_CONNECT_NOTES]    = { 660.0f, 880.0f, 1320.0f };
+    const float disconnectFreqs[PROXY_DISCONNECT_NOTES] = { 880.0f, 440.0f };
+    const float ampConn = 9000.0f;
+    const float ampDisc = 7000.0f;
+    for (int n = 0; n < PROXY_CONNECT_NOTES; n++) {
+        float f = connectFreqs[n];
+        for (int i = 0; i < PROXY_CHIME_SAMPLES; i++) {
+            float t   = (float)i / SAMPLE_RATE;
+            float env = 1.0f;
+            if (i < 40) env = (float)i / 40.0f;
+            else if (i > PROXY_CHIME_SAMPLES - 40) env = (float)(PROXY_CHIME_SAMPLES - i) / 40.0f;
+            s_proxyConnectBuf[n * PROXY_CHIME_SAMPLES + i] = (int16_t)(sinf(2.0f * M_PI * f * t) * ampConn * env);
+        }
+    }
+    for (int n = 0; n < PROXY_DISCONNECT_NOTES; n++) {
+        float f = disconnectFreqs[n];
+        for (int i = 0; i < PROXY_CHIME_SAMPLES; i++) {
+            float t   = (float)i / SAMPLE_RATE;
+            float env = 1.0f;
+            if (i < 40) env = (float)i / 40.0f;
+            else if (i > PROXY_CHIME_SAMPLES - 40) env = (float)(PROXY_CHIME_SAMPLES - i) / 40.0f;
+            s_proxyDisconnectBuf[n * PROXY_CHIME_SAMPLES + i] = (int16_t)(sinf(2.0f * M_PI * f * t) * ampDisc * env);
+        }
+    }
+    s_proxyChimeBufsReady = true;
+}
+
+void play_proxy_connect_chime() {
+    buildProxyChimeBufs();
+    if (audio_playing) return;
+    play_pcm_audio(s_proxyConnectBuf, PROXY_CONNECT_TOTAL, 130);
+}
+
+void play_proxy_disconnect_chime() {
+    buildProxyChimeBufs();
+    if (audio_playing) return;
+    play_pcm_audio(s_proxyDisconnectBuf, PROXY_DISCONNECT_TOTAL, 90);
+}

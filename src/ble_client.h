@@ -137,6 +137,10 @@ public:
     // Register callback for stable V1 connection work after the connect burst settles.
     void onV1Connected(ConnectionCallback callback);
 
+    // Register callbacks fired when a proxy client (JBV1, Dukes, etc.) connects/disconnects.
+    void onProxyClientConnected(ConnectionCallback callback);
+    void onProxyClientDisconnected(ConnectionCallback callback);
+
     // Record latest loop timings used by the connect-burst settle gate.
     void noteBleProcessDuration(uint32_t us);
     void noteDisplayPipelineDuration(uint32_t us);
@@ -348,6 +352,8 @@ private:
     DataCallback dataCallback_;
     ConnectionCallback connectImmediateCallback_;
     ConnectionCallback connectStableCallback_;
+    ConnectionCallback proxyClientConnectedCallback_    = nullptr;
+    ConnectionCallback proxyClientDisconnectedCallback_ = nullptr;
     std::atomic<bool> connected_{false};      // Standalone connection flag; use atomic load/store for all direct accesses
     std::atomic<bool> shouldConnect_{false};  // Atomic for thread safety (set from BLE callbacks)
     std::atomic<bool> pendingConnectStateUpdate_{false};   // Deferred update from BLE callbacks
