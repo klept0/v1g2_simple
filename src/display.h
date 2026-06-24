@@ -96,7 +96,8 @@ public:
     void updateSettingsSliders(uint8_t brightnessLevel, uint8_t volumeLevel, int activeSlider);
     void hideBrightnessSlider();
     int  getActiveSliderFromTouch(int16_t touchY);
-    void showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn);
+    // wifiState: 0 = off, 1 = on (manual), 2 = always on (auto-start at boot)
+    void showTogglesPage(int wifiState, bool proxyOn, bool muteZeroOn);
 
     // Timed notification banner — draws centred text over the main display area.
     // Clears automatically after ~2 s when tickBanner() is called each loop.

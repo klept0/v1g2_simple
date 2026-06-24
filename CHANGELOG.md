@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Power button screen cycle** — single short press (< 1.5 s) cycles idle screens (Off → Dashboard → Tuning → Stealth → Off), same as double-tap. Double press (two short presses within 600 ms) cycles profile slot (0 → 1 → 2 → 0), same as triple-tap. Long hold (≥ 2 s) still powers off. Useful when the device is mounted and the screen is hard to reach.
 - **BOOT button quick-tap returns to main radar view** — a quick tap of the BOOT button (< 300 ms, before the settings UI activates) immediately dismisses any active idle screen and returns to the main radar view. No need to cycle all the way back through Off.
+- **WiFi AP three-state toggle** — on-device toggles page (BOOT button settings) now cycles WiFi AP through three states: Off → On → Always On → Off. "Always On" (shown in amber) persists `enableWifiAtBoot` so the AP starts automatically on every boot without pressing anything.
 
 ---
 

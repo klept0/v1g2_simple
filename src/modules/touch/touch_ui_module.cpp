@@ -170,19 +170,23 @@ bool TouchUiModule::handleSliderTouch(unsigned long nowMs) {
 
 // ─── Page 2: toggles ────────────────────────────────────────────────────────
 
+// Returns 0=off, 1=on(manual), 2=always-on
+static int wifiToggleState(const TouchUiModule::Callbacks& cbs) {
+    bool alwaysOn = cbs.getWifiAlwaysOn ? cbs.getWifiAlwaysOn(cbs.getWifiAlwaysOnCtx) : false;
+    if (alwaysOn) return 2;
+    bool active = cbs.isWifiSetupActive ? cbs.isWifiSetupActive(cbs.isWifiSetupActiveCtx) : false;
+    return active ? 1 : 0;
+}
+
 void TouchUiModule::enterTogglesPage() {
     settingsPage_ = 2;
 
     const V1Settings& s = settings_->get();
-    bool wifiOn   = callbacks_.isWifiSetupActive
-                    ? callbacks_.isWifiSetupActive(callbacks_.isWifiSetupActiveCtx)
-                    : false;
-    bool proxyOn  = s.proxyBLE;
     bool muteZero = callbacks_.getMuteToZero
                     ? callbacks_.getMuteToZero(callbacks_.getMuteToZeroCtx)
                     : false;
 
-    display_->showTogglesPage(wifiOn, proxyOn, muteZero);
+    display_->showTogglesPage(wifiToggleState(callbacks_), s.proxyBLE, muteZero);
 }
 
 bool TouchUiModule::handleToggleTouch() {
@@ -201,11 +205,19 @@ bool TouchUiModule::handleToggleTouch() {
     else                    btn = 0;  // WiFi AP (left side visually)
 
     if (btn == 0) {
-        // Toggle WiFi AP
-        if (callbacks_.isWifiSetupActive && callbacks_.isWifiSetupActive(callbacks_.isWifiSetupActiveCtx)) {
-            if (callbacks_.stopWifiSetup) callbacks_.stopWifiSetup(callbacks_.stopWifiSetupCtx);
-        } else {
+        // Cycle WiFi AP: Off(0) → On(1) → Always On(2) → Off(0)
+        int current = wifiToggleState(callbacks_);
+        if (current == 0) {
+            // Off → On: start WiFi, leave alwaysOn false
+            if (callbacks_.setWifiAlwaysOn) callbacks_.setWifiAlwaysOn(false, callbacks_.setWifiAlwaysOnCtx);
             if (callbacks_.startWifi) callbacks_.startWifi(callbacks_.startWifiCtx);
+        } else if (current == 1) {
+            // On → Always On: keep WiFi running, set alwaysOn true
+            if (callbacks_.setWifiAlwaysOn) callbacks_.setWifiAlwaysOn(true, callbacks_.setWifiAlwaysOnCtx);
+        } else {
+            // Always On → Off: clear alwaysOn, stop WiFi
+            if (callbacks_.setWifiAlwaysOn) callbacks_.setWifiAlwaysOn(false, callbacks_.setWifiAlwaysOnCtx);
+            if (callbacks_.stopWifiSetup) callbacks_.stopWifiSetup(callbacks_.stopWifiSetupCtx);
         }
     } else if (btn == 1) {
         // Toggle BLE proxy
@@ -223,14 +235,10 @@ bool TouchUiModule::handleToggleTouch() {
 
     // Redraw with updated state
     const V1Settings& s = settings_->get();
-    bool wifiOn   = callbacks_.isWifiSetupActive
-                    ? callbacks_.isWifiSetupActive(callbacks_.isWifiSetupActiveCtx)
-                    : false;
-    bool proxyOn  = s.proxyBLE;
     bool muteZero = callbacks_.getMuteToZero
                     ? callbacks_.getMuteToZero(callbacks_.getMuteToZeroCtx)
                     : false;
-    display_->showTogglesPage(wifiOn, proxyOn, muteZero);
+    display_->showTogglesPage(wifiToggleState(callbacks_), s.proxyBLE, muteZero);
     return true;
 }
 

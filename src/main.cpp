@@ -729,6 +729,13 @@ void configureTouchUiModule() {
             settingsManager.setSlotMuteToZero(settingsManager.get().activeSlot, enabled);
             settingsManager.save();
         },
+        .getWifiAlwaysOn = [](void* /*ctx*/) {
+            return settingsManager.get().enableWifiAtBoot;
+        },
+        .setWifiAlwaysOn = [](bool enabled, void* /*ctx*/) {
+            settingsManager.setEnableWifiAtBoot(enabled);
+            settingsManager.save();
+        },
         .dismissIdleScreen = [](void* /*ctx*/) {
             if (dashboardModule.isActive()) {
                 dashboardModule.setActive(false);
