@@ -39,22 +39,10 @@ void TapGestureModule::process(unsigned long nowMs) {
         return;
     }
 
-    // If a single tap was pending and the window expired with no follow-up,
-    // fire the dashboard toggle now.
-#ifndef UNIT_TEST
-    if (pendingDashboardToggle_ && tapCount_ == 1 &&
-        nowMs - lastTapTime_ > TAP_WINDOW_MS) {
-        pendingDashboardToggle_ = false;
-        if (dashboard_) {
-            dashboard_->cycleNext();
-            if (!dashboard_->isActive()) {
-                display_->forceNextRedraw();
-            }
-            DBG_PRINTLN("Idle screen cycled via single tap");
-        }
+    // Expire stale tap sequence (window closed without reaching an action threshold).
+    if (tapCount_ > 0 && nowMs - lastTapTime_ > TAP_WINDOW_MS) {
         tapCount_ = 0;
     }
-#endif
 
     int16_t touchX, touchY;
     bool hasActiveAlert = parser_->hasAlerts();
@@ -109,7 +97,7 @@ void TapGestureModule::process(unsigned long nowMs) {
 
     DBG_PRINTF("Tap at x=%d y=%d hasAlert=%d\n", touchX, touchY, hasActiveAlert);
 
-    // Alert active: any tap mutes (and exits dashboard if active)
+    // Alert active: any tap mutes (and collapses idle screen back to radar)
     if (hasActiveAlert) {
 #ifndef UNIT_TEST
         if (dashboard_ && dashboard_->isActive()) {
@@ -119,31 +107,32 @@ void TapGestureModule::process(unsigned long nowMs) {
 #endif
         performMuteToggle("tap");
         tapCount_ = 0;
-        pendingDashboardToggle_ = false;
         return;
     }
 
-    // No alert: count taps.
-    // A single isolated tap (no follow-up within TAP_WINDOW_MS) toggles the
-    // dashboard.  Triple-tap within the window cycles the profile as before.
+    // No alert: count taps within the window.
+    // Double-tap → cycle idle screen. Triple-tap → cycle profile.
+    // Single tap alone does nothing (no accidental screen changes).
     if (nowMs - lastTapTime_ >= TAP_DEBOUNCE_MS) {
-        if (nowMs - lastTapTime_ <= TAP_WINDOW_MS) {
-            // Follow-up tap — cancel any pending dashboard toggle
-            pendingDashboardToggle_ = false;
-            tapCount_++;
-        } else {
-            // New tap sequence; arm dashboard toggle and start counting
-            tapCount_ = 1;
-            pendingDashboardToggle_ = true;
-        }
+        tapCount_ = (nowMs - lastTapTime_ <= TAP_WINDOW_MS) ? tapCount_ + 1 : 1;
         lastTapTime_ = nowMs;
 
-        DBG_PRINTF("Profile tap count: %d\n", tapCount_);
+        DBG_PRINTF("Tap count: %d\n", tapCount_);
 
         if (tapCount_ >= PROFILE_CHANGE_TAP_COUNT) {
-            pendingDashboardToggle_ = false;
             performProfileCycle();
             tapCount_ = 0;
+#ifndef UNIT_TEST
+        } else if (tapCount_ == SCREEN_CYCLE_TAP_COUNT) {
+            if (dashboard_) {
+                dashboard_->cycleNext();
+                if (!dashboard_->isActive()) {
+                    display_->forceNextRedraw();
+                }
+                DBG_PRINTLN("Idle screen cycled via double-tap");
+            }
+            tapCount_ = 0;
+#endif
         }
     }
 }

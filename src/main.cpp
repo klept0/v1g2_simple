@@ -1173,6 +1173,47 @@ void loop() {
         smartBrightnessEngine.process(now, hasAlerts, isMuted);
     }
 
+    // Auto-switch idle screen when Night driving mode is activated/deactivated.
+    {
+        const DrivingMode currentMode = settingsManager.getActiveDrivingMode();
+        if (currentMode != mainRuntimeState.lastDrivingMode) {
+            if (currentMode == DrivingMode::Night) {
+                // Night mode engaged — jump directly to Stealth idle screen
+                while (dashboardModule.activeScreen() != IdleScreen::Stealth) {
+                    dashboardModule.cycleNext();
+                }
+            } else if (mainRuntimeState.lastDrivingMode == DrivingMode::Night) {
+                // Night mode exiting — return to Off (radar-only)
+                while (dashboardModule.activeScreen() != IdleScreen::Off) {
+                    dashboardModule.cycleNext();
+                }
+            }
+            mainRuntimeState.lastDrivingMode = currentMode;
+        }
+    }
+
+    // Once per connect: save V1 device info to SD when version packet arrives.
+    if (!mainRuntimeState.v1InfoSavedThisConnect && bleClient.isConnected()) {
+        const DisplayState& ds = parser.getDisplayState();
+        if (ds.hasV1Version && storageManager.isSDCard()) {
+            fs::FS* sdFs = storageManager.getFilesystem();
+            if (sdFs) {
+                File f = sdFs->open("/v1_info.json", FILE_WRITE);
+                if (f) {
+                    JsonDocument doc;
+                    doc["fw"]        = ds.v1FirmwareVersion;
+                    doc["addr"]      = bleClient.getConnectedAddress().toString().c_str();
+                    doc["saved_at"]  = now;
+                    serializeJson(doc, f);
+                    f.close();
+                    SerialLog.printf("[V1Info] Saved v1_info.json (fw=%lu)\n",
+                                     static_cast<unsigned long>(ds.v1FirmwareVersion));
+                }
+            }
+            mainRuntimeState.v1InfoSavedThisConnect = true;
+        }
+    }
+
     const LoopWifiPhaseValues loopWifiValues = processLoopWifiPhase(
         now,
         mainRuntimeState.v1ConnectedAtMs,

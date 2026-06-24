@@ -1496,11 +1496,14 @@ Default is `true`.
 
 | Gesture | Condition | Action |
 |---|---|---|
-| Single tap | Alert active | Mute / unmute |
-| Single tap | No active alert | Cycle idle screen: Off → Dashboard → Tuning → Stealth → Off |
+| Single tap | Alert active | Mute / unmute — collapses any idle screen back to radar |
+| Single tap | No active alert | No action (prevents accidental screen changes) |
+| Double tap (within 600 ms) | No active alert | Cycle idle screen: Off → Dashboard → Tuning → Stealth → Off |
 | Triple tap (within 600 ms) | No active alert | Cycle profile slot: 0 → 1 → 2 → 0 |
 
 Any active alert immediately collapses the idle screen back to the radar view. A tap during an alert mutes regardless of which idle screen was showing.
+
+Night driving mode (from web UI or preset button) automatically switches the idle screen to Stealth Night Mode. Switching away from Night mode returns to Off.
 
 ### Idle Screens
 

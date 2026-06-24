@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Double-tap to cycle idle screens** — single tap now does nothing when no alert is active (eliminates accidental screen changes). Double-tap cycles Off → Dashboard → Tuning → Stealth → Off. Triple-tap continues to cycle profile slots. Any alert tap still mutes immediately.
+- **V1 firmware info saved to SD** — on each BLE connect, `requestVersion()` is now sent during the subscribe handshake; once the V1 version packet arrives, device firmware version and BLE address are written to `/v1_info.json` on the SD card.
+- **Night mode auto-switches to Stealth screen** — activating Night driving mode (from web UI or preset button) automatically advances the idle screen to Stealth Night Mode. Leaving Night mode returns to Off (radar-only view).
+
+---
+
 ## [4.4.0] - 2026-06-21
 
 ### Added
