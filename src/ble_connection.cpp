@@ -717,6 +717,7 @@ bool V1BLEClient::executeSubscribeStep() {
         }
 
         case SubscribeStep::REQUEST_VERSION: {
+            requestVersion();  // ask V1 to push its firmware version packet
             subscribeStep_ = SubscribeStep::COMPLETE;
             return true;  // All done!
         }

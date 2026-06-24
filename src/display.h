@@ -98,6 +98,11 @@ public:
     int  getActiveSliderFromTouch(int16_t touchY);
     void showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn);
 
+    // Timed notification banner — draws centred text over the main display area.
+    // Clears automatically after ~2 s when tickBanner() is called each loop.
+    void showProxyBanner(const char* msg, uint16_t color);
+    void tickBanner(uint32_t nowMs);
+
     // Clear screen
     void clear();
 
@@ -223,6 +228,12 @@ private:
     bool bleProxyClientConnected_ = false;   // BLE proxy client connection flag
     bool bleReceivingData_ = true;           // True when V1 packets received recently (heartbeat)
     bool bleProxyDrawn_ = false;             // Track if icon has been drawn at least once
+
+    // Proxy connection banner
+    char     bannerText_[32]  = {};
+    uint16_t bannerColor_     = 0;
+    uint32_t bannerExpiryMs_  = 0;
+    bool     bannerActive_    = false;
     bool multiAlertMode_ = false;            // True when showing secondary alert cards (reduces main area)
     bool persistedMode_ = false;              // True when drawing persisted alerts (uses PALETTE_PERSISTED)
     bool wasInMultiAlertMode_ = false;       // Track mode transitions for change detection

@@ -61,6 +61,12 @@ void play_band_only(AlertBand band);
 void play_startup_chime();
 void play_shutdown_chime();
 
+// Proxy client connect / disconnect confirmation chimes.
+// Connect: 3-note ascending ping (660→880→1320 Hz).
+// Disconnect: 2-note descending (880→440 Hz).
+void play_proxy_connect_chime();
+void play_proxy_disconnect_chime();
+
 // Voice pack selection — set active pack name (empty = built-in default).
 // Must be called from the main task before any play_* call.
 void audio_set_voice_pack(const char* packName);

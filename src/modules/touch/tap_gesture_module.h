@@ -49,10 +49,9 @@ private:
 
     unsigned long lastTapTime_ = 0;
     int tapCount_ = 0;
-    // Whether a single pending tap has been registered but the window hasn't expired.
-    bool pendingDashboardToggle_ = false;
 
+    static constexpr int SCREEN_CYCLE_TAP_COUNT   = 2;
     static constexpr int PROFILE_CHANGE_TAP_COUNT = 3;
-    static constexpr unsigned long TAP_WINDOW_MS = 600;
+    static constexpr unsigned long TAP_WINDOW_MS   = 600;
     static constexpr unsigned long TAP_DEBOUNCE_MS = 150;
 };

@@ -717,11 +717,27 @@ void V1BLEClient::setObdBleArbitrationRequest(ObdBleArbitrationRequest request) 
 }
 
 void V1BLEClient::setProxyClientConnected(bool connected_) {
+    const bool wasConnected = proxyClientConnected_;
     proxyClientConnected_ = connected_;
     if (connected_) {
         proxyClientConnectedOnceThisBoot_ = true;
         proxyNoClientDeadlineMs_ = 0;
+        if (!wasConnected && proxyClientConnectedCallback_) {
+            proxyClientConnectedCallback_();
+        }
+    } else {
+        if (wasConnected && proxyClientDisconnectedCallback_) {
+            proxyClientDisconnectedCallback_();
+        }
     }
+}
+
+void V1BLEClient::onProxyClientConnected(ConnectionCallback callback) {
+    proxyClientConnectedCallback_ = callback;
+}
+
+void V1BLEClient::onProxyClientDisconnected(ConnectionCallback callback) {
+    proxyClientDisconnectedCallback_ = callback;
 }
 
 void V1BLEClient::onDataReceived(DataCallback callback) {

@@ -9,6 +9,7 @@ class V1Display;
 class PowerModule;
 class BleQueueModule;
 class SystemEventBus;
+class DashboardModule;
 
 /**
  * ConnectionStateModule - Tracks V1 BLE connection state transitions
@@ -27,7 +28,8 @@ public:
                V1Display* display,
                PowerModule* powerModule,
                BleQueueModule* bleQueueModule,
-               SystemEventBus* eventBus = nullptr);
+               SystemEventBus* eventBus = nullptr,
+               DashboardModule* dashboard = nullptr);
 
     // Call once per loop iteration; returns true if connected
     bool process(unsigned long nowMs);
@@ -39,6 +41,7 @@ private:
     PowerModule* power_ = nullptr;
     BleQueueModule* bleQueue_ = nullptr;
     SystemEventBus* bus_ = nullptr;
+    DashboardModule* dashboard_ = nullptr;
 
     bool wasConnected_ = false;
     unsigned long lastDataRequestMs_ = 0;

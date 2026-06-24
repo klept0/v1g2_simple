@@ -96,6 +96,7 @@ void prepareForShutdown(void* /*context*/) {
 
 void onV1ConnectImmediate() {
     mainRuntimeState.v1ConnectedAtMs = millis();
+    mainRuntimeState.v1InfoSavedThisConnect = false;  // arm save for next hasV1Version
 
     // Start a new perf CSV session so scoring tools can isolate
     // V1-connected data from idle boot noise.
