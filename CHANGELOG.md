@@ -9,11 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [4.5.0] - 2026-06-24
+
 ### Added
 - **Double-tap to cycle idle screens** — single tap now does nothing when no alert is active (eliminates accidental screen changes). Double-tap cycles Off → Dashboard → Tuning → Stealth → Off. Triple-tap continues to cycle profile slots. Any alert tap still mutes immediately.
 - **V1 firmware info saved to SD** — on each BLE connect, `requestVersion()` is now sent during the subscribe handshake; once the V1 version packet arrives, device firmware version and BLE address are written to `/v1_info.json` on the SD card.
 - **Night mode auto-switches to Stealth screen** — activating Night driving mode (from web UI or preset button) automatically advances the idle screen to Stealth Night Mode. Leaving Night mode returns to Off (radar-only view).
 - **Proxy client connection notification** — when a companion app (JBV1, Dukes, etc.) connects or disconnects via the BLE proxy, the device plays a distinct chime and briefly displays a centred banner ("PROXY CONNECTED" in green / "PROXY DISCONNECTED" in amber) for 2.5 seconds. Connect chime: 3-note ascending ping (660→880→1320 Hz). Disconnect chime: 2-note descending (880→440 Hz).
+
+### Fixed
+- **Idle screens now render when disconnected** — tap gestures (double/triple) had no visible effect when not connected to V1G2 because the display pipeline only runs on BLE packet arrival. `ConnectionStateModule` now drives idle screen rendering directly when disconnected.
 
 ---
 

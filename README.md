@@ -15,6 +15,7 @@ A open-source touchscreen companion display for the **Valentine One Gen2** radar
 | **Voice alert filters** | Per-band suppression (X/K/Ka/Laser), first-alert-only mode, direction-change-only mode |
 | **Custom voice packs** | Upload your own `.mul` audio clips to replace the built-in TTS voice |
 | **Startup/shutdown chimes** | Synthesized two-note tones on power on/off (individually toggle-able) |
+| **Proxy connection chime** | 3-note ascending ping + on-screen banner when a companion app (JBV1, Dukes) connects via BLE proxy |
 | **V1 profile management** | Store up to 3 sensitivity profiles; triple-tap display to switch slots instantly |
 | **Auto-push** | Automatically pushes the active profile to V1 on BLE connect |
 | **BLE proxy** | Re-advertises V1 data so a phone app (Escort Live, YaV1) can connect simultaneously |
@@ -22,7 +23,7 @@ A open-source touchscreen companion display for the **Valentine One Gen2** radar
 | **Smart brightness** | Auto-adjusts brightness on alert, mute, and idle-timeout; all levels configurable |
 | **Driving safety lockout** | Blocks configuration changes when speed exceeds threshold (default 5 mph) |
 | **Quick driving modes** | Normal / Quiet / Highway / Night presets — one tap, NVS-persisted |
-| **Idle screen cycle** | Single tap cycles three overlay screens: Dashboard, V1 Tuning, and Stealth Night Mode |
+| **Idle screen cycle** | Double-tap cycles overlay screens: Off → Dashboard → Tuning → Stealth → Off |
 | **Driving dashboard** | Idle screen: speed, connection dots, profile slot, mute state, last alert |
 | **V1 Tuning Screen** | Live band, frequency, 8-bar signal meter, direction, alert duration, profile — for sweep validation |
 | **Stealth Night Mode** | Minimal red/orange HUD: speed left, alert centre, direction right — fighter-jet style for night driving |
@@ -117,7 +118,8 @@ Short press BOOT on Page 2 exits and saves all changes.
 | Gesture | When | Function |
 |---|---|---|
 | Single tap | Alert active | Mute / unmute the alert |
-| Single tap | No active alert | Cycle idle screen (Off → Dashboard → Tuning → Stealth → Off) |
+| Single tap | No active alert | No action (prevents accidental changes) |
+| Double tap within 600 ms | No active alert | Cycle idle screen (Off → Dashboard → Tuning → Stealth → Off) |
 | Triple tap within 600 ms | No active alert | Cycle profile slot (0 → 1 → 2 → 0) |
 
 ---
@@ -126,7 +128,7 @@ Short press BOOT on Page 2 exits and saves all changes.
 
 ### Screen
 
-The 640×172 display shows the radar screen when an alert is active: live frequency, band indicators, signal bars (6-level front/rear), direction arrow, and bogey counter. When no alert is present, single tap cycles between three idle overlay screens — Dashboard, V1 Tuning, and Stealth Night Mode.
+The 640×172 display shows the radar screen when an alert is active: live frequency, band indicators, signal bars (6-level front/rear), direction arrow, and bogey counter. When no alert is present, double-tap cycles between three idle overlay screens — Dashboard, V1 Tuning, and Stealth Night Mode. Night driving mode automatically switches to Stealth.
 
 ### Voice alerts
 
