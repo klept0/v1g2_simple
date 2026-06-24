@@ -77,7 +77,7 @@ public:
     int updateSettingsSlidersCalls = 0;
     int hideBrightnessSliderCalls = 0;
     int showTogglesPageCalls = 0;
-    bool lastTogglesWifi = false;
+    int  lastTogglesWifi = 0;
     bool lastTogglesProxy = false;
     bool lastTogglesMuteZero = false;
     int lastSettingsBrightness = 0;
@@ -137,7 +137,7 @@ public:
         updateSettingsSlidersCalls = 0;
         hideBrightnessSliderCalls = 0;
         showTogglesPageCalls = 0;
-        lastTogglesWifi = false;
+        lastTogglesWifi = 0;
         lastTogglesProxy = false;
         lastTogglesMuteZero = false;
         lastSettingsBrightness = 0;
@@ -260,9 +260,9 @@ public:
     }
     void hideBrightnessSlider() { hideBrightnessSliderCalls++; }
     int getActiveSliderFromTouch(int16_t /*touchY*/) { return activeSliderFromTouch; }
-    void showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn) {
+    void showTogglesPage(int wifiState, bool proxyOn, bool muteZeroOn) {
         showTogglesPageCalls++;
-        lastTogglesWifi     = wifiOn;
+        lastTogglesWifi     = wifiState;
         lastTogglesProxy    = proxyOn;
         lastTogglesMuteZero = muteZeroOn;
     }

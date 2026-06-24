@@ -131,7 +131,7 @@ void V1Display::hideBrightnessSlider() {
 // Button layout:  [  WiFi AP  ] [ BLE Proxy ] [  Mute→0  ]
 //                  0..212        213..426       427..640
 
-void V1Display::showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn) {
+void V1Display::showTogglesPage(int wifiState, bool proxyOn, bool muteZeroOn) {
     clear();
 
     const int btnW   = SCREEN_WIDTH / 3;   // 213px each
@@ -140,42 +140,47 @@ void V1Display::showTogglesPage(bool wifiOn, bool proxyOn, bool muteZeroOn) {
     const int radius = 8;
 
     // Colours
-    const uint16_t ON_BG     = 0x07E0;  // green
-    const uint16_t OFF_BG    = 0x2104;  // dark grey
-    const uint16_t LABEL_COL = 0xFFFF;  // white
-    const uint16_t BORDER    = 0x4208;  // mid-grey border
+    const uint16_t ON_BG      = 0x07E0;  // green  — active/on
+    const uint16_t ALWAYS_BG  = 0xFD20;  // amber  — always-on
+    const uint16_t OFF_BG     = 0x2104;  // dark grey — off
+    const uint16_t LABEL_COL  = 0xFFFF;  // white
+    const uint16_t BORDER     = 0x4208;  // mid-grey border
 
-    struct Btn { int x; const char* label; bool state; };
+    // WiFi button: cycles Off(0) → On(1) → Always On(2) → Off
+    struct Btn { int x; const char* label; uint16_t bg; const char* stateStr; uint16_t stateCol; };
+
+    const uint16_t wifiBg    = (wifiState == 2) ? ALWAYS_BG
+                             : (wifiState == 1) ? ON_BG
+                                                : OFF_BG;
+    const char*    wifiState_ = (wifiState == 2) ? "ALWAYS"
+                              : (wifiState == 1) ? "  ON  "
+                                                 : "  OFF ";
+    const uint16_t wifiSCol  = (wifiState > 0) ? 0xFFFF : 0xAD75;
+
     Btn buttons[3] = {
-        { 0,         "WiFi AP",   wifiOn      },
-        { btnW,      "BLE Proxy", proxyOn     },
-        { btnW * 2,  "Mute=0",   muteZeroOn  },
+        { 0,        "WiFi AP",   wifiBg,                             wifiState_,                wifiSCol              },
+        { btnW,     "BLE Proxy", proxyOn    ? ON_BG : OFF_BG,        proxyOn    ? "  ON  " : "  OFF ", proxyOn    ? 0xFFFF : 0xAD75 },
+        { btnW * 2, "Mute=0",   muteZeroOn ? ON_BG : OFF_BG,        muteZeroOn ? "  ON  " : "  OFF ", muteZeroOn ? 0xFFFF : 0xAD75 },
     };
 
     tft_->setTextSize(1);
     for (auto& b : buttons) {
-        uint16_t bg = b.state ? ON_BG : OFF_BG;
-        // Fill + border
-        tft_->fillRoundRect(b.x + 6, btnY, btnW - 12, btnH, radius, bg);
+        tft_->fillRoundRect(b.x + 6, btnY, btnW - 12, btnH, radius, b.bg);
         tft_->drawRoundRect(b.x + 6, btnY, btnW - 12, btnH, radius, BORDER);
 
-        // Label (centred, white)
-        tft_->setTextColor(LABEL_COL, bg);
+        tft_->setTextColor(LABEL_COL, b.bg);
         int16_t tx = b.x + (btnW / 2) - (strlen(b.label) * 6 / 2);
         tft_->setCursor(tx, btnY + 28);
         tft_->print(b.label);
 
-        // State chip
-        const char* stateStr = b.state ? " ON " : " OFF";
-        uint16_t stateCol = b.state ? 0xFFFF : 0xAD75;
-        tft_->setTextColor(stateCol, bg);
-        int16_t sx = b.x + (btnW / 2) - (4 * 6 / 2);
+        tft_->setTextColor(b.stateCol, b.bg);
+        int16_t sx = b.x + (btnW / 2) - (6 * 6 / 2);
         tft_->setCursor(sx, btnY + 52);
-        tft_->print(stateStr);
+        tft_->print(b.stateStr);
     }
 
     // Footer hint
-    tft_->setTextColor(0x8410, PALETTE_BG);  // dim grey
+    tft_->setTextColor(0x8410, PALETTE_BG);
     tft_->setCursor(4, SCREEN_HEIGHT - 14);
     tft_->print("BOOT = exit & save");
 

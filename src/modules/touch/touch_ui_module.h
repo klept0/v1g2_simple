@@ -39,6 +39,16 @@ public:
         void* getMuteToZeroCtx = nullptr;
         void (*setMuteToZero)(bool enabled, void* ctx) = nullptr;
         void* setMuteToZeroCtx = nullptr;
+
+        // WiFi "Always On" — persisted enableWifiAtBoot setting.
+        bool (*getWifiAlwaysOn)(void* ctx) = nullptr;
+        void* getWifiAlwaysOnCtx = nullptr;
+        void (*setWifiAlwaysOn)(bool enabled, void* ctx) = nullptr;
+        void* setWifiAlwaysOnCtx = nullptr;
+
+        // Quick BOOT tap (< 300 ms) dismisses the active idle screen, returning to the main radar view.
+        void (*dismissIdleScreen)(void* ctx) = nullptr;
+        void* dismissIdleScreenCtx = nullptr;
     };
 
     void begin(V1Display* disp,

@@ -1505,6 +1505,25 @@ Any active alert immediately collapses the idle screen back to the radar view. A
 
 Night driving mode (from web UI or preset button) automatically switches the idle screen to Stealth Night Mode. Switching away from Night mode returns to Off.
 
+### Power Button (Mounted Use)
+
+When the device is mounted and the touchscreen is hard to reach, the physical power button provides the same controls:
+
+| Press | Action |
+|---|---|
+| Short press (release < 1.5 s) | Cycle idle screen — same as double-tap |
+| Double press (two short presses within 600 ms) | Cycle profile slot — same as triple-tap |
+| Hold ≥ 2 s | Power off |
+
+### BOOT Button
+
+| Press | Action |
+|---|---|
+| Quick tap (< 300 ms) | **Return to main radar view** — immediately dismisses any active idle screen |
+| Short press (≥ 300 ms, < 4 s) | Open settings UI (brightness / volume sliders → toggles page) |
+| Long press (≥ 4 s) | Toggle WiFi AP on/off |
+| Very long press (≥ 10 s) | Arm OBD manual pair scan |
+
 ### Idle Screens
 
 Three overlay screens are available when no alert is active. Single tap cycles through them in order; another tap advances to the next. Tapping past Stealth returns to Off (radar-only view).

@@ -77,13 +77,27 @@ public:
     // Process power button (call in loop) - returns true if should power off
     bool processPowerButton();
 
+    // Register callbacks fired on short press (< 1.5 s) and double press.
+    // Double press = two short presses within PWR_DOUBLE_PRESS_WINDOW_MS.
+    using PwrCallback = void (*)();
+    void onPowerButtonShortPress(PwrCallback cb)   { shortPressCallback_  = cb; }
+    void onPowerButtonDoublePress(PwrCallback cb)  { doublePressCallback_ = cb; }
+
 private:
+    static constexpr unsigned long PWR_SHORT_PRESS_MAX_MS      = 1500;
+    static constexpr unsigned long PWR_DOUBLE_PRESS_WINDOW_MS  = 600;
+    static constexpr unsigned long PWR_SHUTDOWN_HOLD_MS        = 2000;
+
     bool initialized_;
     bool onBattery_;
     uint16_t lastVoltage_;
     unsigned long lastButtonPress_;
     unsigned long buttonPressStart_;
     bool buttonWasPressed_;
+    unsigned long lastShortPressMs_ = 0;  // timestamp of most recent short press (for double-press detection)
+
+    PwrCallback shortPressCallback_  = nullptr;
+    PwrCallback doublePressCallback_ = nullptr;
 
     // Cached battery state (updated every 30s)
     uint16_t cachedVoltage_;

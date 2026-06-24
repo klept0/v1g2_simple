@@ -728,6 +728,19 @@ void configureTouchUiModule() {
         .setMuteToZero = [](bool enabled, void* /*ctx*/) {
             settingsManager.setSlotMuteToZero(settingsManager.get().activeSlot, enabled);
             settingsManager.save();
+        },
+        .getWifiAlwaysOn = [](void* /*ctx*/) {
+            return settingsManager.get().enableWifiAtBoot;
+        },
+        .setWifiAlwaysOn = [](bool enabled, void* /*ctx*/) {
+            settingsManager.setEnableWifiAtBoot(enabled);
+            settingsManager.save();
+        },
+        .dismissIdleScreen = [](void* /*ctx*/) {
+            if (dashboardModule.isActive()) {
+                dashboardModule.setActive(false);
+                display.forceNextRedraw();
+            }
         }
     };
     touchUiModule.begin(&display, &touchHandler, &settingsManager, touchCbs);
@@ -1014,6 +1027,9 @@ static void initializePreflightDisplayAndBootUi(esp_reset_reason_t resetReason,
     powerModule.begin(&batteryManager, &display, &settingsManager);
     powerModule.setShutdownPreparationCallback(prepareForShutdown, nullptr);
     powerModule.logStartupStatus();
+    // Power button short press = cycle idle screen; double press = cycle profile slot.
+    batteryManager.onPowerButtonShortPress([]() { tapGestureModule.cycleScreens(); });
+    batteryManager.onPowerButtonDoublePress([]() { tapGestureModule.cycleProfileSlot(); });
     logBootStage("settings");
 
     // Show boot splash only on true power-on (not crash reboots or firmware uploads).

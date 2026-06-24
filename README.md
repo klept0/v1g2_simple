@@ -122,6 +122,22 @@ Short press BOOT on Page 2 exits and saves all changes.
 | Double tap within 600 ms | No active alert | Cycle idle screen (Off → Dashboard → Tuning → Stealth → Off) |
 | Triple tap within 600 ms | No active alert | Cycle profile slot (0 → 1 → 2 → 0) |
 
+### Power button (mounted use)
+
+| Press | Function |
+|---|---|
+| Short press (< 1.5 s) | Cycle idle screen — same as double-tap |
+| Double press (two presses within 600 ms) | Cycle profile slot — same as triple-tap |
+| Hold ≥ 2 s | Power off |
+
+### BOOT button
+
+| Press | Function |
+|---|---|
+| Quick tap (< 300 ms) | Return to main radar view (dismiss idle screen) |
+| Short press (≥ 300 ms) | Open settings (brightness / volume / toggles) |
+| Long press (≥ 4 s) | Toggle WiFi AP |
+
 ---
 
 ## Features

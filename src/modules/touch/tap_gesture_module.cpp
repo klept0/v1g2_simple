@@ -137,5 +137,23 @@ void TapGestureModule::process(unsigned long nowMs) {
     }
 }
 
-// NOTE: process() is called every main loop iteration.  Between tap events
-// we also check whether a pending single-tap dashboard toggle has timed out.
+void TapGestureModule::cycleScreens() {
+#ifndef UNIT_TEST
+    if (!dashboard_) return;
+    dashboard_->cycleNext();
+    if (!dashboard_->isActive()) display_->forceNextRedraw();
+#endif
+}
+
+void TapGestureModule::cycleProfileSlot() {
+    if (!settings_ || !displayMode_ || !alertPersistence_ || !display_ || !ble_ || !autoPush_) return;
+    const V1Settings& s = settings_->get();
+    int newSlot = (s.activeSlot + 1) % 3;
+    settings_->setActiveSlot(newSlot);
+    *displayMode_ = DisplayMode::IDLE;
+    alertPersistence_->clearPersistence();
+    display_->drawProfileIndicator(newSlot);
+    if (ble_->isConnected() && s.autoPushEnabled) {
+        autoPush_->queueSlotPush(newSlot);
+    }
+}

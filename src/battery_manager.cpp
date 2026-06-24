@@ -515,24 +515,35 @@ bool BatteryManager::processPowerButton() {
     // Allow shutdown as long as a battery is present; onBattery_ can be wrong if button was held during boot.
     if (!hasBattery()) return false;
 
-    // Note: GPIO 0 (BOOT pin) cannot be read as GPIO on ESP32 - disabled BOOT+PWR check
-
     bool pressed = isPowerButtonPressed();
     unsigned long now = millis();
 
     if (pressed && !buttonWasPressed_) {
-        // Button just pressed
         buttonPressStart_ = now;
         buttonWasPressed_ = true;
     } else if (pressed && buttonWasPressed_) {
-        // Button held - check for long press (2 seconds)
-        if (now - buttonPressStart_ >= 2000) {
+        // Fire shutdown on hold >= 2 s
+        if (static_cast<int32_t>(now - buttonPressStart_) >= (int32_t)PWR_SHUTDOWN_HOLD_MS) {
             Serial.println("[Battery] Long press detected - requesting shutdown");
+            buttonWasPressed_ = false;  // consume so release doesn't also fire short-press
             return true;
         }
     } else if (!pressed && buttonWasPressed_) {
-        // Button released
+        // Released — measure duration
         buttonWasPressed_ = false;
+        const unsigned long dur = static_cast<unsigned long>(static_cast<int32_t>(now - buttonPressStart_));
+        if (dur < PWR_SHORT_PRESS_MAX_MS) {
+            // Check for double press
+            const bool isDouble = (lastShortPressMs_ > 0) &&
+                                  (static_cast<int32_t>(now - lastShortPressMs_) <= (int32_t)PWR_DOUBLE_PRESS_WINDOW_MS);
+            if (isDouble) {
+                lastShortPressMs_ = 0;
+                if (doublePressCallback_) doublePressCallback_();
+            } else {
+                lastShortPressMs_ = now;
+                if (shortPressCallback_) shortPressCallback_();
+            }
+        }
     }
 
     return false;

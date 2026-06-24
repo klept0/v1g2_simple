@@ -932,6 +932,14 @@ public:
     bool restoreFromSD();
     bool checkAndRestoreFromSD();  // Call after storage is mounted to retry restore
 
+    // SD import: reads /v1simple_import.json, applies settings, renames to .done.
+    // Returns true if an import file was found and applied.
+    bool importFromSD();
+
+    // Writes /v1simple_config_template.json to SD if it doesn't already exist.
+    // Gives users a documented starting point for offline editing.
+    void generateSDTemplateIfAbsent();
+
     // Validate profile references exist - clear invalid ones
     void validateProfileReferences(V1ProfileManager& profileMgr);
 
