@@ -1,10 +1,11 @@
 # Display flush discipline contract (flush call-site snapshot)
 
-kind=BARE_FLUSH file=src/display_dashboard.cpp line=378 function=showDashboard
+kind=BARE_FLUSH file=src/display_dashboard.cpp line=404 function=showDashboard
 kind=BARE_FLUSH file=src/display_sliders.cpp line=187 function=showTogglesPage
-kind=BARE_FLUSH file=src/display_stealth.cpp line=173 function=showStealth
+kind=BARE_FLUSH file=src/display_stealth.cpp line=180 function=showStealth
+kind=BARE_FLUSH file=src/display_stealth.cpp line=75 function=showStealth
 kind=BARE_FLUSH file=src/display_tuning.cpp line=168 function=showTuning
-kind=BARE_FLUSH file=src/display_tuning.cpp line=293 function=showTuning
+kind=BARE_FLUSH file=src/display_tuning.cpp line=309 function=showTuning
 kind=DISPLAY_FLUSH file=src/display.cpp line=225 function=begin
 kind=DISPLAY_FLUSH file=src/display.cpp line=280 function=clear
 kind=DISPLAY_FLUSH file=src/display.cpp line=331 function=flush

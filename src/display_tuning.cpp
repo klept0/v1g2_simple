@@ -207,12 +207,28 @@ void V1Display::showTuning(const TuningData& data) {
             tft_->setTextSize(2);
             tft_->setTextColor(TUN_WHITE, TUN_BG);
             GFX_setTextDatum(MC_DATUM);
-            GFX_drawString(tft_.get(), buf, cx, BODY_Y + BODY_H / 2 + 4);
+            GFX_drawString(tft_.get(), buf, cx, BODY_Y + BODY_H / 2 - 8);
 
             tft_->setTextSize(1);
             tft_->setTextColor(TUN_GREY, TUN_BG);
             GFX_setTextDatum(BC_DATUM);
-            GFX_drawString(tft_.get(), "GHz", cx, BODY_Y + BODY_H - 6);
+            GFX_drawString(tft_.get(), "GHz", cx, BODY_Y + BODY_H / 2 + 16);
+
+            // Frequency history — last 2 seen (skip index 0, that's current)
+            if (data.freqHistCount > 1) {
+                tft_->setTextSize(1);
+                tft_->setTextColor(TUN_DIM, TUN_BG);
+                GFX_setTextDatum(TC_DATUM);
+                GFX_drawString(tft_.get(), "PREV", cx, BODY_Y + BODY_H / 2 + 24);
+                for (uint8_t i = 1; i < data.freqHistCount && i < 3; ++i) {
+                    char hbuf[12];
+                    const uint32_t hp = data.freqHistory[i] / 1000;
+                    const uint32_t hf = (data.freqHistory[i] % 1000) / 10;
+                    snprintf(hbuf, sizeof(hbuf), "%lu.%02lu", hp, hf);
+                    const int16_t hy = static_cast<int16_t>(BODY_Y + BODY_H / 2 + 34 + (i - 1) * 14);
+                    GFX_drawString(tft_.get(), hbuf, cx, hy);
+                }
+            }
         } else {
             tft_->setTextSize(2);
             tft_->setTextColor(TUN_GREY, TUN_BG);
