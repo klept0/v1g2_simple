@@ -131,7 +131,16 @@ void V1Display::showDashboard(const DashboardData& data) {
         const int16_t dotY = 6;
 
         x = drawStatusDot(tft_.get(), x, dotY, "V1",    data.v1Connected);
-        x += 6;
+        // RSSI quality dot — green/yellow/red after V1 label
+        if (data.v1Connected && data.v1RssiValid) {
+            const uint16_t rssiCol = (data.v1Rssi >= -60) ? DASH_GREEN
+                                   : (data.v1Rssi >= -75) ? DASH_YELLOW
+                                                           : DASH_RED;
+            tft_->fillCircle(x + 3, dotY + 3, 3, rssiCol);
+            x += 10;
+        } else {
+            x += 6;
+        }
         x = drawStatusDot(tft_.get(), x, dotY, "PROXY",
                            data.proxyEnabled && data.proxyClientConnected);
         x += 6;
@@ -324,6 +333,23 @@ void V1Display::showDashboard(const DashboardData& data) {
                 tft_->setTextColor(DASH_YELLOW, DASH_BG);
                 tft_->setCursor(310, rowCy - 8);
                 tft_->print(dashDirName(data.lastDirection));
+            }
+
+            // Alert age ("LIVE" / "5s ago" / "2m ago")
+            {
+                char ageBuf[12];
+                if (data.lastAlertAgeMs == 0) {
+                    snprintf(ageBuf, sizeof(ageBuf), "LIVE");
+                } else if (data.lastAlertAgeMs < 60000u) {
+                    snprintf(ageBuf, sizeof(ageBuf), "%lus ago", data.lastAlertAgeMs / 1000);
+                } else {
+                    snprintf(ageBuf, sizeof(ageBuf), "%lum ago", data.lastAlertAgeMs / 60000u);
+                }
+                tft_->setTextSize(1);
+                const uint16_t ageCol = (data.lastAlertAgeMs == 0) ? DASH_GREEN : DASH_DIM;
+                tft_->setTextColor(ageCol, DASH_BG);
+                GFX_setTextDatum(TR_DATUM);
+                GFX_drawString(tft_.get(), ageBuf, 430, rowCy - 3);
             }
         } else {
             tft_->setTextSize(1);

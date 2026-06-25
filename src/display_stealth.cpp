@@ -69,6 +69,13 @@ static const char* sthDirArrow(Direction d) {
 // ============================================================================
 
 void V1Display::showStealth(const StealthData& data) {
+    // Alert onset flash: one full-red frame for peripheral-vision awareness.
+    if (data.flashFrame) {
+        FILL_SCREEN(STH_RED);
+        flush();
+        return;
+    }
+
     FILL_SCREEN(STH_BG);
 
     // Thin dim separators

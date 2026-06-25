@@ -41,10 +41,17 @@ DashboardData DashboardModule::snapshot(uint32_t nowMs) const {
         }
     }
 
-    // BLE connection state
+    // BLE connection state + RSSI
     d.v1Connected          = ble_->isConnected();
     d.proxyEnabled         = s.proxyBLE;
     d.proxyClientConnected = ble_->isProxyClientConnected();
+    if (d.v1Connected) {
+        const int rssi = ble_->getConnectionRssi();
+        if (rssi != 0) {
+            d.v1RssiValid = true;
+            d.v1Rssi      = static_cast<int8_t>(rssi);
+        }
+    }
 
     // WiFi AP
     d.wifiApActive = wifiManager.isSetupModeActive();
@@ -71,10 +78,12 @@ DashboardData DashboardModule::snapshot(uint32_t nowMs) const {
         if (parser_->hasAlerts()) {
             AlertData pri;
             if (parser_->getRenderablePriorityAlert(pri)) {
-                d.hasLastAlert  = true;
-                d.lastBand      = pri.band;
-                d.lastFreqMhz   = pri.frequency;
-                d.lastDirection = pri.direction;
+                d.hasLastAlert   = true;
+                d.lastBand       = pri.band;
+                d.lastFreqMhz    = pri.frequency;
+                d.lastDirection  = pri.direction;
+                d.lastAlertAgeMs = 0;  // currently active
+                lastAlertSeenMs_ = nowMs;
                 // Update the persistent cache
                 lastAlertCache_.hasLastAlert  = true;
                 lastAlertCache_.lastBand      = pri.band;
@@ -86,6 +95,9 @@ DashboardData DashboardModule::snapshot(uint32_t nowMs) const {
             d.lastBand      = lastAlertCache_.lastBand;
             d.lastFreqMhz   = lastAlertCache_.lastFreqMhz;
             d.lastDirection = lastAlertCache_.lastDirection;
+            if (lastAlertSeenMs_ != UINT32_MAX) {
+                d.lastAlertAgeMs = nowMs - lastAlertSeenMs_;
+            }
         }
     }
 
@@ -143,6 +155,14 @@ TuningData DashboardModule::tuningSnapshot(uint32_t nowMs) const {
             d.durationMs = alertOnsetMs_ > 0 ? (nowMs - alertOnsetMs_) : 0;
         }
     }
+
+    // Copy frequency history snapshot (most recent first)
+    d.freqHistCount = freqHistCount_;
+    for (uint8_t i = 0; i < freqHistCount_ && i < 3; ++i) {
+        // freqHistHead_ points to the *next* write slot; walk backwards
+        const uint8_t idx = (freqHistHead_ + 3 - 1 - i) % 3;
+        d.freqHistory[i] = freqHistory_[idx];
+    }
     return d;
 }
 
@@ -170,6 +190,8 @@ StealthData DashboardModule::stealthSnapshot(uint32_t nowMs) const {
             d.freqMHz   = pri.frequency;
         }
     }
+
+    d.flashFrame = static_cast<int32_t>(nowMs - stealthFlashUntilMs_) < 0;
     return d;
 }
 
@@ -177,12 +199,41 @@ bool DashboardModule::renderIfActive(uint32_t nowMs) {
     if (activeScreen_ == IdleScreen::Off || !display_) return false;
     if (nowMs - lastRedrawMs_ < REDRAW_INTERVAL_MS) return false;
 
-    // Track alert onset time for the tuning screen duration counter.
+    // Track alert onset / clear transitions.
     const bool hasAlert = parser_ && parser_->hasAlerts();
-    if (hasAlert && !prevHasAlert_) alertOnsetMs_ = nowMs;
-    if (!hasAlert) alertOnsetMs_ = 0;
-    prevHasAlert_ = hasAlert;
+    const bool alertOnset = hasAlert && !prevHasAlert_;
+    const bool alertClear = !hasAlert && prevHasAlert_;
 
+    if (alertOnset) {
+        alertOnsetMs_ = nowMs;
+        alertFiredOnIdleScreen_ = true;
+
+        // Arm stealth flash for one render cycle (~250ms).
+        stealthFlashUntilMs_ = nowMs + REDRAW_INTERVAL_MS;
+
+        // Record frequency into history ring (de-dup consecutive same freq).
+        if (parser_) {
+            AlertData pri;
+            if (parser_->getRenderablePriorityAlert(pri) && pri.frequency != lastRecordedFreq_) {
+                freqHistory_[freqHistHead_] = pri.frequency;
+                freqHistHead_ = (freqHistHead_ + 1) % 3;
+                if (freqHistCount_ < 3) ++freqHistCount_;
+                lastRecordedFreq_ = pri.frequency;
+            }
+        }
+    }
+
+    if (!hasAlert) alertOnsetMs_ = 0;
+
+    // Auto-return to Off when the alert that triggered the idle screen clears.
+    if (alertClear && alertFiredOnIdleScreen_) {
+        alertFiredOnIdleScreen_ = false;
+        activeScreen_ = IdleScreen::Off;
+        prevHasAlert_ = false;
+        return false;  // nothing to render — caller will draw normal radar view
+    }
+
+    prevHasAlert_ = hasAlert;
     lastRedrawMs_ = nowMs;
 
     switch (activeScreen_) {

@@ -22,6 +22,9 @@ struct TuningData {
     char      slotName[12] = "DEFAULT";
     bool      muted       = false;
     bool      v1Connected = false;
+    // Last 3 distinct frequencies seen this session (index 0 = most recent)
+    uint32_t  freqHistory[3] = {};
+    uint8_t   freqHistCount  = 0;
 };
 
 // Data needed to render the stealth night-mode HUD.
@@ -33,6 +36,7 @@ struct StealthData {
     Direction direction  = DIR_NONE;
     uint32_t  freqMHz    = 0;
     bool      muted      = false;
+    bool      flashFrame = false;  // true for ~1 render cycle on alert onset
 };
 
 // All data needed to render the driving dashboard in one snapshot.
@@ -58,11 +62,16 @@ struct DashboardData {
     char modeChar = 0;               // 'A'=All Bogeys, 'L'=Logic, 'c'=Adv Logic, 0=unknown
     bool muted = false;
 
+    // V1 BLE signal strength (only meaningful when v1Connected == true)
+    bool    v1RssiValid = false;
+    int8_t  v1Rssi      = 0;   // dBm; typically -30 (strong) to -90 (weak)
+
     // Last alert summary (zeroed when no history yet)
-    bool      hasLastAlert  = false;
-    Band      lastBand      = BAND_NONE;
-    uint32_t  lastFreqMhz   = 0;
-    Direction lastDirection = DIR_NONE;
+    bool      hasLastAlert   = false;
+    Band      lastBand       = BAND_NONE;
+    uint32_t  lastFreqMhz    = 0;
+    Direction lastDirection  = DIR_NONE;
+    uint32_t  lastAlertAgeMs = UINT32_MAX;  // UINT32_MAX = no history
 
     // Phone companion data (valid when phoneDataValid == true)
     bool     phoneDataValid  = false;
@@ -120,6 +129,21 @@ private:
     uint32_t lastRedrawMs_  = 0;
     uint32_t alertOnsetMs_  = 0;  // when the current alert sequence started
     bool     prevHasAlert_  = false;
+
+    // Auto-return: if an alert fires while on an idle screen, return to Off on clear
+    bool alertFiredOnIdleScreen_ = false;
+
+    // Last alert seen time (for age display on Dashboard)
+    mutable uint32_t lastAlertSeenMs_ = UINT32_MAX;
+
+    // Frequency history ring buffer (Tuning screen)
+    uint32_t freqHistory_[3]  = {};
+    uint8_t  freqHistCount_   = 0;
+    uint8_t  freqHistHead_    = 0;   // next write index (ring)
+    uint32_t lastRecordedFreq_ = 0;  // avoid duplicates on same alert
+
+    // Stealth flash: non-zero for one render cycle on alert onset
+    uint32_t stealthFlashUntilMs_ = 0;
 
     // Track last alert across cycles so it persists on the dashboard.
     mutable DashboardData lastAlertCache_{};
